@@ -285,7 +285,7 @@
                     <div class="w-full md:w-1/2 relative group animate-on-scroll">
                         <div class="absolute -inset-4 bg-blue-100 rounded-3xl transform rotate-3 group-hover:rotate-2 transition-transform duration-500"></div>
                         <img 
-                            src="/images/tentangprogram.png" 
+                            src="/images/tentangprogramm.png" 
                             alt="Masyarakat KP-SPAMS" 
                             class="relative rounded-2xl shadow-2xl w-full h-[400px] object-cover transform group-hover:-translate-y-2 transition-transform duration-500"
                         />
