@@ -210,7 +210,7 @@
             @if($pembayaran['abunemen'])
             <div class="total-row">
                 <div class="total-label">Abunemen</div>
-                <div class="total-value">Rp {{ number_format(5000, 0, ',', '.') }}</div>
+                <div class="total-value">Rp {{ number_format(3000, 0, ',', '.') }}</div>
             </div>
             @endif
 

@@ -433,8 +433,8 @@
 
                     <div class="p-6">
                         <!-- Form Tambah Pembayaran -->
-                        <div class="mb-6 bg-gray-50 rounded-lg p-4">
-                            <h4 class="text-lg font-semibold mb-4">Tambah Pembayaran Baru</h4>
+                        <div class="mb-6 bg-gray-50 rounded-lg p-3 sm:p-4">
+                            <h4 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Tambah Pembayaran Baru</h4>
                             
                             <!-- Info Pelanggan Belum Bayar Bulan Ini -->
                             <div v-if="selectedPelanggan?.kategori !== 'sosial' && !getStatusBayar(selectedPelanggan).sudah_bayar" class="mb-4 bg-yellow-50 border border-yellow-300 rounded-lg p-3">
@@ -462,22 +462,22 @@
                                 </div>
                             </div>
                             
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Bulan Bayar</label>
+                                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Bulan Bayar</label>
                                     <input
                                         type="month"
                                         v-model="pembayaranForm.bulan_bayar"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
                                     />
                                     <p v-if="pembayaranErrors.bulan_bayar" class="text-red-600 text-sm mt-1">{{ pembayaranErrors.bulan_bayar }}</p>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Bayar</label>
+                                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Tanggal Bayar</label>
                                     <input
                                         type="date"
                                         v-model="pembayaranForm.tanggal_bayar"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
                                     />
                                     <p v-if="pembayaranErrors.tanggal_bayar" class="text-red-600 text-sm mt-1">{{ pembayaranErrors.tanggal_bayar }}</p>
                                 </div>
@@ -591,7 +591,7 @@
                             <button
                                 @click="submitPembayaran"
                                 :disabled="isSubmitting"
-                                class="mt-4 px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900 disabled:bg-gray-400 transition"
+                                class="mt-3 sm:mt-4 w-full sm:w-auto px-4 py-2 text-sm sm:text-base bg-blue-800 text-white rounded-lg hover:bg-blue-900 active:bg-blue-950 disabled:bg-gray-400 transition touch-manipulation"
                             >
                                 {{ isSubmitting ? 'Menyimpan...' : 'Simpan Pembayaran' }}
                             </button>
@@ -599,66 +599,66 @@
 
                         <!-- List Riwayat Pembayaran -->
                         <div>
-                            <h4 class="text-lg font-semibold mb-4">Daftar Pembayaran</h4>
+                            <h4 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Daftar Pembayaran</h4>
                             <div v-if="loadingPembayaran" class="text-center py-8">
-                                <p class="text-gray-500">Memuat data...</p>
+                                <p class="text-gray-500 text-sm">Memuat data...</p>
                             </div>
                             <div v-else-if="pembayaranList.length === 0" class="text-center py-8">
-                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                <p class="mt-2 text-gray-500">Belum ada riwayat pembayaran</p>
+                                <p class="mt-2 text-gray-500 text-sm">Belum ada riwayat pembayaran</p>
                             </div>
-                            <div v-else class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200">
+                            <div v-else class="overflow-x-auto -mx-3 sm:mx-0">
+                                <table class="min-w-full divide-y divide-gray-200 text-sm">
                                     <thead class="bg-gray-100">
                                         <tr>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Bulan</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Tanggal Bayar</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Meteran Sebelum</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Meteran Sesudah</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Pemakaian</th>
-                                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase">Abunemen</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Jumlah</th>
-                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Keterangan</th>
-                                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase w-20">Aksi</th>
+                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase">Bulan</th>
+                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase">Tgl Bayar</th>
+                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase hidden sm:table-cell">Meteran Sebelum</th>
+                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase hidden sm:table-cell">Meteran Sesudah</th>
+                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase">Pakai</th>
+                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-center text-xs font-medium text-gray-700 uppercase hidden lg:table-cell">Abunemen</th>
+                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase">Jumlah</th>
+                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase hidden md:table-cell">Ket</th>
+                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-center text-xs font-medium text-gray-700 uppercase">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200">
                                         <tr v-for="item in pembayaranList" :key="item.id" class="hover:bg-gray-50">
-                                            <td class="px-4 py-3 text-sm">{{ formatBulan(item.bulan_bayar) }}</td>
-                                            <td class="px-4 py-3 text-sm">{{ formatTanggal(item.tanggal_bayar) }}</td>
-                                            <td class="px-4 py-3 text-sm text-gray-600">{{ item.meteran_sebelum || '-' }}</td>
-                                            <td class="px-4 py-3 text-sm text-gray-600">{{ item.meteran_sesudah || '-' }}</td>
-                                            <td class="px-4 py-3 text-sm text-gray-600">{{ item.jumlah_kubik ? item.jumlah_kubik + ' m³' : '-' }}</td>
-                                            <td class="px-4 py-3 text-center">
+                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm">{{ formatBulan(item.bulan_bayar) }}</td>
+                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm">{{ formatTanggal(item.tanggal_bayar) }}</td>
+                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">{{ item.meteran_sebelum || '-' }}</td>
+                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">{{ item.meteran_sesudah || '-' }}</td>
+                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600">{{ item.jumlah_kubik ? item.jumlah_kubik + ' m³' : '-' }}</td>
+                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-center hidden lg:table-cell">
                                                 <span v-if="item.abunemen" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                                     <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                                     </svg>
                                                     Ya
                                                 </span>
-                                                <span v-else class="text-gray-400 text-sm">-</span>
+                                                <span v-else class="text-gray-400 text-xs sm:text-sm">-</span>
                                             </td>
-                                            <td class="px-4 py-3 text-sm font-medium">Rp {{ Number(item.jumlah_bayar).toLocaleString('id-ID') }}</td>
-                                            <td class="px-4 py-3 text-sm text-gray-600">{{ item.keterangan || '-' }}</td>
-                                            <td class="px-4 py-3 text-sm">
-                                                <div class="flex gap-2 justify-center">
+                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium">Rp {{ Number(item.jumlah_bayar).toLocaleString('id-ID') }}</td>
+                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 hidden md:table-cell">{{ item.keterangan || '-' }}</td>
+                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm">
+                                                <div class="flex gap-1 sm:gap-2 justify-center">
                                                     <button
                                                         @click="sendReceipt(item.id)"
-                                                        class="text-blue-600 hover:text-blue-800 transition"
+                                                        class="p-1.5 sm:p-2 text-blue-600 hover:text-blue-800 active:text-blue-900 hover:bg-blue-50 active:bg-blue-100 rounded transition touch-manipulation"
                                                         title="Kirim Struk via WhatsApp"
                                                     >
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                                                         </svg>
                                                     </button>
                                                     <button
                                                         @click="deletePembayaran(item.id)"
-                                                        class="text-red-600 hover:text-red-800 transition"
+                                                        class="p-1.5 sm:p-2 text-red-600 hover:text-red-800 active:text-red-900 hover:bg-red-50 active:bg-red-100 rounded transition touch-manipulation"
                                                         title="Hapus"
                                                     >
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                         </svg>
                                                     </button>
