@@ -1,0 +1,370 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Pelanggan;
+use App\Models\Pembayaran;
+use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Inertia\Inertia;
+
+class PembayaranController extends Controller
+{
+    /**
+     * Halaman pembayaran untuk admin
+     */
+    public function adminIndex(Request $request)
+    {
+        $bulan = $request->input('bulan', now()->format('Y-m'));
+        
+        // Ambil semua pembayaran bulan ini dengan data pelanggan
+        $pembayaranList = Pembayaran::with('pelanggan')
+            ->where('bulan_bayar', $bulan)
+            ->orderBy('tanggal_bayar', 'desc')
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'pelanggan' => [
+                        'id' => $p->pelanggan->id,
+                        'id_pelanggan' => $p->pelanggan->id_pelanggan,
+                        'nama_pelanggan' => $p->pelanggan->nama_pelanggan,
+                        'wilayah' => $p->pelanggan->wilayah,
+                        'rt' => $p->pelanggan->rt,
+                        'rw' => $p->pelanggan->rw,
+                    ],
+                    'bulan_bayar' => $p->bulan_bayar,
+                    'tanggal_bayar' => $p->tanggal_bayar->format('Y-m-d'),
+                    'jumlah_bayar' => $p->jumlah_bayar,
+                    'keterangan' => $p->keterangan,
+                    'meteran_sebelum' => $p->meteran_sebelum,
+                    'meteran_sesudah' => $p->meteran_sesudah,
+                    'jumlah_kubik' => $p->jumlah_kubik,
+                ];
+            });
+        
+        return Inertia::render('PembayaranAdmin/Index', [
+            'pembayaranList' => $pembayaranList,
+            'bulan' => $bulan,
+        ]);
+    }
+    
+    public function index($pelangganId)
+    {
+        $pelanggan = Pelanggan::findOrFail($pelangganId);
+        $pembayarans = Pembayaran::where('pelanggan_id', $pelangganId)
+            ->orderBy('bulan_bayar', 'desc')
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'bulan_bayar' => $p->bulan_bayar,
+                    'tanggal_bayar' => $p->tanggal_bayar->format('Y-m-d'),
+                    'meteran_sebelum' => $p->meteran_sebelum,
+                    'meteran_sesudah' => $p->meteran_sesudah,
+                    'abunemen' => $p->abunemen,
+                    'tunggakan' => $p->tunggakan,
+                    'jumlah_kubik' => $p->jumlah_kubik,
+                    'jumlah_bayar' => $p->jumlah_bayar,
+                    'keterangan' => $p->keterangan,
+                ];
+            });
+        
+        return response()->json([
+            'pelanggan' => [
+                'id' => $pelanggan->id,
+                'id_pelanggan' => $pelanggan->id_pelanggan,
+                'nama_pelanggan' => $pelanggan->nama_pelanggan,
+            ],
+            'pembayarans' => $pembayarans,
+        ]);
+    }
+
+    public function store(Request $request, $pelangganId)
+    {
+        $validated = $request->validate([
+            'bulan_bayar' => 'required|string|max:7',
+            'tanggal_bayar' => 'required|date',
+            'meteran_sebelum' => 'nullable|numeric|min:0',
+            'meteran_sesudah' => 'nullable|numeric|min:0',
+            'abunemen' => 'nullable|boolean',
+            'tunggakan' => 'nullable|numeric|min:0',
+            'jumlah_kubik' => 'nullable|numeric|min:0',
+            'jumlah_bayar' => 'required|numeric|min:0',
+            'keterangan' => 'nullable|string|max:500',
+            'bayar_tunggakan' => 'nullable|boolean',
+            'id_tunggakan' => 'nullable|array',
+            'id_tunggakan.*' => 'integer|exists:tagihan_bulanan,id',
+        ]);
+
+        $pelanggan = Pelanggan::findOrFail($pelangganId);
+        
+        // Cek apakah sudah ada pembayaran untuk bulan ini
+        $existing = Pembayaran::where('pelanggan_id', $pelangganId)
+            ->where('bulan_bayar', $validated['bulan_bayar'])
+            ->first();
+        
+        if ($existing) {
+            return response()->json([
+                'message' => 'Pembayaran untuk bulan ini sudah ada. Silakan edit pembayaran yang sudah ada.'
+            ], 422);
+        }
+
+        $pembayaran = Pembayaran::create([
+            'pelanggan_id' => $pelangganId,
+            'bulan_bayar' => $validated['bulan_bayar'],
+            'tanggal_bayar' => $validated['tanggal_bayar'],
+            'meteran_sebelum' => $validated['meteran_sebelum'] ?? null,
+            'meteran_sesudah' => $validated['meteran_sesudah'] ?? null,
+            'abunemen' => $validated['abunemen'] ?? false,
+            'tunggakan' => $validated['tunggakan'] ?? 0,
+            'jumlah_kubik' => $validated['jumlah_kubik'] ?? 0,
+            'jumlah_bayar' => $validated['jumlah_bayar'],
+            'keterangan' => $validated['keterangan'] ?? null,
+        ]);        
+        
+        // Update status_bayar di tagihan_bulanan jika ada
+        $tagihan = \App\Models\TagihanBulanan::where('pelanggan_id', $pelangganId)
+            ->where('bulan', $validated['bulan_bayar'])
+            ->first();
+        
+        if ($tagihan) {
+            // Jika keterangan NUNGGAK, status tetap BELUM_BAYAR
+            // Jika CICILAN, cek apakah jumlah bayar >= total tagihan
+            // Jika TAGIHAN atau kosong, otomatis SUDAH_BAYAR
+            $keterangan = strtoupper($validated['keterangan'] ?? '');
+            
+            if ($keterangan === 'NUNGGAK') {
+                // Tetap BELUM_BAYAR
+                $tagihan->status_bayar = 'BELUM_BAYAR';
+            } elseif ($keterangan === 'CICILAN') {
+                // Cek apakah sudah lunas
+                if ($validated['jumlah_bayar'] >= $tagihan->total_tagihan) {
+                    $tagihan->status_bayar = 'SUDAH_BAYAR';
+                } else {
+                    $tagihan->status_bayar = 'BELUM_BAYAR';
+                }
+            } else {
+                // TAGIHAN atau kosong = otomatis lunas
+                $tagihan->status_bayar = 'SUDAH_BAYAR';
+            }
+            
+            $tagihan->save();
+        }
+        
+        // Jika bayar tunggakan juga, update status tunggakan yang dibayar
+        if (isset($validated['bayar_tunggakan']) && $validated['bayar_tunggakan'] && isset($validated['id_tunggakan'])) {
+            foreach ($validated['id_tunggakan'] as $tunggakanId) {
+                $tunggakanTagihan = \App\Models\TagihanBulanan::find($tunggakanId);
+                if ($tunggakanTagihan) {
+                    $tunggakanTagihan->status_bayar = 'SUDAH_BAYAR';
+                    $tunggakanTagihan->save();
+                }
+            }
+        }
+        
+        return response()->json([
+            'message' => 'Pembayaran berhasil ditambahkan',
+            'pembayaran' => [
+                'id' => $pembayaran->id,
+                'bulan_bayar' => $pembayaran->bulan_bayar,
+                'tanggal_bayar' => $pembayaran->tanggal_bayar->format('Y-m-d'),
+                'meteran_sebelum' => $pembayaran->meteran_sebelum,
+                'meteran_sesudah' => $pembayaran->meteran_sesudah,
+                'abunemen' => $pembayaran->abunemen,
+                'tunggakan' => $pembayaran->tunggakan,
+                'jumlah_kubik' => $pembayaran->jumlah_kubik,
+                'jumlah_bayar' => $pembayaran->jumlah_bayar,
+                'keterangan' => $pembayaran->keterangan,
+            ],
+        ], 201);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'tanggal_bayar' => 'required|date',
+            'jumlah_bayar' => 'required|numeric|min:0',
+            'keterangan' => 'nullable|string|max:500',
+        ]);
+
+        $pembayaran = Pembayaran::findOrFail($id);
+        
+        $pembayaran->update([
+            'tanggal_bayar' => $validated['tanggal_bayar'],
+            'jumlah_bayar' => $validated['jumlah_bayar'],
+            'keterangan' => $validated['keterangan'] ?? null,
+        ]);
+
+        return response()->json([
+            'message' => 'Pembayaran berhasil diupdate',
+            'pembayaran' => [
+                'id' => $pembayaran->id,
+                'bulan_bayar' => $pembayaran->bulan_bayar,
+                'tanggal_bayar' => $pembayaran->tanggal_bayar->format('Y-m-d'),
+                'jumlah_bayar' => $pembayaran->jumlah_bayar,
+                'keterangan' => $pembayaran->keterangan,
+            ],
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $pembayaran = Pembayaran::findOrFail($id);
+        
+        // Update status_bayar di tagihan_bulanan kembali ke BELUM_BAYAR
+        $tagihan = \App\Models\TagihanBulanan::where('pelanggan_id', $pembayaran->pelanggan_id)
+            ->where('bulan', $pembayaran->bulan_bayar)
+            ->first();
+        
+        if ($tagihan) {
+            $tagihan->status_bayar = 'BELUM_BAYAR';
+            $tagihan->save();
+        }
+        
+        $pembayaran->delete();
+
+        return response()->json([
+            'message' => 'Pembayaran berhasil dihapus'
+        ]);
+    }
+
+    public function sendReceipt($id)
+    {
+        $pembayaran = Pembayaran::with('pelanggan')->findOrFail($id);
+        
+        if (!$pembayaran->pelanggan) {
+            return response()->json([
+                'message' => 'Data pelanggan tidak ditemukan'
+            ], 404);
+        }
+
+        if (!$pembayaran->pelanggan->no_whatsapp) {
+            return response()->json([
+                'message' => 'Nomor WhatsApp pelanggan tidak tersedia'
+            ], 422);
+        }
+
+        // Generate PDF
+        $data = [
+            'pembayaran' => [
+                'id' => $pembayaran->id,
+                'pelanggan_id' => $pembayaran->pelanggan->id_pelanggan,
+                'pelanggan_nama' => $pembayaran->pelanggan->nama_pelanggan,
+                'rt' => $pembayaran->pelanggan->rt,
+                'rw' => $pembayaran->pelanggan->rw,
+                'no_whatsapp' => $pembayaran->pelanggan->no_whatsapp,
+                'bulan_bayar' => \Carbon\Carbon::parse($pembayaran->bulan_bayar . '-01')->locale('id')->isoFormat('MMMM YYYY'),
+                'tanggal_bayar' => \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->locale('id')->isoFormat('D MMMM YYYY'),
+                'meteran_sebelum' => $pembayaran->meteran_sebelum,
+                'meteran_sesudah' => $pembayaran->meteran_sesudah,
+                'abunemen' => $pembayaran->abunemen,
+                'tunggakan' => $pembayaran->tunggakan,
+                'jumlah_kubik' => $pembayaran->jumlah_kubik,
+                'jumlah_bayar' => $pembayaran->jumlah_bayar,
+                'keterangan' => $pembayaran->keterangan,
+            ]
+        ];
+
+        $pdf = Pdf::loadView('pdf.struk-pembayaran', $data);
+        $pdf->setPaper([0, 0, 302.36, 566.93], 'portrait'); // 80mm x 200mm struk paper
+        
+        // Save PDF temporarily to public folder
+        $fileName = 'struk_' . $pembayaran->pelanggan->id_pelanggan . '_' . str_replace('-', '', $pembayaran->bulan_bayar) . '.pdf';
+        $filePath = public_path('storage/struk/' . $fileName);
+        
+        // Create directory if not exists
+        if (!file_exists(public_path('storage/struk'))) {
+            mkdir(public_path('storage/struk'), 0755, true);
+        }
+        
+        $pdf->save($filePath);
+
+        // Generate WhatsApp link
+        $waNumber = preg_replace('/[^0-9]/', '', $pembayaran->pelanggan->no_whatsapp);
+        if (substr($waNumber, 0, 1) === '0') {
+            $waNumber = '62' . substr($waNumber, 1);
+        }
+
+        $message = "Halo *{$pembayaran->pelanggan->nama_pelanggan}*,\n\n";
+        $message .= "Terima kasih atas pembayaran Anda untuk tagihan bulan *{$data['pembayaran']['bulan_bayar']}*.\n\n";
+        $message .= "📋 *Detail Pembayaran:*\n";
+        $message .= "• ID Pelanggan: {$pembayaran->pelanggan->id_pelanggan}\n";
+        $message .= "• Bulan Tagihan: {$data['pembayaran']['bulan_bayar']}\n";
+        $message .= "• Tanggal Bayar: {$data['pembayaran']['tanggal_bayar']}\n";
+        $message .= "• Total Bayar: Rp " . number_format($pembayaran->jumlah_bayar, 0, ',', '.') . "\n\n";
+        $message .= "✅ Status: *LUNAS*\n\n";
+        $message .= "Struk pembayaran Anda dapat diunduh melalui link berikut:\n";
+        $message .= url('storage/struk/' . $fileName) . "\n\n";
+        $message .= "Simpan struk ini sebagai bukti pembayaran yang sah.\n\n";
+        $message .= "Salam,\n*KP-SPAMS DAMMAR WULAN*";
+
+        $waLink = "https://wa.me/{$waNumber}?text=" . urlencode($message);
+
+        return response()->json([
+            'message' => 'Struk berhasil digenerate',
+            'wa_link' => $waLink,
+            'pdf_url' => url('storage/struk/' . $fileName),
+            'pelanggan_nama' => $pembayaran->pelanggan->nama_pelanggan,
+            'no_whatsapp' => $pembayaran->pelanggan->no_whatsapp,
+        ]);
+    }
+
+    public function getReceiptLink($id)
+    {
+        $pembayaran = Pembayaran::with('pelanggan')->findOrFail($id);
+        
+        if (!$pembayaran->pelanggan) {
+            return response()->json([
+                'message' => 'Data pelanggan tidak ditemukan'
+            ], 404);
+        }
+
+        if (!$pembayaran->pelanggan->no_whatsapp) {
+            return response()->json([
+                'message' => 'Nomor WhatsApp pelanggan tidak tersedia'
+            ], 422);
+        }
+
+        // Check if PDF already exists
+        $fileName = 'struk_' . $pembayaran->pelanggan->id_pelanggan . '_' . str_replace('-', '', $pembayaran->bulan_bayar) . '.pdf';
+        $filePath = public_path('storage/struk/' . $fileName);
+        
+        if (!file_exists($filePath)) {
+            // Generate PDF if not exists
+            return $this->sendReceipt($id);
+        }
+
+        // Generate WhatsApp link
+        $waNumber = preg_replace('/[^0-9]/', '', $pembayaran->pelanggan->no_whatsapp);
+        if (substr($waNumber, 0, 1) === '0') {
+            $waNumber = '62' . substr($waNumber, 1);
+        }
+
+        $bulanBayar = \Carbon\Carbon::parse($pembayaran->bulan_bayar . '-01')->locale('id')->isoFormat('MMMM YYYY');
+        $tanggalBayar = \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->locale('id')->isoFormat('D MMMM YYYY');
+
+        $message = "Halo *{$pembayaran->pelanggan->nama_pelanggan}*,\n\n";
+        $message .= "Terima kasih atas pembayaran Anda untuk tagihan bulan *{$bulanBayar}*.\n\n";
+        $message .= "📋 *Detail Pembayaran:*\n";
+        $message .= "• ID Pelanggan: {$pembayaran->pelanggan->id_pelanggan}\n";
+        $message .= "• Bulan Tagihan: {$bulanBayar}\n";
+        $message .= "• Tanggal Bayar: {$tanggalBayar}\n";
+        $message .= "• Total Bayar: Rp " . number_format($pembayaran->jumlah_bayar, 0, ',', '.') . "\n\n";
+        $message .= "✅ Status: *LUNAS*\n\n";
+        $message .= "Struk pembayaran Anda dapat diunduh melalui link berikut:\n";
+        $message .= url('storage/struk/' . $fileName) . "\n\n";
+        $message .= "Simpan struk ini sebagai bukti pembayaran yang sah.\n\n";
+        $message .= "Salam,\n*KP-SPAMS DAMMAR WULAN*";
+
+        $waLink = "https://wa.me/{$waNumber}?text=" . urlencode($message);
+
+        return response()->json([
+            'message' => 'Link WhatsApp berhasil digenerate',
+            'wa_link' => $waLink,
+            'pdf_url' => url('storage/struk/' . $fileName),
+            'pelanggan_nama' => $pembayaran->pelanggan->nama_pelanggan,
+            'no_whatsapp' => $pembayaran->pelanggan->no_whatsapp,
+        ]);
+    }
+}
