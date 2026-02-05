@@ -19,6 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: [
             \App\Http\Middleware\TrustProxies::class,
         ]);
+        
+        // Middleware aliases
+        $middleware->alias([
+            'guest.redirect' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

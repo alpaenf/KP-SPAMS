@@ -95,15 +95,21 @@
             <div class="flex gap-2">
               <button
                 @click="editGaleri(galeri)"
-                class="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition"
+                class="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-1"
               >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
                 Edit
               </button>
               <button
-                @click="deleteGaleri(galeri.id)"
-                class="flex-1 px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition"
+                @click="confirmDelete(galeri.id, galeri.caption)"
+                class="flex-1 px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition flex items-center justify-center gap-1 font-medium"
               >
-                Hapus
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Hapus Foto
               </button>
             </div>
           </div>
@@ -161,13 +167,25 @@ const editGaleri = (galeri) => {
   // Implement edit modal if needed
 };
 
-const deleteGaleri = (id) => {
-  if (confirm('Yakin ingin menghapus foto ini?')) {
-    router.delete(route('galeri.destroy', id), {
-      onSuccess: () => {
-        // Deleted successfully
-      },
-    });
+const confirmDelete = (id, caption) => {
+  const message = caption 
+    ? `Yakin ingin menghapus foto "${caption}"?\n\nFoto yang dihapus tidak dapat dikembalikan.`
+    : 'Yakin ingin menghapus foto ini?\n\nFoto yang dihapus tidak dapat dikembalikan.';
+  
+  if (confirm(message)) {
+    deleteGaleri(id);
   }
+};
+
+const deleteGaleri = (id) => {
+  router.delete(route('galeri.destroy', id), {
+    onSuccess: () => {
+      // Deleted successfully
+    },
+    onError: (errors) => {
+      alert('Gagal menghapus foto. Silakan coba lagi.');
+      console.error(errors);
+    },
+  });
 };
 </script>

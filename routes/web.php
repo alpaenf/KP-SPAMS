@@ -15,7 +15,7 @@ use App\Http\Controllers\QRCodeBulkController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
-Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home')->middleware('guest.redirect');
 Route::get('/download-pdf/{id}', [HomeController::class, 'downloadPdf'])->name('pelanggan.pdf');
 Route::get('/pembayaran/{id}', [HomeController::class, 'pembayaran'])->name('pembayaran.public');
 Route::post('/konfirmasi-pembayaran', [HomeController::class, 'konfirmasiPembayaran'])->name('konfirmasi.pembayaran');
