@@ -41,16 +41,6 @@
                                 Arahkan kamera ke QR code pelanggan
                             </p>
                             
-                            <!-- Debug Info -->
-                            <div v-if="debugInfo.length > 0" class="mt-4 p-3 bg-gray-100 rounded text-xs text-left">
-                                <p class="font-semibold mb-2">Debug Info:</p>
-                                <ul class="space-y-1">
-                                    <li v-for="(info, index) in debugInfo" :key="index" class="text-gray-700">
-                                        • {{ info }}
-                                    </li>
-                                </ul>
-                            </div>
-                            
                             <!-- Help Instructions -->
                             <div v-if="cameraError" class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-left">
                                 <p class="font-semibold text-sm text-yellow-800 mb-2">💡 Cara Mengaktifkan Kamera:</p>
@@ -228,7 +218,6 @@ const scannedData = ref(null);
 const loading = ref(false);
 const showManualInput = ref(false);
 const manualIdPelanggan = ref('');
-const debugInfo = ref([]);
 
 let stream = null;
 let scanInterval = null;
@@ -242,24 +231,13 @@ onUnmounted(() => {
     stopCamera();
 });
 
-const addDebugInfo = (message) => {
-    const timestamp = new Date().toLocaleTimeString();
-    debugInfo.value.push(`[${timestamp}] ${message}`);
-    console.log(`[QR Scanner Debug] ${message}`);
-};
-
 const checkEnvironment = () => {
     // Check HTTPS
     const isHttps = window.location.protocol === 'https:';
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     
-    addDebugInfo(`Protocol: ${window.location.protocol}`);
-    addDebugInfo(`Hostname: ${window.location.hostname}`);
-    addDebugInfo(`User Agent: ${navigator.userAgent}`);
-    
     if (!isHttps && !isLocalhost) {
         cameraError.value = '⚠️ Kamera hanya dapat diakses melalui HTTPS di production. Gunakan input manual.';
-        addDebugInfo('ERROR: Not using HTTPS in production');
         showManualInput.value = true;
         return false;
     }
@@ -267,12 +245,10 @@ const checkEnvironment = () => {
     // Check if getUserMedia is available
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         cameraError.value = '❌ Browser tidak mendukung akses kamera. Gunakan input manual.';
-        addDebugInfo('ERROR: getUserMedia not available');
         showManualInput.value = true;
         return false;
     }
     
-    addDebugInfo('Environment check passed');
     return true;
 };
 
@@ -285,19 +261,16 @@ const startCamera = async () => {
     cameraError.value = '';
     
     try {
-        addDebugInfo('Requesting camera permission...');
-        
         // Check permission first
         if (navigator.permissions) {
             try {
                 const permissionStatus = await navigator.permissions.query({ name: 'camera' });
-                addDebugInfo(`Camera permission status: ${permissionStatus.state}`);
                 
                 if (permissionStatus.state === 'denied') {
                     throw new Error('Camera permission denied by user');
                 }
             } catch (permErr) {
-                addDebugInfo(`Permission query failed: ${permErr.message}`);
+                // Permission query not supported in some browsers
             }
         }
         
@@ -310,18 +283,13 @@ const startCamera = async () => {
             }
         };
         
-        addDebugInfo('Requesting getUserMedia...');
         stream = await navigator.mediaDevices.getUserMedia(constraints);
-        
-        addDebugInfo('Camera stream obtained');
         
         if (videoElement.value) {
             videoElement.value.srcObject = stream;
-            addDebugInfo('Video element configured');
             
             // Wait for video to be ready
             videoElement.value.onloadedmetadata = () => {
-                addDebugInfo(`Video ready: ${videoElement.value.videoWidth}x${videoElement.value.videoHeight}`);
                 startScanning();
             };
         }
@@ -330,23 +298,18 @@ const startCamera = async () => {
     } catch (error) {
         cameraLoading.value = false;
         console.error('Camera error:', error);
-        addDebugInfo(`ERROR: ${error.name} - ${error.message}`);
         
         // Detailed error messages
         let errorMessage = '';
         
         if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
             errorMessage = '🚫 Izin akses kamera ditolak. Silakan izinkan akses kamera di pengaturan browser Anda.';
-            addDebugInfo('User denied camera permission');
         } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
             errorMessage = '📷 Kamera tidak ditemukan pada perangkat Anda.';
-            addDebugInfo('No camera device found');
         } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
             errorMessage = '⚠️ Kamera sedang digunakan oleh aplikasi lain.';
-            addDebugInfo('Camera already in use');
         } else if (error.name === 'OverconstrainedError') {
             errorMessage = '⚠️ Kamera tidak memenuhi persyaratan. Mencoba dengan pengaturan alternatif...';
-            addDebugInfo('Constraints not satisfied, retrying...');
             
             // Retry with simpler constraints
             try {
@@ -358,11 +321,9 @@ const startCamera = async () => {
                 }
             } catch (retryError) {
                 errorMessage = '❌ Tidak dapat mengakses kamera dengan pengaturan apapun.';
-                addDebugInfo(`Retry failed: ${retryError.message}`);
             }
         } else if (error.name === 'TypeError') {
             errorMessage = '❌ Kamera hanya dapat diakses melalui HTTPS atau localhost.';
-            addDebugInfo('TypeError - likely HTTPS issue');
         } else {
             errorMessage = `❌ Error: ${error.message}`;
         }
@@ -381,7 +342,6 @@ const stopCamera = () => {
     if (stream) {
         stream.getTracks().forEach(track => {
             track.stop();
-            addDebugInfo(`Stopped track: ${track.kind}`);
         });
         stream = null;
     }
@@ -394,8 +354,6 @@ const stopCamera = () => {
 const startScanning = () => {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    
-    addDebugInfo('Started QR code scanning');
     
     scanInterval = setInterval(() => {
         if (videoElement.value && videoElement.value.readyState === videoElement.value.HAVE_ENOUGH_DATA) {
@@ -412,7 +370,6 @@ const startScanning = () => {
             const code = jsQR(imageData.data, imageData.width, imageData.height);
             
             if (code && code.data) {
-                addDebugInfo(`QR Code detected: ${code.data}`);
                 processQRCode(code.data);
             }
         }
@@ -425,8 +382,6 @@ const processQRCode = async (qrData) => {
     loading.value = true;
     stopCamera();
     
-    addDebugInfo(`Processing QR data: ${qrData}`);
-    
     try {
         const response = await fetch('/api/qr-scanner/scan', {
             method: 'POST',
@@ -437,26 +392,20 @@ const processQRCode = async (qrData) => {
             body: JSON.stringify({ id_pelanggan: qrData }),
         });
         
-        addDebugInfo(`API Response status: ${response.status}`);
-        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
-        addDebugInfo(`API Response received: ${data.success ? 'Success' : 'Failed'}`);
         
         if (data.success) {
             scannedData.value = data;
-            addDebugInfo('Pelanggan found successfully');
         } else {
             alert(data.message || 'Pelanggan tidak ditemukan.');
-            addDebugInfo('Pelanggan not found, restarting camera');
             startCamera();
         }
     } catch (error) {
         console.error('Error processing QR code:', error);
-        addDebugInfo(`ERROR processing QR: ${error.message}`);
         alert(`Terjadi kesalahan saat memproses QR code: ${error.message}`);
         startCamera();
     } finally {
@@ -467,30 +416,24 @@ const processQRCode = async (qrData) => {
 const scanManual = async () => {
     if (!manualIdPelanggan.value) return;
     
-    addDebugInfo(`Manual scan initiated: ${manualIdPelanggan.value}`);
     await processQRCode(manualIdPelanggan.value);
 };
 
 const goToInputMeteran = () => {
     if (scannedData.value) {
-        addDebugInfo('Navigating to input meteran page');
         router.visit(`/qr-scanner/input-meteran/${scannedData.value.pelanggan.id}`);
     }
 };
 
 const resetScanner = () => {
-    addDebugInfo('Resetting scanner');
     scannedData.value = null;
     manualIdPelanggan.value = '';
     showManualInput.value = false;
-    debugInfo.value = [];
     startCamera();
 };
 
 const retryCamera = () => {
-    addDebugInfo('Retrying camera access');
     cameraError.value = '';
-    debugInfo.value = [];
     startCamera();
 };
 
