@@ -612,7 +612,7 @@
                  <p class="text-blue-100 mb-8 text-lg">Hubungi tim pengelola kami jika Anda mengalami gangguan layanan atau memiliki pertanyaan seputar pendaftaran pelanggan baru.</p>
                  <div class="flex flex-col sm:flex-row justify-center gap-4">
                      <a 
-                         href="https://wa.me/6281234567890?text=Halo%20Admin%20KP-SPAMS,%20saya%20ingin%20bertanya%20seputar%20pendaftaran%20dan%20pelaporan%20layanan."
+                         href="https://wa.me/6285228357400?text=Halo%20Admin%20KP-SPAMS,%20saya%20ingin%20bertanya%20seputar%20pendaftaran%20dan%20pelaporan%20layanan."
                          target="_blank"
                          rel="noopener noreferrer"
                          class="px-8 py-3 bg-white text-blue-900 rounded-full font-bold hover:bg-gray-100 transition shadow-lg flex items-center justify-center gap-2 group"
@@ -780,7 +780,7 @@
 
         <!-- Floating WhatsApp Button -->
         <a 
-            href="https://wa.me/6281234567890?text=Halo%20Admin%20KP-SPAMS,%20saya%20ingin%20bertanya%20seputar%20pendaftaran%20dan%20pelaporan%20layanan."
+            href="https://wa.me/6285228357400?text=Halo%20Admin%20KP-SPAMS,%20saya%20ingin%20bertanya%20seputar%20pendaftaran%20dan%20pelaporan%20layanan."
             target="_blank"
             rel="noopener noreferrer"
             class="fixed bottom-6 right-6 z-50 bg-[#25D366] hover:bg-[#20bd5a] active:bg-[#1ea952] text-white p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 active:scale-105 touch-manipulation flex items-center justify-center group"

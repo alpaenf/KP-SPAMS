@@ -418,20 +418,20 @@
 
         <!-- Modal Pembayaran -->
         <div v-if="showModal" class="fixed inset-0 z-50 overflow-y-auto" @click.self="closeModal">
-            <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="flex items-center justify-center min-h-screen px-4 py-6">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
                 
-                <div class="relative bg-white rounded-lg shadow-xl max-w-4xl w-full">
-                    <div class="bg-blue-800 text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
-                        <h3 class="text-xl font-bold">Riwayat Pembayaran - {{ selectedPelanggan?.nama_pelanggan }}</h3>
-                        <button @click="closeModal" class="text-white hover:text-gray-200">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="relative bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+                    <div class="bg-blue-800 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-t-lg flex justify-between items-center flex-shrink-0">
+                        <h3 class="text-lg sm:text-xl font-bold">Riwayat Pembayaran - {{ selectedPelanggan?.nama_pelanggan }}</h3>
+                        <button @click="closeModal" class="text-white hover:text-gray-200 p-1">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
                     </div>
 
-                    <div class="p-6">
+                    <div class="p-4 sm:p-6 overflow-y-auto flex-1">
                         <!-- Form Tambah Pembayaran -->
                         <div class="mb-6 bg-gray-50 rounded-lg p-3 sm:p-4">
                             <h4 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Tambah Pembayaran Baru</h4>
