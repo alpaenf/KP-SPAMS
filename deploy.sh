@@ -26,8 +26,11 @@ echo "📂 2. Menyalin aset dari folder public ke $PUBLIC_HTML_PATH..."
 # Menyalin semua isi folder public ke public_html
 cp -r public/* "$PUBLIC_HTML_PATH/"
 
-# Opsional: Salin .htaccess jika ada
-if [ -f "public/.htaccess" ]; then
+# Salin .htaccess production jika ada
+if [ -f ".htaccess-production" ]; then
+    echo "📝 Menyalin .htaccess production dengan HTTPS redirect..."
+    cp .htaccess-production "$PUBLIC_HTML_PATH/.htaccess"
+elif [ -f "public/.htaccess" ]; then
     cp public/.htaccess "$PUBLIC_HTML_PATH/"
 fi
 
