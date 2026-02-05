@@ -21,6 +21,13 @@ if [ $? -ne 0 ]; then
     # Lanjut saja, mungkin user sudah pull manual
 fi
 
+# 1.5 Check .env configuration
+echo "🔧 1.5. Memeriksa konfigurasi .env..."
+if ! grep -q "SESSION_SECURE_COOKIE=true" .env 2>/dev/null; then
+    echo "⚠️  Warning: SESSION_SECURE_COOKIE belum di-set ke true di .env"
+    echo "   Silakan update .env dengan konfigurasi dari .env.production.example"
+fi
+
 # 2. Pindahkan isi folder public ke public_html
 echo "📂 2. Menyalin aset dari folder public ke $PUBLIC_HTML_PATH..."
 # Menyalin semua isi folder public ke public_html

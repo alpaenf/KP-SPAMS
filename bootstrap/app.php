@@ -14,6 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
+        
+        // Trust proxies for HTTPS on shared hosting
+        $middleware->trustProxies(at: [
+            \App\Http\Middleware\TrustProxies::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
