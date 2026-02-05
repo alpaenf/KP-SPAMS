@@ -719,8 +719,8 @@
                                 </div>
                                 <div>
                                     <p class="font-bold text-gray-900 text-lg">Kantor KP-SPAMS DAMMAR WULAN</p>
-                                    <p class="text-sm text-gray-600 mt-1">Desa Ciwuni, Kec. Cilongok</p>
-                                    <p class="text-sm text-gray-600">Kab. Banyumas, Jawa Tengah</p>
+                                    <p class="text-sm text-gray-600 mt-1">Desa Ciwuni, Kec. Kesugihan</p>
+                                    <p class="text-sm text-gray-600">Kab. Cilacap, Jawa Tengah</p>
                                 </div>
                             </div>
                             <a 
