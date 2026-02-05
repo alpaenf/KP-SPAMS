@@ -163,7 +163,11 @@ const editGaleri = (galeri) => {
 
 const deleteGaleri = (id) => {
   if (confirm('Yakin ingin menghapus foto ini?')) {
-    router.delete(`/admin/galeri/${id}`);
+    router.delete(route('galeri.destroy', id), {
+      onSuccess: () => {
+        // Deleted successfully
+      },
+    });
   }
 };
 </script>
