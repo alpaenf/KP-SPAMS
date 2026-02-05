@@ -2,49 +2,111 @@
     <AppLayout>
         <div class="py-12">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center mb-8">
-                    <div>
-                        <h1 class="text-3xl font-bold text-gray-900">Data Pelanggan KP-SPAMS</h1>
-                        <p class="text-gray-600">Daftar lengkap pelanggan air bersih desa</p>
-                    </div>
-                    <div class="flex gap-3">
-                        <Link
-                            href="/qr-code/bulk-preview"
-                            class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition"
-                        >
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                            </svg>
-                            Print QR Code
-                        </Link>
-                        <button
-                            @click="exportExcel"
-                            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
-                        >
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            Export Excel
-                        </button>
-                        <button
-                            @click="exportPdf"
-                            class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition"
-                        >
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                            </svg>
-                            Export PDF
-                        </button>
-                        <Link
-                            v-if="$page.props.auth?.user"
-                            href="/pelanggan/create"
-                            class="inline-flex items-center px-6 py-3 bg-blue-800 text-white rounded-lg font-semibold hover:bg-blue-900 transition"
-                        >
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                            </svg>
-                            Tambah Pelanggan
-                        </Link>
+                <div class="mb-6">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                        <div>
+                            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Data Pelanggan KP-SPAMS</h1>
+                            <p class="text-sm sm:text-base text-gray-600">Daftar lengkap pelanggan air bersih desa</p>
+                        </div>
+                        
+                        <!-- Desktop Actions -->
+                        <div class="hidden lg:flex gap-2 xl:gap-3">
+                            <Link
+                                href="/qr-code/bulk-preview"
+                                class="inline-flex items-center px-3 xl:px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition text-sm"
+                            >
+                                <svg class="w-4 h-4 xl:w-5 xl:h-5 xl:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                </svg>
+                                <span class="hidden xl:inline">Print QR</span>
+                            </Link>
+                            <button
+                                @click="exportExcel"
+                                class="inline-flex items-center px-3 xl:px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition text-sm"
+                            >
+                                <svg class="w-4 h-4 xl:w-5 xl:h-5 xl:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <span class="hidden xl:inline">Excel</span>
+                            </button>
+                            <button
+                                @click="exportPdf"
+                                class="inline-flex items-center px-3 xl:px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition text-sm"
+                            >
+                                <svg class="w-4 h-4 xl:w-5 xl:h-5 xl:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                </svg>
+                                <span class="hidden xl:inline">PDF</span>
+                            </button>
+                            <Link
+                                v-if="$page.props.auth?.user"
+                                href="/pelanggan/create"
+                                class="inline-flex items-center px-4 xl:px-6 py-2 bg-blue-800 text-white rounded-lg font-semibold hover:bg-blue-900 transition text-sm"
+                            >
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                <span class="hidden xl:inline">Tambah</span>
+                                <span class="xl:hidden">+</span>
+                            </Link>
+                        </div>
+                        
+                        <!-- Mobile Actions Dropdown -->
+                        <div class="lg:hidden relative">
+                            <button
+                                @click="showMobileMenu = !showMobileMenu"
+                                class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-blue-800 text-white rounded-lg font-semibold hover:bg-blue-900 transition"
+                            >
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                                Menu Aksi
+                            </button>
+                            
+                            <div v-if="showMobileMenu" class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl z-50 border border-gray-200">
+                                <div class="py-2">
+                                    <Link
+                                        href="/qr-code/bulk-preview"
+                                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition"
+                                        @click="showMobileMenu = false"
+                                    >
+                                        <svg class="w-5 h-5 mr-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                        </svg>
+                                        Print QR Code
+                                    </Link>
+                                    <button
+                                        @click="exportExcel(); showMobileMenu = false"
+                                        class="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition"
+                                    >
+                                        <svg class="w-5 h-5 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        Export Excel
+                                    </button>
+                                    <button
+                                        @click="exportPdf(); showMobileMenu = false"
+                                        class="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition"
+                                    >
+                                        <svg class="w-5 h-5 mr-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                        </svg>
+                                        Export PDF
+                                    </button>
+                                    <Link
+                                        v-if="$page.props.auth?.user"
+                                        href="/pelanggan/create"
+                                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition border-t border-gray-100"
+                                        @click="showMobileMenu = false"
+                                    >
+                                        <svg class="w-5 h-5 mr-3 text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Tambah Pelanggan
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -52,58 +114,63 @@
                     {{ $page.props.flash.success }}
                 </div>
 
-                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <div class="flex flex-col sm:flex-row gap-4">
-                        <div class="flex-1">
+                <div class="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
+                    <div class="space-y-3">
+                        <!-- Search -->
+                        <div class="w-full">
                             <input
                                 type="text"
                                 v-model="searchQuery"
                                 placeholder="Cari berdasarkan ID, nama, RT, atau RW..."
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                                class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
                             />
                         </div>
-                        <select
-                            v-model="statusFilter"
-                            class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
-                        >
-                            <option value="all">Semua Status</option>
-                            <option value="aktif">Aktif</option>
-                            <option value="nonaktif">Nonaktif</option>
-                        </select>
-                        <select
-                            v-model="bulanFilter"
-                            class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
-                        >
-                            <option value="all">Semua Bulan</option>
-                            <option v-for="bulan in bulanOptions" :key="bulan.value" :value="bulan.value">
-                                {{ bulan.label }}
-                            </option>
-                        </select>
-                        <select
-                            v-model="wilayahFilter"
-                            class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
-                        >
-                            <option value="all">Semua Wilayah</option>
-                            <option value="Dawuhan">Dawuhan</option>
-                            <option value="Kubangsari Kulon">Kubangsari Kulon</option>
-                            <option value="Kubangsari Wetan">Kubangsari Wetan</option>
-                            <option value="Sokarame">Sokarame</option>
-                            <option value="Tiparjaya">Tiparjaya</option>
-                        </select>
+                        
+                        <!-- Filters -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <select
+                                v-model="statusFilter"
+                                class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                            >
+                                <option value="all">Semua Status</option>
+                                <option value="aktif">Aktif</option>
+                                <option value="nonaktif">Nonaktif</option>
+                            </select>
+                            <select
+                                v-model="bulanFilter"
+                                class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                            >
+                                <option value="all">Semua Bulan</option>
+                                <option v-for="bulan in bulanOptions" :key="bulan.value" :value="bulan.value">
+                                    {{ bulan.label }}
+                                </option>
+                            </select>
+                            <select
+                                v-model="wilayahFilter"
+                                class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                            >
+                                <option value="all">Semua Wilayah</option>
+                                <option value="Dawuhan">Dawuhan</option>
+                                <option value="Kubangsari Kulon">Kubangsari Kulon</option>
+                                <option value="Kubangsari Wetan">Kubangsari Wetan</option>
+                                <option value="Sokarame">Sokarame</option>
+                                <option value="Tiparjaya">Tiparjaya</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white rounded-lg shadow-md p-4">
                         <div class="flex items-center">
-                            <div class="p-3 rounded-full bg-blue-100 text-blue-600">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="p-2.5 rounded-full bg-blue-100 text-blue-600">
+                                <svg class="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                 </svg>
                             </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-500">Total Pelanggan</p>
-                                <p class="text-2xl font-bold text-gray-900">{{ allPelanggan.length }}</p>
+                            <div class="ml-3 sm:ml-4">
+                                <p class="text-xs sm:text-sm font-medium text-gray-500">Total Pelanggan</p>
+                                <p class="text-xl sm:text-2xl font-bold text-gray-900">{{ allPelanggan.length }}</p>
                             </div>
                         </div>
                     </div>
@@ -631,6 +698,7 @@ const searchQuery = ref('');
 const statusFilter = ref('all');
 const bulanFilter = ref('all');
 const wilayahFilter = ref('all');
+const showMobileMenu = ref(false);
 
 // Modal state
 const showModal = ref(false);
