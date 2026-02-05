@@ -406,14 +406,14 @@
         </div>
 
         <!-- Testimoni Tab -->
-        <div v-if="activeTab === 'testimoni'" class="bg-white rounded-lg shadow p-6">
-          <h2 class="text-2xl font-bold text-gray-900 mb-6">Kelola Testimoni</h2>
+        <div v-if="activeTab === 'testimoni'" class="bg-white rounded-lg shadow p-4 sm:p-6">
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Kelola Testimoni</h2>
           
-          <div class="mb-6 flex gap-4">
+          <div class="mb-4 sm:mb-6 flex gap-2 sm:gap-4 overflow-x-auto pb-2">
             <button
               @click="testimoniFilter = 'all'"
               :class="{
-                'px-4 py-2 rounded-lg font-medium transition': true,
+                'px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base': true,
                 'bg-blue-500 text-white': testimoniFilter === 'all',
                 'bg-gray-200 text-gray-700 hover:bg-gray-300': testimoniFilter !== 'all'
               }"
@@ -423,7 +423,7 @@
             <button
               @click="testimoniFilter = 'pending'"
               :class="{
-                'px-4 py-2 rounded-lg font-medium transition': true,
+                'px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base': true,
                 'bg-yellow-500 text-white': testimoniFilter === 'pending',
                 'bg-gray-200 text-gray-700 hover:bg-gray-300': testimoniFilter !== 'pending'
               }"
@@ -433,7 +433,7 @@
             <button
               @click="testimoniFilter = 'approved'"
               :class="{
-                'px-4 py-2 rounded-lg font-medium transition': true,
+                'px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base': true,
                 'bg-blue-500 text-white': testimoniFilter === 'approved',
                 'bg-gray-200 text-gray-700 hover:bg-gray-300': testimoniFilter !== 'approved'
               }"
@@ -443,7 +443,7 @@
             <button
               @click="testimoniFilter = 'rejected'"
               :class="{
-                'px-4 py-2 rounded-lg font-medium transition': true,
+                'px-3 sm:px-4 py-2 rounded-lg font-medium transition whitespace-nowrap text-sm sm:text-base': true,
                 'bg-red-500 text-white': testimoniFilter === 'rejected',
                 'bg-gray-200 text-gray-700 hover:bg-gray-300': testimoniFilter !== 'rejected'
               }"
@@ -456,15 +456,15 @@
             <div
               v-for="testimoni in filteredTestimoni"
               :key="testimoni.id"
-              class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
+              class="border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-md transition"
             >
-              <div class="flex justify-between items-start">
+              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                 <div class="flex-1">
-                  <div class="flex items-center gap-3 mb-2">
-                    <h3 class="font-bold text-gray-900">{{ testimoni.nama }}</h3>
+                  <div class="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
+                    <h3 class="font-bold text-gray-900 text-sm sm:text-base">{{ testimoni.nama }}</h3>
                     <span
                       :class="{
-                        'px-3 py-1 rounded-full text-xs font-semibold': true,
+                        'px-2 sm:px-3 py-1 rounded-full text-xs font-semibold': true,
                         'bg-yellow-100 text-yellow-800': testimoni.status === 'pending',
                         'bg-blue-100 text-blue-800': testimoni.status === 'approved',
                         'bg-red-100 text-red-800': testimoni.status === 'rejected'
@@ -473,7 +473,7 @@
                       {{ testimoni.status === 'pending' ? 'Menunggu' : testimoni.status === 'approved' ? 'Disetujui' : 'Ditolak' }}
                     </span>
                   </div>
-                  <p v-if="testimoni.pekerjaan" class="text-sm text-gray-600 mb-2">{{ testimoni.pekerjaan }}</p>
+                  <p v-if="testimoni.pekerjaan" class="text-xs sm:text-sm text-gray-600 mb-2">{{ testimoni.pekerjaan }}</p>
                   <div class="flex items-center gap-1 mb-2">
                     <svg
                       v-for="i in 5"
@@ -489,14 +489,14 @@
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                   </div>
-                  <p class="text-gray-700">{{ testimoni.isi_testimoni }}</p>
+                  <p class="text-sm sm:text-base text-gray-700">{{ testimoni.isi_testimoni }}</p>
                   <p class="text-xs text-gray-500 mt-2">{{ new Date(testimoni.created_at).toLocaleDateString('id-ID') }}</p>
                 </div>
-                <div class="flex gap-2 ml-4">
+                <div class="flex gap-2 sm:ml-4">
                   <button
                     v-if="testimoni.status !== 'approved'"
                     @click="approveTestimoni(testimoni.id)"
-                    class="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition"
+                    class="flex-1 sm:flex-none px-3 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 active:bg-blue-700 transition touch-manipulation"
                     title="Setujui"
                   >
                     ✓
@@ -504,14 +504,14 @@
                   <button
                     v-if="testimoni.status !== 'rejected'"
                     @click="rejectTestimoni(testimoni.id)"
-                    class="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 transition"
+                    class="flex-1 sm:flex-none px-3 py-2 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 active:bg-yellow-700 transition touch-manipulation"
                     title="Tolak"
                   >
                     ✗
                   </button>
                   <button
                     @click="deleteTestimoni(testimoni.id)"
-                    class="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition"
+                    class="flex-1 sm:flex-none px-3 py-2 bg-red-500 text-white text-sm rounded hover:bg-red-600 active:bg-red-700 transition touch-manipulation"
                     title="Hapus"
                   >
                     🗑

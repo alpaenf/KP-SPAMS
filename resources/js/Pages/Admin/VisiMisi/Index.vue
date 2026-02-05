@@ -29,7 +29,7 @@
               Misi KP-SPAMS
             </label>
             <div class="space-y-3">
-              <div v-for="(misi, index) in form.misi" :key="index" class="flex flex-col sm:flex-row gap-2">
+              <div v-for="(misi, index) in form.misi" :key="index" class="flex gap-2 items-start">
                 <input
                   type="text"
                   v-model="form.misi[index]"
@@ -41,12 +41,12 @@
                   v-if="form.misi.length > 1"
                   type="button"
                   @click="removeMisi(index)"
-                  class="w-full sm:w-auto px-4 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 active:bg-red-700 transition font-medium touch-manipulation flex items-center justify-center gap-1"
+                  class="w-10 h-10 sm:w-auto sm:px-3 sm:py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 active:bg-red-700 transition touch-manipulation flex items-center justify-center flex-shrink-0"
+                  title="Hapus misi"
                 >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
-                  Hapus
                 </button>
               </div>
             </div>
