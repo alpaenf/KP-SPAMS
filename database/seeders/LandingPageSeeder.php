@@ -26,7 +26,7 @@ class LandingPageSeeder extends Seeder
 
         // Create default Sejarah
         Sejarah::create([
-            'konten' => 'KP-SPAMS (DAMMAR WULAN) adalah sistem penyediaan air minum yang didirikan untuk memenuhi kebutuhan air bersih bagi masyarakat desa. Dengan teknologi modern dan manajemen yang baik, kami berkomitmen untuk menyediakan air berkualitas tinggi dengan tarif yang terjangkau untuk semua kalangan masyarakat, khususnya kategori sosial yang dibebaskan dari biaya tagihan bulanan.',
+            'konten' => 'KP-SPAMS (DAMAR WULAN) adalah sistem penyediaan air minum yang didirikan untuk memenuhi kebutuhan air bersih bagi masyarakat desa. Dengan teknologi modern dan manajemen yang baik, kami berkomitmen untuk menyediakan air berkualitas tinggi dengan tarif yang terjangkau untuk semua kalangan masyarakat, khususnya kategori sosial yang dibebaskan dari biaya tagihan bulanan.',
         ]);
     }
 }

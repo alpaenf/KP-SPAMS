@@ -112,7 +112,7 @@
 <body>
     <div class="header">
         <img src="{{ public_path('images/logo.png') }}" alt="Logo KP-SPAMS">
-        <h1>KP-SPAMS "DAMMAR WULAN"</h1>
+        <h1>KP-SPAMS "DAMAR WULAN"</h1>
         <p>Laporan Data Status & Riwayat Pelanggan</p>
     </div>
 

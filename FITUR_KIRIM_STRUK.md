@@ -31,7 +31,7 @@ Fitur ini memungkinkan pengelola/admin PAMSIMAS untuk mengirim struk pembayaran 
 ## Format Struk Pembayaran
 
 Struk pembayaran mencakup informasi berikut:
-- **Header**: Logo dan nama KP-SPAMS "DAMMAR WULAN"
+- **Header**: Logo dan nama KP-SPAMS "DAMAR WULAN"
 - **Info Pelanggan**: 
   - ID Pelanggan
   - Nama
@@ -108,7 +108,7 @@ Struk pembayaran Anda dapat diunduh melalui link berikut:
 Simpan struk ini sebagai bukti pembayaran yang sah.
 
 Salam,
-*KP-SPAMS DAMMAR WULAN*
+*KP-SPAMS DAMAR WULAN*
 ```
 
 ## Keamanan & Privacy
@@ -150,4 +150,4 @@ Fitur yang bisa ditambahkan:
 7. **QR Code verification** - QR code untuk verifikasi keaslian struk
 
 ## Lisensi & Credit
-Fitur ini dikembangkan untuk KP-SPAMS "DAMMAR WULAN" Desa Lempeni, Kec. Swakarya, Grobogan.
+Fitur ini dikembangkan untuk KP-SPAMS "DAMAR WULAN" Desa Lempeni, Kec. Swakarya, Grobogan.

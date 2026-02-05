@@ -138,7 +138,7 @@
 </head>
 <body>
     <div class="header">        <img src="{{ public_path('images/logo.png') }}" alt="Logo">
-        <h1>KP-SPAMS DAMMAR WULAN</h1>        <h1>DATA PELANGGAN KP-SPAMS</h1>
+        <h1>KP-SPAMS DAMAR WULAN</h1>        <h1>DATA PELANGGAN KP-SPAMS</h1>
         <p>Daftar Lengkap Pelanggan Air Bersih Desa</p>
     </div>
 

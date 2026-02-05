@@ -33,7 +33,7 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithTit
         $rows = collect();
         
         // Header Info
-        $rows->push(['KP-SPAMS DAMMAR WULAN']);
+        $rows->push(['KP-SPAMS DAMAR WULAN']);
         $rows->push(['LAPORAN KEUANGAN & OPERASIONAL']);
         $rows->push(['']);
         

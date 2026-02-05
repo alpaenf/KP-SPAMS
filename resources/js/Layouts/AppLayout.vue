@@ -18,7 +18,7 @@
                             <img src="/images/logo.png" alt="Logo KP-SPAMS" class="h-10 w-10 object-contain" />
                             <div class="flex flex-col">
                                 <span class="text-xl font-semibold text-blue-800 leading-tight">KP-SPAMS</span>
-                                <span class="text-xs text-blue-600 font-medium">DAMMAR WULAN</span>
+                                <span class="text-xs text-blue-600 font-medium">DAMAR WULAN</span>
                             </div>
                         </Link>
                         <div v-if="$page.props.auth?.user" class="hidden md:ml-10 md:flex md:space-x-8">
@@ -182,7 +182,7 @@
                             <img src="/images/logo.png" alt="Logo" class="h-8 w-8" />
                             <div>
                                 <div class="text-sm font-semibold text-blue-800">KP-SPAMS</div>
-                                <div class="text-xs text-blue-600">DAMMAR WULAN</div>
+                                <div class="text-xs text-blue-600">DAMAR WULAN</div>
                             </div>
                         </div>
                         <button 

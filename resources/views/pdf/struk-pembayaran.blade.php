@@ -127,7 +127,7 @@
     <div class="struk-container">
         <!-- Header -->
         <div class="header">
-            <h1>KP-SPAMS "DAMMAR WULAN"</h1>
+            <h1>KP-SPAMS "DAMAR WULAN"</h1>
             <p>Air Bersih untuk Kehidupan Sehat</p>
             <p>Desa Lempeni, Kec. Swakarya, Grobogan</p>
         </div>

@@ -21,7 +21,7 @@
             <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-20">
                 <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight text-shadow-lg animate-fade-in-up">
                     KP-SPAMS <br class="hidden md:block" />
-                    <span class="text-blue-300">"DAMMAR WULAN"</span>
+                    <span class="text-blue-300">"DAMAR WULAN"</span>
                 </h1>
                 <p class="text-xl md:text-2xl text-blue-50 mb-10 max-w-3xl mx-auto font-light text-shadow animate-fade-in-up" style="animation-delay: 0.2s;">
                     Mewujudkan akses air bersih yang berkelanjutan untuk kesehatan dan kesejahteraan masyarakat desa.
@@ -718,7 +718,7 @@
                                     <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                 </div>
                                 <div>
-                                    <p class="font-bold text-gray-900 text-lg">Kantor KP-SPAMS DAMMAR WULAN</p>
+                                    <p class="font-bold text-gray-900 text-lg">Kantor KP-SPAMS DAMAR WULAN</p>
                                     <p class="text-sm text-gray-600 mt-1">Desa Ciwuni, Kec. Kesugihan</p>
                                     <p class="text-sm text-gray-600">Kab. Cilacap, Jawa Tengah</p>
                                 </div>
@@ -798,7 +798,7 @@
                 <div class="grid md:grid-cols-4 gap-8">
                     <!-- Tentang -->
                     <div>
-                        <h3 class="text-xl font-bold mb-4">KP-SPAMS Dammar Wulan</h3>
+                        <h3 class="text-xl font-bold mb-4">KP-SPAMS Damar Wulan</h3>
                         <p class="text-gray-400 text-sm leading-relaxed mb-4">
                             Menyediakan layanan air bersih berkualitas untuk kesejahteraan masyarakat Desa Ciwuni.
                         </p>
@@ -893,7 +893,7 @@
                 <!-- Bottom Footer -->
                 <div class="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
                     <p class="text-gray-500 text-sm text-center md:text-left">
-                        © 2026 <span class="text-white font-bold">KP-SPAMS Dammar Wulan</span>. All rights reserved.
+                        © 2026 <span class="text-white font-bold">KP-SPAMS Damar Wulan</span>. All rights reserved.
                     </p>
                     <div class="flex items-center gap-2 text-sm text-gray-500">
                         <span>Developed with</span>

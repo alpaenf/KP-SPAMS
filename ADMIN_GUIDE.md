@@ -249,7 +249,7 @@ Misi:
 
 ### Contoh Konten Sejarah
 ```
-KP-SPAMS "Dammar Wulan" adalah sistem penyediaan air minum komunal 
+KP-SPAMS "Damar Wulan" adalah sistem penyediaan air minum komunal 
 yang didirikan untuk memenuhi kebutuhan air bersih bagi masyarakat 
 Desa Ciwuni. Dengan memanfaatkan teknologi modern dan manajemen yang baik, 
 kami berkomitmen untuk menyediakan air berkualitas tinggi dengan tarif 

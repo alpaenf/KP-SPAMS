@@ -297,7 +297,7 @@ class PembayaranController extends Controller
         $message .= "Struk pembayaran Anda dapat diunduh melalui link berikut:\n";
         $message .= url('storage/struk/' . $fileName) . "\n\n";
         $message .= "Simpan struk ini sebagai bukti pembayaran yang sah.\n\n";
-        $message .= "Salam,\n*KP-SPAMS DAMMAR WULAN*";
+        $message .= "Salam,\n*KP-SPAMS DAMAR WULAN*";
 
         $waLink = "https://wa.me/{$waNumber}?text=" . urlencode($message);
 
@@ -355,7 +355,7 @@ class PembayaranController extends Controller
         $message .= "Struk pembayaran Anda dapat diunduh melalui link berikut:\n";
         $message .= url('storage/struk/' . $fileName) . "\n\n";
         $message .= "Simpan struk ini sebagai bukti pembayaran yang sah.\n\n";
-        $message .= "Salam,\n*KP-SPAMS DAMMAR WULAN*";
+        $message .= "Salam,\n*KP-SPAMS DAMAR WULAN*";
 
         $waLink = "https://wa.me/{$waNumber}?text=" . urlencode($message);
 

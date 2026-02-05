@@ -26,7 +26,7 @@ class PelangganExport implements FromCollection, WithHeadings, WithStyles, WithT
         $rows = collect();
         
         // Header
-        $rows->push(['KP-SPAMS DAMMAR WULAN']);
+        $rows->push(['KP-SPAMS DAMAR WULAN']);
         $rows->push(['DATA PELANGGAN PAMSIMAS']);
         $rows->push(['']);
         
