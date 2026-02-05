@@ -1,9 +1,11 @@
 <template>
     <div class="min-h-screen bg-white">
         <nav :class="{
-            'bg-white sticky top-0 z-50 transition-all duration-300': true,
+            'bg-white sticky top-0 transition-all duration-300': true,
             'shadow-lg border-b-2 border-blue-600': isScrolled,
-            'shadow-sm border-b border-gray-200': !isScrolled
+            'shadow-sm border-b border-gray-200': !isScrolled,
+            'z-[100]': !mobileMenuOpen,
+            'z-[60]': mobileMenuOpen
         }">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div :class="{
@@ -127,7 +129,13 @@
                         
                         <!-- Mobile: Hamburger atau Login -->
                         <div class="flex md:hidden">
-                            <button v-if="$page.props.auth?.user" @click="mobileMenuOpen = !mobileMenuOpen" class="p-2 rounded-md text-gray-700 hover:text-blue-800 hover:bg-gray-100">
+                            <button 
+                                v-if="$page.props.auth?.user" 
+                                @click="mobileMenuOpen = !mobileMenuOpen" 
+                                type="button"
+                                class="p-3 rounded-md text-gray-700 hover:text-blue-800 hover:bg-gray-100 active:bg-gray-200 touch-manipulation"
+                                aria-label="Toggle menu"
+                            >
                                 <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path v-if="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                                     <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -156,7 +164,7 @@
                 leave-from-class="opacity-100"
                 leave-to-class="opacity-0"
             >
-                <div v-if="$page.props.auth?.user && mobileMenuOpen" @click="mobileMenuOpen = false" class="fixed inset-0 bg-gray-600 bg-opacity-75 z-40 md:hidden"></div>
+                <div v-if="$page.props.auth?.user && mobileMenuOpen" @click="mobileMenuOpen = false" class="fixed inset-0 bg-gray-600 bg-opacity-75 z-[70] md:hidden"></div>
             </Transition>
             
             <!-- Mobile Menu Sidebar -->
@@ -168,7 +176,7 @@
                 leave-from-class="translate-x-0"
                 leave-to-class="translate-x-full"
             >
-                <div v-if="$page.props.auth?.user && mobileMenuOpen" class="fixed top-0 right-0 bottom-0 w-80 max-w-full bg-white shadow-xl z-50 md:hidden overflow-y-auto">
+                <div v-if="$page.props.auth?.user && mobileMenuOpen" class="fixed top-0 right-0 bottom-0 w-80 max-w-full bg-white shadow-xl z-[80] md:hidden overflow-y-auto">
                     <div class="flex items-center justify-between p-4 border-b border-gray-200">
                         <div class="flex items-center gap-2">
                             <img src="/images/logo.png" alt="Logo" class="h-8 w-8" />
@@ -177,14 +185,19 @@
                                 <div class="text-xs text-blue-600">DAMMAR WULAN</div>
                             </div>
                         </div>
-                        <button @click="mobileMenuOpen = false" class="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
+                        <button 
+                            @click="mobileMenuOpen = false" 
+                            type="button"
+                            class="p-3 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 active:bg-gray-200 touch-manipulation"
+                            aria-label="Close menu"
+                        >
                             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
                     </div>
                     
-                    <div class="p-4">
+                    <div class="p-4 pb-8">
                         <div class="flex flex-col space-y-2">
                             <Link href="/dashboard" @click="mobileMenuOpen = false" :class="{
                                 'flex items-center px-4 py-3 text-base font-medium rounded-lg transition': true,
@@ -281,7 +294,11 @@
                                 </svg>
                                 Admin Panel
                             </Link>
-                            <button @click="logout; mobileMenuOpen = false" class="flex items-center w-full px-4 py-3 text-base font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition mt-2">
+                            <button 
+                                @click.prevent="handleLogout" 
+                                type="button"
+                                class="flex items-center w-full px-4 py-4 text-base font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 active:bg-red-800 transition mt-2 touch-manipulation"
+                            >
                                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                 </svg>
@@ -331,4 +348,34 @@ onUnmounted(() => {
 const logout = () => {
     router.post('/logout');
 };
+
+const handleLogout = () => {
+    mobileMenuOpen.value = false;
+    // Small delay to allow menu animation to complete
+    setTimeout(() => {
+        logout();
+    }, 100);
+};
+
+// Close mobile menu when route changes
+router.on('navigate', () => {
+    mobileMenuOpen.value = false;
+});
+
+// Prevent body scroll when mobile menu is open
+const updateBodyScroll = () => {
+    if (mobileMenuOpen.value) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
+};
+
+// Watch for mobile menu changes
+import { watch } from 'vue';
+watch(mobileMenuOpen, updateBodyScroll);
+
+onUnmounted(() => {
+    document.body.style.overflow = '';
+});
 </script>
