@@ -300,8 +300,8 @@ const startCamera = async () => {
         const constraints = {
             video: {
                 facingMode: 'environment',
-                width: { ideal: 1920 },
-                height: { ideal: 1080 }
+                width: { ideal: 1280 }, // Lower resolution for better performance & wider FOV
+                height: { ideal: 720 }
             }
         };
         
@@ -377,6 +377,7 @@ const startScanning = () => {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     
+    // Scan lebih sering (250ms) agar terasa lebih responsif
     scanInterval = setInterval(() => {
         if (videoElement.value && videoElement.value.readyState === videoElement.value.HAVE_ENOUGH_DATA) {
             canvas.width = videoElement.value.videoWidth;
@@ -389,13 +390,15 @@ const startScanning = () => {
             context.drawImage(videoElement.value, 0, 0, canvas.width, canvas.height);
             
             const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            // jsQR works better with moderate resolutions. 
+            // If the image is huge, this call is slow. 720p is a good balance.
             const code = jsQR(imageData.data, imageData.width, imageData.height);
             
             if (code && code.data) {
                 processQRCode(code.data);
             }
         }
-    }, 500);
+    }, 250); 
 };
 
 const processQRCode = async (qrData) => {
