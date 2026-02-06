@@ -134,7 +134,6 @@
                                 <div class="flex gap-2">
                                     <input
                                         type="text"
-                                        inputmode="decimal"
                                         id="latitude"
                                         v-model="form.latitude"
                                         placeholder="-6.200000"
