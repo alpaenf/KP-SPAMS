@@ -129,6 +129,23 @@ class PembayaranController extends Controller
             ->first();
         
         if ($tagihan) {
+            // Update data meteran dan tagihan agar sinkron dengan pembayaran
+            $tagihan->meteran_sebelum = $validated['meteran_sebelum'] ?? $tagihan->meteran_sebelum;
+            $tagihan->meteran_sesudah = $validated['meteran_sesudah'] ?? $tagihan->meteran_sesudah;
+            $tagihan->pemakaian_kubik = $validated['jumlah_kubik'] ?? $tagihan->pemakaian_kubik;
+            
+            // Jika pembayaran menyertakan abunemen, update juga
+            if (isset($validated['abunemen'])) {
+                $tagihan->ada_abunemen = $validated['abunemen'];
+            }
+            
+            // Update total tagihan jika berbeda
+            if (isset($validated['jumlah_bayar']) && $validated['jumlah_bayar'] > 0) {
+                 // Warning: modifying total_tagihan here might be risky if partial payment
+                 // But strictly speaking, if it's a "Tagihan", it implies full payment usually?
+                 // Let's only update Readings for now to capture the "Meteran before" logic for next month.
+            }
+            
             // Jika keterangan NUNGGAK, status tetap BELUM_BAYAR
             // Jika CICILAN, cek apakah jumlah bayar >= total tagihan
             // Jika TAGIHAN atau kosong, otomatis SUDAH_BAYAR
@@ -139,7 +156,10 @@ class PembayaranController extends Controller
                 $tagihan->status_bayar = 'BELUM_BAYAR';
             } elseif ($keterangan === 'CICILAN') {
                 // Cek apakah sudah lunas
-                if ($validated['jumlah_bayar'] >= $tagihan->total_tagihan) {
+                // Menggunakan total tagihan dari input pembayaran sebagai referensi jika tagihan database 0
+                $totalTagihanRef = $tagihan->total_tagihan > 0 ? $tagihan->total_tagihan : $validated['jumlah_bayar'];
+                
+                if ($validated['jumlah_bayar'] >= $totalTagihanRef) {
                     $tagihan->status_bayar = 'SUDAH_BAYAR';
                 } else {
                     $tagihan->status_bayar = 'BELUM_BAYAR';

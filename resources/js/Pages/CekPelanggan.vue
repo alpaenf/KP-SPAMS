@@ -927,34 +927,37 @@ const fetchMeteranData = async (bulan) => {
         // logic: meteran_sebelum (this month) = meteran_sesudah (previous month)
         const prevMonth = getPreviousMonth(bulan);
         if (prevMonth) {
+            let foundPreviousReading = false;
+            let previousReading = 0;
+
             // Check previous month bill/tagihan first
             try {
                 const prevTagihanRes = await axios.get(`/api/tagihan-bulanan/${selectedPelanggan.value.id}/${prevMonth}`);
-                if (prevTagihanRes.data && prevTagihanRes.data.tagihan && prevTagihanRes.data.tagihan.meteran_sesudah != null) {
-                    pembayaranForm.value.meteran_sebelum = prevTagihanRes.data.tagihan.meteran_sesudah;
-                    pembayaranForm.value.meteran_sesudah = 0; // Reset sesudah because it's new
-                    pembayaranForm.value.jumlah_kubik = 0;
-                    hitungTagihan();
-                    return;
+                if (prevTagihanRes.data && prevTagihanRes.data.tagihan && prevTagihanRes.data.tagihan.meteran_sesudah > 0) {
+                    previousReading = prevTagihanRes.data.tagihan.meteran_sesudah;
+                    foundPreviousReading = true;
                 }
             } catch (ignore) {}
 
-            // Fallback: Check previous payment history if tagihan not found
-            // Find payment for prevMonth in the already loaded list
-            const prevPayment = pembayaranList.value.find(p => p.bulan_bayar === prevMonth);
-            if (prevPayment && prevPayment.meteran_sesudah != null) {
-                pembayaranForm.value.meteran_sebelum = prevPayment.meteran_sesudah;
-                pembayaranForm.value.meteran_sesudah = 0;
+            // If tagihan didn't have valid reading, check payment history
+            if (!foundPreviousReading) {
+                const prevPayment = pembayaranList.value.find(p => p.bulan_bayar === prevMonth);
+                if (prevPayment && prevPayment.meteran_sesudah > 0) {
+                    previousReading = prevPayment.meteran_sesudah;
+                    foundPreviousReading = true;
+                }
+            }
+
+            if (foundPreviousReading) {
+                pembayaranForm.value.meteran_sebelum = previousReading;
+                pembayaranForm.value.meteran_sesudah = 0; // Reset sesudah because it's new
                 pembayaranForm.value.jumlah_kubik = 0;
                 hitungTagihan();
                 return;
             }
         }
 
-        // 3. Last Fallback: If no previous month data, reset to 0 or keep existing input if user typed
-        // Only reset if the values seem to be from a different loaded state (dirty check could be complex, simple reset for now)
-        // Check if we are switching dates, we should probably reset to avoid confusion, 
-        // OR we leave it as 0 to prompt manual input.
+        // 3. Last Fallback: If no previous month data, reset to 0
         pembayaranForm.value.meteran_sebelum = 0;
         pembayaranForm.value.meteran_sesudah = 0;
         pembayaranForm.value.jumlah_kubik = 0;
