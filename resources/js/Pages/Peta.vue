@@ -60,11 +60,16 @@
                             ></div>
 
                             <!-- Floating Stats Card -->
-                            <div class="absolute top-4 right-4 z-[400] bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-xl border border-white/50 max-w-xs w-64 transition-all duration-300 hover:bg-white">
-                                <h4 class="font-bold text-gray-800 mb-3 flex items-center gap-2 border-b border-gray-200 pb-2">
-                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                                    Statistik Wilayah
-                                </h4>
+                            <div v-if="showStats" class="absolute top-4 right-4 z-[400] bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-xl border border-white/50 max-w-xs w-64 transition-all duration-300 hover:bg-white animate-in fade-in slide-in-from-top-4">
+                                <div class="flex justify-between items-center border-b border-gray-200 pb-2 mb-3">
+                                    <h4 class="font-bold text-gray-800 flex items-center gap-2">
+                                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                        Statistik Wilayah
+                                    </h4>
+                                    <button @click="showStats = false" class="text-gray-400 hover:text-gray-600 transition p-1 hover:bg-gray-100 rounded-full">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
+                                </div>
                                 <div class="space-y-3">
                                     <div class="flex justify-between items-center text-sm">
                                         <span class="text-gray-600">Total Ditampilkan</span>
@@ -80,6 +85,10 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- Restore Stats Button -->
+                            <button v-else @click="showStats = true" class="absolute top-4 right-4 z-[400] bg-white/90 backdrop-blur-sm p-2 rounded-lg shadow-lg border border-white/50 text-blue-600 hover:bg-white transition-all transform hover:scale-110" title="Tampilkan Statistik">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                            </button>
 
                             <!-- Floating Legend -->
                             <div class="absolute bottom-4 left-4 z-[400] bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-xl border border-white/50 max-w-xs transition-opacity duration-300 opacity-90 hover:opacity-100 hidden md:block">
@@ -231,6 +240,7 @@ const mapContainer = ref(null);
 let map = null;
 let pelangganLayer = null;
 const selectedPelanggan = ref(null);
+const showStats = ref(true);
 const searchQuery = ref('');
 const statusFilter = ref('all');
 const rtFilter = ref('');

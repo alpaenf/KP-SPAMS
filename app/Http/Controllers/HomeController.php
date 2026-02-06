@@ -688,6 +688,7 @@ class HomeController extends Controller
                     'no_whatsapp' => $pelanggan->no_whatsapp,
                     'rt' => $pelanggan->rt,
                     'rw' => $pelanggan->rw,
+                    'wilayah' => $pelanggan->wilayah,
                     'status_aktif' => $pelanggan->status_aktif,
                     'latitude' => (float) $pelanggan->latitude,
                     'longitude' => (float) $pelanggan->longitude,
