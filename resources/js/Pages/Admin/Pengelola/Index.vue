@@ -115,84 +115,85 @@
                 </div>
 
                 <!-- Create/Edit Modal -->
-                <div v-show="showModal" class="fixed inset-0 z-[200] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-                    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                        <!-- Overlay -->
-                        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeModal" aria-hidden="true"></div>
+                <div v-if="showModal" class="relative z-[200]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                    <!-- Background backdrop -->
+                    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
-                        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-                        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
-                            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                                    {{ editingUser ? 'Edit Akun Pengelola' : 'Tambah Akun Pengelola' }}
-                                </h3>
-                                <form @submit.prevent="submitUser" class="space-y-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
-                                        <input type="text" v-model="form.name" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required />
-                                        <p v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{ form.errors.name }}</p>
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                        <input type="email" v-model="form.email" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required />
-                                        <p v-if="form.errors.email" class="text-red-500 text-xs mt-1">{{ form.errors.email }}</p>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                                        <select v-model="form.role" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                            <option value="pengelola">Pengelola Staf</option>
-                                            <option value="admin">Administrator</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="grid grid-cols-2 gap-4">
+                    <div class="fixed inset-0 z-10 overflow-y-auto">
+                        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                            <!-- Modal panel -->
+                            <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                    <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">
+                                        {{ editingUser ? 'Edit Akun Pengelola' : 'Tambah Akun Pengelola' }}
+                                    </h3>
+                                    <form @submit.prevent="submitUser" class="space-y-4">
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                                Password {{ editingUser ? '(Opsional)' : '' }}
-                                            </label>
-                                            <input 
-                                                type="text" 
-                                                v-model="form.password" 
-                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" 
-                                                :required="!editingUser"
-                                                minlength="8"
-                                            />
-                                            <p v-if="form.errors.password" class="text-red-500 text-xs mt-1">{{ form.errors.password }}</p>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                                            <input type="text" v-model="form.name" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required />
+                                            <p v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{ form.errors.name }}</p>
                                         </div>
+                                        
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">PIN Akses (4-8 digit)</label>
-                                            <input 
-                                                type="text" 
-                                                v-model="form.pin" 
-                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" 
-                                                maxlength="8"
-                                                placeholder="123456"
-                                            />
-                                             <p v-if="form.errors.pin" class="text-red-500 text-xs mt-1">{{ form.errors.pin }}</p>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                            <input type="email" v-model="form.email" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required />
+                                            <p v-if="form.errors.email" class="text-red-500 text-xs mt-1">{{ form.errors.email }}</p>
                                         </div>
-                                    </div>
-                                    <p v-if="editingUser" class="text-xs text-gray-500 italic">* Kosongkan password jika tidak ingin mengubahnya.</p>
-                                </form>
-                            </div>
-                            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
-                                <button 
-                                    @click="submitUser" 
-                                    type="button" 
-                                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm"
-                                    :disabled="form.processing"
-                                >
-                                    {{ editingUser ? 'Simpan Perubahan' : 'Buat Akun' }}
-                                </button>
-                                <button 
-                                    @click="closeModal" 
-                                    type="button" 
-                                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                                >
-                                    Batal
-                                </button>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                                            <select v-model="form.role" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                                <option value="pengelola">Pengelola Staf</option>
+                                                <option value="admin">Administrator</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                    Password {{ editingUser ? '(Opsional)' : '' }}
+                                                </label>
+                                                <input 
+                                                    type="text" 
+                                                    v-model="form.password" 
+                                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" 
+                                                    :required="!editingUser"
+                                                    minlength="8"
+                                                />
+                                                <p v-if="form.errors.password" class="text-red-500 text-xs mt-1">{{ form.errors.password }}</p>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">PIN Akses (4-8 digit)</label>
+                                                <input 
+                                                    type="text" 
+                                                    v-model="form.pin" 
+                                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" 
+                                                    maxlength="8"
+                                                    placeholder="123456"
+                                                />
+                                                 <p v-if="form.errors.pin" class="text-red-500 text-xs mt-1">{{ form.errors.pin }}</p>
+                                            </div>
+                                        </div>
+                                        <p v-if="editingUser" class="text-xs text-gray-500 italic">* Kosongkan password jika tidak ingin mengubahnya.</p>
+                                    </form>
+                                </div>
+                                <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-2">
+                                    <button 
+                                        @click="submitUser" 
+                                        type="button" 
+                                        class="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
+                                        :disabled="form.processing"
+                                    >
+                                        {{ editingUser ? 'Simpan' : 'Buat Akun' }}
+                                    </button>
+                                    <button 
+                                        @click="closeModal" 
+                                        type="button" 
+                                        class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                                    >
+                                        Batal
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
