@@ -403,8 +403,13 @@ async function fetchMeteranSebelum(bulan) {
             meteranSebelumValue.value = 0;
         }
     } catch (error) {
-        console.log('Tidak ada tagihan bulan sebelumnya, meteran sebelum = 0');
-        meteranSebelumValue.value = 0;
+        // Ignore 404 (Not Found) - it just means no previous bill exists
+        if (error.response && error.response.status === 404) {
+            meteranSebelumValue.value = 0;
+        } else {
+            console.error('Error fetching meteran sebelum:', error);
+            meteranSebelumValue.value = 0;
+        }
     }
 }
 

@@ -131,15 +131,25 @@
                             <!-- Latitude -->
                             <div>
                                 <label for="latitude" class="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
-                                <input
-                                    type="number"
-                                    step="any"
-                                    id="latitude"
-                                    v-model="form.latitude"
-                                    placeholder="-6.200000"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
-                                    :class="{ 'border-red-500': errors.latitude }"
-                                />
+                                <div class="flex gap-2">
+                                    <input
+                                        type="text"
+                                        inputmode="decimal"
+                                        id="latitude"
+                                        v-model="form.latitude"
+                                        placeholder="-6.200000"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent transition"
+                                        :class="{ 'border-red-500': errors.latitude }"
+                                    />
+                                    <button 
+                                        type="button"
+                                        @click="form.latitude = form.latitude ? (form.latitude.startsWith('-') ? form.latitude.substring(1) : '-' + form.latitude) : '-'"
+                                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-bold border border-gray-300 shadow-sm"
+                                        title="Ubah Tanda +/-"
+                                    >
+                                        ±
+                                    </button>
+                                </div>
                                 <p v-if="errors.latitude" class="mt-1 text-sm text-red-600">{{ errors.latitude }}</p>
                                 <a 
                                     href="https://www.google.com/maps" 
@@ -159,8 +169,8 @@
                             <div>
                                 <label for="longitude" class="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
                                 <input
-                                    type="number"
-                                    step="any"
+                                    type="text"
+                                    inputmode="decimal"
                                     id="longitude"
                                     v-model="form.longitude"
                                     placeholder="106.816666"

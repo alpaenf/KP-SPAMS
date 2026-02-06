@@ -15,7 +15,7 @@
                 <div class="space-y-4">
                     <!-- Camera View -->
                     <div v-if="!scannedData" class="relative">
-                        <div class="relative aspect-video bg-black rounded-lg overflow-hidden">
+                        <div class="relative aspect-[3/4] bg-black rounded-lg overflow-hidden shadow-inner">
                             <video
                                 ref="videoElement"
                                 class="w-full h-full object-cover"
