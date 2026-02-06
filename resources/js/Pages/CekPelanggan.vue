@@ -912,7 +912,17 @@ const fetchMeteranData = async (bulan) => {
     try {
         // 1. Try to get data for the SELECTED month
         // This checks if a bill/meter reading already exists for this specific month
-        const currentTagihanRes = await axios.get(`/api/tagihan-bulanan/${selectedPelanggan.value.id}/${bulan}`);
+        let currentTagihanRes;
+        try {
+             currentTagihanRes = await axios.get(`/api/tagihan-bulanan/${selectedPelanggan.value.id}/${bulan}`);
+        } catch (err) {
+            // Ignore 404, it just means no tagihan yet
+            if (err.response && err.response.status === 404) {
+                currentTagihanRes = { data: { tagihan: null } };
+            } else {
+                throw err;
+            }
+        }
         
         if (currentTagihanRes.data && currentTagihanRes.data.tagihan) {
             const tagihan = currentTagihanRes.data.tagihan;
@@ -942,7 +952,12 @@ const fetchMeteranData = async (bulan) => {
                     previousReading = prevTagihanRes.data.tagihan.meteran_sesudah;
                     foundPreviousReading = true;
                 }
-            } catch (ignore) {}
+            } catch (err) {
+                 // Ignore 404
+                 if (err.response && err.response.status !== 404) {
+                    console.error("Error fetching prev tagihan:", err);
+                 }
+            }
 
             // If tagihan didn't have valid reading, check payment history
             if (!foundPreviousReading) {
