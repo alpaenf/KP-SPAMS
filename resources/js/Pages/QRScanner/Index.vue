@@ -26,16 +26,16 @@
                             <!-- Scanning Overlay - Fixed positioning -->
                             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 <div class="relative">
-                                    <!-- Kotak scanner dengan garis sudut -->
-                                    <div class="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 relative">
+                                    <!-- Kotak scanner dengan garis sudut - DIPERBESAR -->
+                                    <div class="w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 lg:w-96 lg:h-96 relative">
                                         <!-- Border sudut kiri atas -->
-                                        <div class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-blue-500"></div>
+                                        <div class="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-blue-500"></div>
                                         <!-- Border sudut kanan atas -->
-                                        <div class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-blue-500"></div>
+                                        <div class="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-blue-500"></div>
                                         <!-- Border sudut kiri bawah -->
-                                        <div class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-blue-500"></div>
+                                        <div class="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-blue-500"></div>
                                         <!-- Border sudut kanan bawah -->
-                                        <div class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-blue-500"></div>
+                                        <div class="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-blue-500"></div>
                                         
                                         <!-- Garis animasi scan -->
                                         <div class="absolute inset-0 overflow-hidden">
