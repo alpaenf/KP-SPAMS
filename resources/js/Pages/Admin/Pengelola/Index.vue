@@ -253,8 +253,7 @@ const openModal = (user = null) => {
         form.password = ''; // Don't show password
     } else {
         form.reset();
-        form.password = 'password'; // Default password suggestion? Or just empty
-        form.password = '';
+        form.password = ''; 
     }
     showModal.value = true;
 };
