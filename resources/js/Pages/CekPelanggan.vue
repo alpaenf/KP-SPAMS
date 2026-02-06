@@ -495,31 +495,31 @@
                                     </div>
                                 </div>
                                 
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Meteran Sebelum</label>
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium text-gray-700">Meteran Sebelum</label>
                                     <input
                                         type="number"
                                         v-model="pembayaranForm.meteran_sebelum"
                                         step="0.01"
                                         placeholder="0.00"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent mt-1"
                                         @input="hitungTagihan"
                                     />
                                     <p v-if="pembayaranErrors.meteran_sebelum" class="text-red-600 text-sm mt-1">{{ pembayaranErrors.meteran_sebelum }}</p>
-                                    <p class="text-xs text-gray-500 mt-1">Angka meteran bulan lalu</p>
+                                    <p class="text-xs text-gray-500">Angka meteran bulan lalu</p>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Meteran Sesudah</label>
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium text-gray-700">Meteran Sesudah</label>
                                     <input
                                         type="number"
                                         v-model="pembayaranForm.meteran_sesudah"
                                         step="0.01"
                                         placeholder="0.00"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent mt-1"
                                         @input="hitungTagihan"
                                     />
                                     <p v-if="pembayaranErrors.meteran_sesudah" class="text-red-600 text-sm mt-1">{{ pembayaranErrors.meteran_sesudah }}</p>
-                                    <p class="text-xs text-gray-500 mt-1">Angka meteran bulan ini</p>
+                                    <p class="text-xs text-gray-500">Angka meteran bulan ini</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Pemakaian (m³)</label>
@@ -677,7 +677,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import axios from 'axios';
@@ -837,12 +837,15 @@ const showPembayaranModal = async (pelanggan) => {
     loadingPembayaran.value = true;
     pembayaranErrors.value = {};
     
-    const bulanSekarang = props.bulanIni || new Date().toISOString().slice(0, 7);
+    // Default values
+    const today = new Date();
+    const currentMonth = props.bulanIni || today.toISOString().slice(0, 7);
+    const currentDate = today.toISOString().split('T')[0];
     
-    // Reset form dengan default values
+    // Reset form
     pembayaranForm.value = {
-        bulan_bayar: bulanSekarang,
-        tanggal_bayar: new Date().toISOString().split('T')[0],
+        bulan_bayar: currentMonth,
+        tanggal_bayar: currentDate,
         meteran_sebelum: 0,
         meteran_sesudah: 0,
         abunemen: false,
@@ -852,46 +855,108 @@ const showPembayaranModal = async (pelanggan) => {
         keterangan: ''
     };
     
-    // Load pembayaran list
+    // Load payment history
     try {
         const response = await axios.get(`/pelanggan/${pelanggan.id}/pembayaran`);
         pembayaranList.value = response.data.pembayarans;
         
-        // Ambil data meteran dari tagihan_bulanan untuk bulan ini
-        try {
-            const tagihanResponse = await axios.get(`/api/tagihan-bulanan/${pelanggan.id}/${bulanSekarang}`);
-            if (tagihanResponse.data && tagihanResponse.data.tagihan) {
-                const tagihan = tagihanResponse.data.tagihan;
-                pembayaranForm.value.meteran_sebelum = tagihan.meteran_sebelum || 0;
-                pembayaranForm.value.meteran_sesudah = tagihan.meteran_sesudah || 0;
-                pembayaranForm.value.jumlah_kubik = tagihan.pemakaian_kubik || 0;
-                pembayaranForm.value.jumlah_bayar = tagihan.total_tagihan || 0;
-                pembayaranForm.value.abunemen = tagihan.ada_abunemen || false;
-            }
-        } catch (tagihanError) {
-            // Jika tidak ada tagihan bulanan, gunakan nilai default
-            console.log('Tidak ada tagihan bulanan untuk bulan ini');
-        }
+        // Fetch meter data for the initial month
+        await fetchMeteranData(currentMonth);
         
-        // Hitung tunggakan otomatis dari bulan sebelumnya yang belum bayar
+        // Calculate tunggakan from history
         const tunggakanBulanSebelumnya = pembayaranList.value
             .filter(p => {
-                // Ambil pembayaran yang bulannya < bulan sekarang
-                return p.bulan_bayar < bulanSekarang && 
+                return p.bulan_bayar < currentMonth && 
                        (p.keterangan === 'Nunggak' || p.keterangan === 'Kurang bayar' || p.keterangan === 'Terlambat');
             })
             .reduce((total, p) => total + parseFloat(p.jumlah_bayar || 0), 0);
         
-        // Set tunggakan otomatis
         if (tunggakanBulanSebelumnya > 0) {
             pembayaranForm.value.tunggakan = tunggakanBulanSebelumnya;
         }
     } catch (error) {
-        console.error('Error loading pembayaran:', error);
+        console.error('Error loading data:', error);
     } finally {
         loadingPembayaran.value = false;
     }
 };
+
+const getPreviousMonth = (monthStr) => {
+    if (!monthStr) return null;
+    const [year, month] = monthStr.split('-').map(Number);
+    const date = new Date(year, month - 1 - 1, 1); // Subtract 1 for index, then 1 month back
+    return date.toISOString().slice(0, 7);
+};
+
+const fetchMeteranData = async (bulan) => {
+    if (!selectedPelanggan.value) return;
+    
+    try {
+        // 1. Try to get data for the SELECTED month
+        // This checks if a bill/meter reading already exists for this specific month
+        const currentTagihanRes = await axios.get(`/api/tagihan-bulanan/${selectedPelanggan.value.id}/${bulan}`);
+        
+        if (currentTagihanRes.data && currentTagihanRes.data.tagihan) {
+            const tagihan = currentTagihanRes.data.tagihan;
+            pembayaranForm.value.meteran_sebelum = tagihan.meteran_sebelum;
+            pembayaranForm.value.meteran_sesudah = tagihan.meteran_sesudah;
+            pembayaranForm.value.jumlah_kubik = tagihan.pemakaian_kubik;
+            
+            // Only overwrite abunemen if it's explicitly set in tagihan
+            if (tagihan.ada_abunemen) pembayaranForm.value.abunemen = true;
+            
+            // Recalculate bill
+            hitungTagihan();
+            return; 
+        }
+
+        // 2. If NO data for current month (new entry), try to get PREVIOUS month's final reading
+        // logic: meteran_sebelum (this month) = meteran_sesudah (previous month)
+        const prevMonth = getPreviousMonth(bulan);
+        if (prevMonth) {
+            // Check previous month bill/tagihan first
+            try {
+                const prevTagihanRes = await axios.get(`/api/tagihan-bulanan/${selectedPelanggan.value.id}/${prevMonth}`);
+                if (prevTagihanRes.data && prevTagihanRes.data.tagihan && prevTagihanRes.data.tagihan.meteran_sesudah != null) {
+                    pembayaranForm.value.meteran_sebelum = prevTagihanRes.data.tagihan.meteran_sesudah;
+                    pembayaranForm.value.meteran_sesudah = 0; // Reset sesudah because it's new
+                    pembayaranForm.value.jumlah_kubik = 0;
+                    hitungTagihan();
+                    return;
+                }
+            } catch (ignore) {}
+
+            // Fallback: Check previous payment history if tagihan not found
+            // Find payment for prevMonth in the already loaded list
+            const prevPayment = pembayaranList.value.find(p => p.bulan_bayar === prevMonth);
+            if (prevPayment && prevPayment.meteran_sesudah != null) {
+                pembayaranForm.value.meteran_sebelum = prevPayment.meteran_sesudah;
+                pembayaranForm.value.meteran_sesudah = 0;
+                pembayaranForm.value.jumlah_kubik = 0;
+                hitungTagihan();
+                return;
+            }
+        }
+
+        // 3. Last Fallback: If no previous month data, reset to 0 or keep existing input if user typed
+        // Only reset if the values seem to be from a different loaded state (dirty check could be complex, simple reset for now)
+        // Check if we are switching dates, we should probably reset to avoid confusion, 
+        // OR we leave it as 0 to prompt manual input.
+        pembayaranForm.value.meteran_sebelum = 0;
+        pembayaranForm.value.meteran_sesudah = 0;
+        pembayaranForm.value.jumlah_kubik = 0;
+        hitungTagihan();
+
+    } catch (error) {
+        console.error('Error fetching meteran data:', error);
+    }
+};
+
+watch(() => pembayaranForm.value.bulan_bayar, (newBulan) => {
+    if (newBulan && selectedPelanggan.value) {
+        fetchMeteranData(newBulan);
+    }
+});
 
 const closeModal = () => {
     showModal.value = false;

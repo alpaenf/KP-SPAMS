@@ -265,9 +265,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import axios from 'axios';
 
 const props = defineProps({
     pelanggan: Object,
@@ -285,9 +286,10 @@ const form = ref({
 const loading = ref(false);
 const showSuccessModal = ref(false);
 const savedTagihan = ref(null);
+const meteranSebelumValue = ref(props.tagihan_terbaru ? props.tagihan_terbaru.meteran_sesudah : 0);
 
 const meteranSebelum = computed(() => {
-    return props.tagihan_terbaru ? props.tagihan_terbaru.meteran_sesudah : 0;
+    return meteranSebelumValue.value;
 });
 
 const pemakaianKubik = computed(() => {
@@ -329,6 +331,55 @@ function getCurrentMonth() {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     return `${year}-${month}`;
 }
+
+const getPreviousMonth = (monthStr) => {
+    if (!monthStr) return null;
+    const [year, month] = monthStr.split('-').map(Number);
+    const date = new Date(year, month - 1 - 1, 1);
+    return date.toISOString().slice(0, 7);
+};
+
+const fetchMeteranInfo = async (bulan) => {
+    if (!bulan) return;
+
+    try {
+        // Find previous month
+        const prevMonth = getPreviousMonth(bulan);
+        
+        // Fetch tagihan for previous month
+        const response = await axios.get(`/api/tagihan-bulanan/${props.pelanggan.id}/${prevMonth}`);
+        
+        if (response.data && response.data.tagihan) {
+            meteranSebelumValue.value = response.data.tagihan.meteran_sesudah;
+        } else {
+            // If no immediate previous month bill, we might want to fall back to the "latest bill before this month"
+            // But relying on exact previous month is safer for strict billing. 
+            // If user skipped a month, they should probably fill that month first.
+            // However, to be helpful, let's try to find the *latest* bill before this selected month.
+            // We can't do that easily with the single-month API. 
+            // For now, if exact previous month not found, default to 0 or keep current if it makes sense.
+            // A better API would be "getLastMeteranBefore(month)".
+            
+            // Let's assume 0 for now if data is missing, unless we can get smarter.
+            meteranSebelumValue.value = 0; 
+        }
+    } catch (error) {
+        console.error("Error fetching meter info:", error);
+        meteranSebelumValue.value = 0;
+    }
+};
+
+watch(() => form.value.bulan, (newBulan) => {
+    fetchMeteranInfo(newBulan);
+});
+
+// Initial fetch on mount if needed, or rely on props
+onMounted(() => {
+    // If the default month (current month) is not the one next to tagihan_terbaru, we should fetch.
+    if (form.value.bulan) {
+        fetchMeteranInfo(form.value.bulan);
+    }
+});
 
 async function submitForm() {
     if (!isFormValid.value || loading.value) return;

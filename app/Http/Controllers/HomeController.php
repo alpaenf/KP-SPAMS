@@ -627,9 +627,12 @@ class HomeController extends Controller
         return redirect()->route('cek-pelanggan')->with('success', 'Pelanggan berhasil diperbarui!');
     }
     
-    public function deletePelanggan($id)
+    public function deletePelanggan(Pelanggan $pelanggan)
     {
-        $pelanggan = Pelanggan::findOrFail($id);
+        // Hapus pembayaran dan tagihan terkait terlebih dahulu untuk menghindari constraint error
+        $pelanggan->pembayarans()->delete();
+        $pelanggan->tagihanBulanan()->delete();
+        
         $pelanggan->delete();
         
         return redirect()->route('cek-pelanggan')->with('success', 'Pelanggan berhasil dihapus!');
