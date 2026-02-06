@@ -15,7 +15,7 @@
                 <div class="space-y-4">
                     <!-- Camera View -->
                     <div v-if="!scannedData" class="relative">
-                        <div class="relative aspect-[3/4] sm:aspect-video bg-black rounded-lg overflow-hidden">
+                        <div class="relative aspect-video bg-black rounded-lg overflow-hidden">
                             <video
                                 ref="videoElement"
                                 class="w-full h-full object-cover"
@@ -300,8 +300,8 @@ const startCamera = async () => {
         const constraints = {
             video: {
                 facingMode: 'environment',
-                width: { ideal: 1280 }, // Lower resolution for better performance & wider FOV
-                height: { ideal: 720 }
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
             }
         };
         
@@ -377,7 +377,6 @@ const startScanning = () => {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     
-    // Scan lebih sering (250ms) agar terasa lebih responsif
     scanInterval = setInterval(() => {
         if (videoElement.value && videoElement.value.readyState === videoElement.value.HAVE_ENOUGH_DATA) {
             canvas.width = videoElement.value.videoWidth;
@@ -390,15 +389,13 @@ const startScanning = () => {
             context.drawImage(videoElement.value, 0, 0, canvas.width, canvas.height);
             
             const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-            // jsQR works better with moderate resolutions. 
-            // If the image is huge, this call is slow. 720p is a good balance.
             const code = jsQR(imageData.data, imageData.width, imageData.height);
             
             if (code && code.data) {
                 processQRCode(code.data);
             }
         }
-    }, 250); 
+    }, 500);
 };
 
 const processQRCode = async (qrData) => {
@@ -408,13 +405,23 @@ const processQRCode = async (qrData) => {
     stopCamera();
     
     try {
-        // Use axios instead of fetch to automatically handle CSRF token (XSRF-TOKEN cookie)
-        // This prevents 419 Page Expired errors
-        const response = await axios.post('/api/qr-scanner/scan', { 
-            id_pelanggan: qrData 
+        const response = await fetch('/api/qr-scanner/scan', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin', // FIX: Include cookies untuk session/CSRF
+            body: JSON.stringify({ id_pelanggan: qrData }),
         });
         
-        const data = response.data;
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
         
         if (data.success) {
             scannedData.value = data;
@@ -424,19 +431,7 @@ const processQRCode = async (qrData) => {
         }
     } catch (error) {
         console.error('Error processing QR code:', error);
-        
-        let msg = 'Terjadi kesalahan saat memproses QR code.';
-        if (error.response) {
-            // Server responded with a status code outside 2xx
-            msg += ` (${error.response.status}: ${error.response.data.message || error.response.statusText})`;
-        } else if (error.request) {
-            // Request was made but no response received
-            msg += ' Tidak ada respons dari server.';
-        } else {
-            msg += ` ${error.message}`;
-        }
-        
-        alert(msg);
+        alert(`Terjadi kesalahan saat memproses QR code: ${error.message}`);
         startCamera();
     } finally {
         loading.value = false;

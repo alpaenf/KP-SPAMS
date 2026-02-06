@@ -211,22 +211,12 @@
                                     <p class="text-sm text-gray-600 mt-1">Scan kode QR di bawah dengan aplikasi e-wallet Anda</p>
                                 </div>
                             </div>
-                            <div class="flex flex-col items-center bg-gray-50 rounded-lg p-6">
+                            <div class="flex justify-center bg-gray-50 rounded-lg p-6">
                                 <img 
                                     :src="`/storage/${paymentSettings.qris_image}`" 
                                     alt="QRIS Payment" 
-                                    class="max-w-sm w-full border-4 border-white rounded-lg shadow-lg mb-4"
+                                    class="max-w-sm w-full border-4 border-white rounded-lg shadow-lg"
                                 >
-                                <a 
-                                    :href="`/storage/${paymentSettings.qris_image}`" 
-                                    download="QRIS-Payment"
-                                    class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 text-gray-700 font-medium transition"
-                                >
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                    </svg>
-                                    Unduh QRIS
-                                </a>
                             </div>
                             <div class="mt-4 bg-blue-50 rounded-lg p-3">
                                 <p class="text-sm text-blue-800 font-medium">

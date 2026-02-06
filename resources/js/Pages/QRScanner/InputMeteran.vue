@@ -161,13 +161,13 @@
 
                             <div class="bg-white rounded-lg p-4 border-2 border-green-200">
                                 <div class="space-y-3">
-                                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-1">
-                                        <span class="text-gray-600 text-sm sm:text-base">Biaya Pemakaian</span>
-                                        <span class="font-semibold text-right text-sm sm:text-base">{{ pemakaianDitagih.toFixed(2) }} m³ × {{ formatRupiah(tarif_aktif.tarif_per_kubik) }} = {{ formatRupiah(biayaPemakaian) }}</span>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-600">Biaya Pemakaian</span>
+                                        <span class="font-semibold">{{ pemakaianDitagih.toFixed(2) }} m³ × {{ formatRupiah(tarif_aktif.tarif_per_kubik) }} = {{ formatRupiah(biayaPemakaian) }}</span>
                                     </div>
                                     <div class="flex justify-between items-center">
-                                        <span class="text-gray-600 text-sm sm:text-base">Biaya Abunemen</span>
-                                        <span class="font-semibold text-sm sm:text-base">{{ formatRupiah(tarif_aktif.biaya_abunemen) }}</span>
+                                        <span class="text-gray-600">Biaya Abunemen</span>
+                                        <span class="font-semibold">{{ formatRupiah(tarif_aktif.biaya_abunemen) }}</span>
                                     </div>
                                     <div class="border-t-2 border-gray-200 pt-3">
                                         <div class="flex justify-between items-center">
@@ -265,10 +265,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import axios from 'axios';
 
 const props = defineProps({
     pelanggan: Object,
@@ -286,10 +285,9 @@ const form = ref({
 const loading = ref(false);
 const showSuccessModal = ref(false);
 const savedTagihan = ref(null);
-const meteranSebelumValue = ref(props.tagihan_terbaru ? props.tagihan_terbaru.meteran_sesudah : 0);
 
 const meteranSebelum = computed(() => {
-    return meteranSebelumValue.value;
+    return props.tagihan_terbaru ? props.tagihan_terbaru.meteran_sesudah : 0;
 });
 
 const pemakaianKubik = computed(() => {
@@ -332,70 +330,24 @@ function getCurrentMonth() {
     return `${year}-${month}`;
 }
 
-const getPreviousMonth = (monthStr) => {
-    if (!monthStr) return null;
-    let [year, month] = monthStr.split('-').map(Number);
-    
-    month = month - 1;
-    if (month === 0) {
-        year -= 1;
-        month = 12;
-    }
-    
-    return `${year}-${String(month).padStart(2, '0')}`;
-};
-
-const fetchMeteranInfo = async (bulan) => {
-    if (!bulan) return;
-
-    try {
-        // Find previous month
-        const prevMonth = getPreviousMonth(bulan);
-        
-        // Fetch tagihan for previous month
-        const response = await axios.get(`/api/tagihan-bulanan/${props.pelanggan.id}/${prevMonth}`);
-        
-        if (response.data && response.data.tagihan) {
-            meteranSebelumValue.value = response.data.tagihan.meteran_sesudah;
-        } else {
-            // If no immediate previous month bill, we might want to fall back to the "latest bill before this month"
-            // But relying on exact previous month is safer for strict billing. 
-            // If user skipped a month, they should probably fill that month first.
-            // However, to be helpful, let's try to find the *latest* bill before this selected month.
-            // We can't do that easily with the single-month API. 
-            // For now, if exact previous month not found, default to 0 or keep current if it makes sense.
-            // A better API would be "getLastMeteranBefore(month)".
-            
-            // Let's assume 0 for now if data is missing, unless we can get smarter.
-            meteranSebelumValue.value = 0; 
-        }
-    } catch (error) {
-        console.error("Error fetching meter info:", error);
-        meteranSebelumValue.value = 0;
-    }
-};
-
-watch(() => form.value.bulan, (newBulan) => {
-    fetchMeteranInfo(newBulan);
-});
-
-// Initial fetch on mount if needed, or rely on props
-onMounted(() => {
-    // If the default month (current month) is not the one next to tagihan_terbaru, we should fetch.
-    if (form.value.bulan) {
-        fetchMeteranInfo(form.value.bulan);
-    }
-});
-
 async function submitForm() {
     if (!isFormValid.value || loading.value) return;
     
     loading.value = true;
     
     try {
-        const response = await axios.post('/api/qr-scanner/store-meteran', form.value);
+        const response = await fetch('/api/qr-scanner/store-meteran', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin', // FIX: Include cookies untuk session/CSRF
+            body: JSON.stringify(form.value),
+        });
         
-        const data = response.data;
+        const data = await response.json();
         
         if (data.success) {
             savedTagihan.value = data.tagihan;
@@ -405,11 +357,7 @@ async function submitForm() {
         }
     } catch (error) {
         console.error('Error submitting form:', error);
-        if (error.response && error.response.data && error.response.data.message) {
-            alert(error.response.data.message);
-        } else {
-            alert('Terjadi kesalahan saat menyimpan data.');
-        }
+        alert('Terjadi kesalahan saat menyimpan data.');
     } finally {
         loading.value = false;
     }

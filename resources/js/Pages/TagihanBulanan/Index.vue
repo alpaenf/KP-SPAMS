@@ -1115,28 +1115,62 @@ const generateTagihan = async () => {
     }
 };
 
-const openInputModal = (pelanggan) => {
-    selectedPelanggan.value = pelanggan;
-    
-    if (pelanggan.tagihan) {
-        inputForm.value = {
-            meteran_sebelum: pelanggan.tagihan.meteran_sebelum,
-            meteran_sesudah: pelanggan.tagihan.meteran_sesudah,
-            tarif_per_kubik: pelanggan.tagihan.tarif_per_kubik,
-            ada_abunemen: pelanggan.tagihan.ada_abunemen,
-            biaya_abunemen: pelanggan.tagihan.biaya_abunemen,
-        };
-    } else {
-        inputForm.value = {
-            meteran_sebelum: null,
-            meteran_sesudah: null,
-            tarif_per_kubik: 2000,
-            ada_abunemen: true,
-            biaya_abunemen: 3000,
-        };
+const fetchMeteranDataForInput = async (pelanggan) => {
+    // 1. Jika sudah ada tagihan bulan ini, gunakan data tersebut
+    if (pelanggan.tagihan && pelanggan.tagihan.meteran_sesudah !== null) {
+        inputForm.value.meteran_sebelum = pelanggan.tagihan.meteran_sebelum;
+        inputForm.value.meteran_sesudah = pelanggan.tagihan.meteran_sesudah;
+        inputForm.value.tarif_per_kubik = pelanggan.tagihan.tarif_per_kubik;
+        inputForm.value.ada_abunemen = pelanggan.tagihan.ada_abunemen;
+        inputForm.value.biaya_abunemen = pelanggan.tagihan.biaya_abunemen;
+        return;
     }
     
+    // 2. Jika belum ada tagihan bulan ini, otomatis isi meteran_sebelum dari bulan lalu
+    const prevMonth = getPreviousMonth(selectedBulan.value);
+    if (prevMonth) {
+        let foundPreviousReading = false;
+        let previousReading = 0;
+        
+        try {
+            // Cek tagihan bulan sebelumnya
+            const prevTagihanRes = await axios.get(`/api/tagihan-bulanan/${pelanggan.id}/${prevMonth}`);
+            if (prevTagihanRes.data && prevTagihanRes.data.tagihan && prevTagihanRes.data.tagihan.meteran_sesudah > 0) {
+                previousReading = prevTagihanRes.data.tagihan.meteran_sesudah;
+                foundPreviousReading = true;
+            }
+        } catch (error) {
+            console.log('Tidak ada tagihan bulan sebelumnya');
+        }
+        
+        if (foundPreviousReading) {
+            inputForm.value.meteran_sebelum = previousReading;
+            inputForm.value.meteran_sesudah = null;
+            return;
+        }
+    }
+    
+    // 3. Fallback: Set default values
+    inputForm.value.meteran_sebelum = null;
+    inputForm.value.meteran_sesudah = null;
+};
+
+const openInputModal = async (pelanggan) => {
+    selectedPelanggan.value = pelanggan;
+    
+    // Inisialisasi form dengan data default
+    inputForm.value = {
+        meteran_sebelum: null,
+        meteran_sesudah: null,
+        tarif_per_kubik: 2000,
+        ada_abunemen: true,
+        biaya_abunemen: 3000,
+    };
+    
     showInputModal.value = true;
+    
+    // Ambil data meteran (akan otomatis mengisi dari bulan lalu jika belum ada data bulan ini)
+    await fetchMeteranDataForInput(pelanggan);
 };
 
 const closeInputModal = () => {
@@ -1144,22 +1178,77 @@ const closeInputModal = () => {
     selectedPelanggan.value = null;
 };
 
-const openPembayaranModal = (pelanggan) => {
+const getPreviousMonth = (monthStr) => {
+    if (!monthStr) return null;
+    let [year, month] = monthStr.split('-').map(Number);
+    
+    // Kurangi 1 bulan
+    month = month - 1;
+    
+    // Jika bulan menjadi 0 (sebelum Januari), maka mundur 1 tahun dan set bulan ke Desember (12)
+    if (month === 0) {
+        year -= 1;
+        month = 12;
+    }
+    
+    return `${year}-${String(month).padStart(2, '0')}`;
+};
+
+const fetchMeteranDataForPembayaran = async (pelanggan) => {
+    // 1. Jika sudah ada tagihan bulan ini dan meteran sudah diisi, gunakan data tersebut
+    if (pelanggan.tagihan && pelanggan.tagihan.meteran_sesudah !== null) {
+        pembayaranForm.value.meteran_sebelum = pelanggan.tagihan.meteran_sebelum;
+        pembayaranForm.value.meteran_sesudah = pelanggan.tagihan.meteran_sesudah;
+        pembayaranForm.value.jumlah_kubik = pelanggan.tagihan.pemakaian_kubik;
+        pembayaranForm.value.abunemen = pelanggan.tagihan.ada_abunemen;
+        return;
+    }
+    
+    // 2. Jika belum ada tagihan meteran bulan ini, cari data bulan sebelumnya
+    // meteran_sebelum (bulan ini) = meteran_sesudah (bulan lalu)
+    const prevMonth = getPreviousMonth(selectedBulan.value);
+    if (prevMonth) {
+        try {
+            // Cek tagihan bulan sebelumnya
+            const prevTagihanRes = await axios.get(`/api/tagihan-bulanan/${pelanggan.id}/${prevMonth}`);
+            if (prevTagihanRes.data && prevTagihanRes.data.tagihan && prevTagihanRes.data.tagihan.meteran_sesudah > 0) {
+                pembayaranForm.value.meteran_sebelum = prevTagihanRes.data.tagihan.meteran_sesudah;
+                pembayaranForm.value.meteran_sesudah = null;
+                pembayaranForm.value.jumlah_kubik = 0;
+                return;
+            }
+        } catch (error) {
+            console.log('Tidak ada tagihan bulan sebelumnya');
+        }
+    }
+    
+    // 3. Fallback: Jika tidak ada data bulan sebelumnya, set ke 0
+    pembayaranForm.value.meteran_sebelum = 0;
+    pembayaranForm.value.meteran_sesudah = null;
+    pembayaranForm.value.jumlah_kubik = 0;
+};
+
+const openPembayaranModal = async (pelanggan) => {
     selectedPelanggan.value = pelanggan;
     const tagihanBulanIni = pelanggan.tagihan?.total_tagihan || 0;
     
+    // Inisialisasi form dengan data dasar
     pembayaranForm.value = {
         tanggal_bayar: new Date().toISOString().split('T')[0],
-        meteran_sebelum: pelanggan.tagihan?.meteran_sebelum || null,
-        meteran_sesudah: pelanggan.tagihan?.meteran_sesudah || null,
-        jumlah_kubik: pelanggan.tagihan?.pemakaian_kubik || 0,
+        meteran_sebelum: null,
+        meteran_sesudah: null,
+        jumlah_kubik: 0,
         abunemen: pelanggan.tagihan?.ada_abunemen || false,
         jumlah_bayar: tagihanBulanIni,
         keterangan: 'TAGIHAN',
         catatan: '',
         bayar_tunggakan: false,
     };
+    
     showPembayaranModal.value = true;
+    
+    // Ambil data meteran (akan otomatis mengisi dari bulan lalu jika belum ada data bulan ini)
+    await fetchMeteranDataForPembayaran(pelanggan);
 };
 
 const hitungPemakaianPembayaran = () => {

@@ -66,7 +66,7 @@
       <!-- Content Area -->
       <div class="max-w-7xl mx-auto px-4 py-8">
         <!-- Visi & Misi Tab -->
-        <div v-if="activeTab === 'visi-misi'" class="bg-white rounded-lg shadow p-4 sm:p-6">
+        <div v-if="activeTab === 'visi-misi'" class="bg-white rounded-lg shadow p-6">
           <h2 class="text-2xl font-bold text-gray-900 mb-6">Visi & Misi KP-SPAMS</h2>
           <form @submit.prevent="submitVisiMisi" class="space-y-6">
             <!-- Visi -->
@@ -84,18 +84,18 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-3">Misi</label>
               <div class="space-y-3">
-                <div v-for="(misi, idx) in visiMisiForm.misi" :key="idx" class="flex flex-col sm:flex-row gap-2">
+                <div v-for="(misi, idx) in visiMisiForm.misi" :key="idx" class="flex gap-2">
                   <input
                     type="text"
                     v-model="visiMisiForm.misi[idx]"
-                    class="w-full sm:flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     :placeholder="`Misi ${idx + 1}...`"
                   />
                   <button
                     v-if="visiMisiForm.misi.length > 1"
                     type="button"
                     @click="visiMisiForm.misi.splice(idx, 1)"
-                    class="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 shrink-0"
+                    class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
                   >
                     Hapus
                   </button>
@@ -132,7 +132,7 @@
           </div>
 
           <!-- Form Tambah/Edit Layanan -->
-          <div v-if="showLayananForm" class="bg-white rounded-lg shadow p-4 sm:p-6">
+          <div v-if="showLayananForm" class="bg-white rounded-lg shadow p-6">
             <h3 class="text-xl font-bold mb-4">{{ editingLayanan ? 'Edit' : 'Tambah' }} Layanan</h3>
             <form @submit.prevent="submitLayanan" class="space-y-4">
               <input
@@ -189,22 +189,22 @@
             <div
               v-for="layanan in layanans"
               :key="layanan.id"
-              class="bg-white rounded-lg shadow p-4 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4"
+              class="bg-white rounded-lg shadow p-4 flex justify-between items-start"
             >
-              <div class="flex-1 w-full">
+              <div class="flex-1">
                 <h3 class="font-bold text-gray-900">{{ layanan.judul }}</h3>
                 <p class="text-gray-600 text-sm">{{ layanan.deskripsi }}</p>
               </div>
-              <div class="flex gap-2 w-full sm:w-auto">
+              <div class="flex gap-2">
                 <button
                   @click="editLayanan(layanan)"
-                  class="flex-1 sm:flex-none px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                  class="px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
                 >
                   Edit
                 </button>
                 <button
                   @click="deleteLayanan(layanan.id)"
-                  class="flex-1 sm:flex-none px-4 py-2 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                  class="px-4 py-2 bg-red-500 text-white rounded text-sm hover:bg-red-600"
                 >
                   Hapus
                 </button>
@@ -226,7 +226,7 @@
           </div>
 
           <!-- Form Tambah/Edit Berita -->
-          <div v-if="showBeritaForm" class="bg-white rounded-lg shadow p-4 sm:p-6">
+          <div v-if="showBeritaForm" class="bg-white rounded-lg shadow p-6">
             <h3 class="text-xl font-bold mb-4">{{ editingBerita ? 'Edit' : 'Tambah' }} Berita</h3>
             <form @submit.prevent="submitBerita" class="space-y-4">
               <input
@@ -287,9 +287,9 @@
             <div
               v-for="berita in beritas"
               :key="berita.id"
-              class="bg-white rounded-lg shadow p-4 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4"
+              class="bg-white rounded-lg shadow p-4 flex justify-between items-start"
             >
-              <div class="flex-1 w-full">
+              <div class="flex-1">
                 <h3 class="font-bold text-gray-900">{{ berita.judul }}</h3>
                 <p class="text-gray-600 text-sm">{{ berita.konten.substring(0, 100) }}...</p>
                 <p class="text-xs text-gray-500 mt-2">
@@ -299,16 +299,16 @@
                   </span>
                 </p>
               </div>
-              <div class="flex gap-2 w-full sm:w-auto">
+              <div class="flex gap-2">
                 <button
                   @click="editBerita(berita)"
-                  class="flex-1 sm:flex-none px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                  class="px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
                 >
                   Edit
                 </button>
                 <button
                   @click="deleteBerita(berita.id)"
-                  class="flex-1 sm:flex-none px-4 py-2 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                  class="px-4 py-2 bg-red-500 text-white rounded text-sm hover:bg-red-600"
                 >
                   Hapus
                 </button>
@@ -330,7 +330,7 @@
           </div>
 
           <!-- Form Upload -->
-          <div v-if="showGaleriForm" class="bg-white rounded-lg shadow p-4 sm:p-6">
+          <div v-if="showGaleriForm" class="bg-white rounded-lg shadow p-6">
             <h3 class="text-xl font-bold mb-4">Upload Foto Galeri</h3>
             <form @submit.prevent="submitGaleri" class="space-y-4">
               <div>
@@ -527,7 +527,7 @@
         </div>
 
         <!-- Sejarah Tab -->
-        <div v-if="activeTab === 'sejarah'" class="bg-white rounded-lg shadow p-4 sm:p-6">
+        <div v-if="activeTab === 'sejarah'" class="bg-white rounded-lg shadow p-6">
           <h2 class="text-2xl font-bold text-gray-900 mb-6">Sejarah KP-SPAMS</h2>
           <form @submit.prevent="submitSejarah" class="space-y-6">
             <div>
