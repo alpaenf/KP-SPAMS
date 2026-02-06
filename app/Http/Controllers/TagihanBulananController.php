@@ -295,24 +295,45 @@ class TagihanBulananController extends Controller
             ->where('bulan', $bulan)
             ->first();
         
-        if (!$tagihan) {
+        if ($tagihan) {
             return response()->json([
-                'message' => 'Tagihan tidak ditemukan untuk bulan ini',
-                'tagihan' => null,
-            ], 404);
+                'tagihan' => [
+                    'id' => $tagihan->id,
+                    'meteran_sebelum' => $tagihan->meteran_sebelum ?? 0,
+                    'meteran_sesudah' => $tagihan->meteran_sesudah ?? 0,
+                    'pemakaian_kubik' => $tagihan->pemakaian_kubik ?? 0,
+                    'total_tagihan' => $tagihan->total_tagihan ?? 0,
+                    'ada_abunemen' => $tagihan->ada_abunemen ?? false,
+                    'biaya_abunemen' => $tagihan->biaya_abunemen ?? 0,
+                    'status_bayar' => $tagihan->status_bayar,
+                ],
+            ]);
+        }
+        
+        // Jika tidak ada tagihan, cek pembayaran bulan tersebut
+        // Ini penting untuk data lama yang tidak punya record di tagihan_bulanan
+        $pembayaran = Pembayaran::where('pelanggan_id', $pelangganId)
+            ->where('bulan_bayar', $bulan)
+            ->first();
+        
+        if ($pembayaran) {
+            return response()->json([
+                'tagihan' => [
+                    'id' => null,
+                    'meteran_sebelum' => $pembayaran->meteran_sebelum ?? 0,
+                    'meteran_sesudah' => $pembayaran->meteran_sesudah ?? 0,
+                    'pemakaian_kubik' => $pembayaran->jumlah_kubik ?? 0,
+                    'total_tagihan' => $pembayaran->jumlah_bayar ?? 0,
+                    'ada_abunemen' => $pembayaran->abunemen ?? false,
+                    'biaya_abunemen' => $pembayaran->abunemen ? 3000 : 0,
+                    'status_bayar' => 'SUDAH_BAYAR',
+                ],
+            ]);
         }
         
         return response()->json([
-            'tagihan' => [
-                'id' => $tagihan->id,
-                'meteran_sebelum' => $tagihan->meteran_sebelum ?? 0,
-                'meteran_sesudah' => $tagihan->meteran_sesudah ?? 0,
-                'pemakaian_kubik' => $tagihan->pemakaian_kubik ?? 0,
-                'total_tagihan' => $tagihan->total_tagihan ?? 0,
-                'ada_abunemen' => $tagihan->ada_abunemen ?? false,
-                'biaya_abunemen' => $tagihan->biaya_abunemen ?? 0,
-                'status_bayar' => $tagihan->status_bayar,
-            ],
-        ]);
+            'message' => 'Tagihan tidak ditemukan untuk bulan ini',
+            'tagihan' => null,
+        ], 404);
     }
 }
