@@ -147,15 +147,15 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
                             <p class="text-sm text-blue-600 font-medium mb-1">Meteran Sebelum</p>
-                            <p class="text-2xl font-bold text-blue-800">{{ tagihan.meteran_sebelum?.toFixed(2) || '0.00' }} m³</p>
+                            <p class="text-2xl font-bold text-blue-800">{{ parseFloat(tagihan.meteran_sebelum || 0).toFixed(2) }} m³</p>
                         </div>
                         <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
                             <p class="text-sm text-green-600 font-medium mb-1">Meteran Sesudah</p>
-                            <p class="text-2xl font-bold text-green-800">{{ tagihan.meteran_sesudah?.toFixed(2) || '0.00' }} m³</p>
+                            <p class="text-2xl font-bold text-green-800">{{ parseFloat(tagihan.meteran_sesudah || 0).toFixed(2) }} m³</p>
                         </div>
                         <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
                             <p class="text-sm text-purple-600 font-medium mb-1">Pemakaian</p>
-                            <p class="text-2xl font-bold text-purple-800">{{ tagihan.pemakaian?.toFixed(2) || '0.00' }} m³</p>
+                            <p class="text-2xl font-bold text-purple-800">{{ parseFloat(tagihan.pemakaian || 0).toFixed(2) }} m³</p>
                         </div>
                     </div>
                     
