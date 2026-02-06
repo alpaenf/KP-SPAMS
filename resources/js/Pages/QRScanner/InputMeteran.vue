@@ -161,13 +161,13 @@
 
                             <div class="bg-white rounded-lg p-4 border-2 border-green-200">
                                 <div class="space-y-3">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-gray-600">Biaya Pemakaian</span>
-                                        <span class="font-semibold">{{ pemakaianDitagih.toFixed(2) }} m³ × {{ formatRupiah(tarif_aktif.tarif_per_kubik) }} = {{ formatRupiah(biayaPemakaian) }}</span>
+                                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-1">
+                                        <span class="text-gray-600 text-sm sm:text-base">Biaya Pemakaian</span>
+                                        <span class="font-semibold text-right text-sm sm:text-base">{{ pemakaianDitagih.toFixed(2) }} m³ × {{ formatRupiah(tarif_aktif.tarif_per_kubik) }} = {{ formatRupiah(biayaPemakaian) }}</span>
                                     </div>
                                     <div class="flex justify-between items-center">
-                                        <span class="text-gray-600">Biaya Abunemen</span>
-                                        <span class="font-semibold">{{ formatRupiah(tarif_aktif.biaya_abunemen) }}</span>
+                                        <span class="text-gray-600 text-sm sm:text-base">Biaya Abunemen</span>
+                                        <span class="font-semibold text-sm sm:text-base">{{ formatRupiah(tarif_aktif.biaya_abunemen) }}</span>
                                     </div>
                                     <div class="border-t-2 border-gray-200 pt-3">
                                         <div class="flex justify-between items-center">
@@ -336,18 +336,9 @@ async function submitForm() {
     loading.value = true;
     
     try {
-        const response = await fetch('/api/qr-scanner/store-meteran', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json',
-            },
-            credentials: 'same-origin', // FIX: Include cookies untuk session/CSRF
-            body: JSON.stringify(form.value),
-        });
+        const response = await axios.post('/api/qr-scanner/store-meteran', form.value);
         
-        const data = await response.json();
+        const data = response.data;
         
         if (data.success) {
             savedTagihan.value = data.tagihan;
@@ -357,7 +348,11 @@ async function submitForm() {
         }
     } catch (error) {
         console.error('Error submitting form:', error);
-        alert('Terjadi kesalahan saat menyimpan data.');
+        if (error.response && error.response.data && error.response.data.message) {
+            alert(error.response.data.message);
+        } else {
+            alert('Terjadi kesalahan saat menyimpan data.');
+        }
     } finally {
         loading.value = false;
     }
