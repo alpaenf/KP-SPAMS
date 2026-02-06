@@ -485,13 +485,13 @@
         <!-- Info Tarif & Biaya Section -->
         <section class="py-20 bg-gradient-to-br from-blue-50 to-white">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-12">
+                <div class="text-center mb-12 animate-on-scroll">
                     <h2 class="text-3xl font-bold text-gray-900 mb-4">Informasi Tarif & Biaya</h2>
                     <p class="text-gray-600 max-w-2xl mx-auto">Struktur biaya yang transparan dan terjangkau untuk kemudahan masyarakat</p>
                 </div>
 
                 <!-- Tarif Cards -->
-                <div class="grid md:grid-cols-3 gap-6">
+                <div class="grid md:grid-cols-3 gap-6 animate-on-scroll">
                     <template v-if="tarifs.length > 0">
                         <div
                             v-for="tarif in tarifs"

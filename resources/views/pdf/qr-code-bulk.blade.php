@@ -128,7 +128,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>PAMSIMAS - QR Code Pelanggan</h1>
+        <h1>KP-SPAMS DAMAR WULAN</h1>
         <p>Dicetak: {{ date('d F Y H:i') }} | Total: {{ count($pelangganList) }} Pelanggan</p>
     </div>
     
@@ -136,8 +136,8 @@
         @foreach($pelangganList as $index => $pelanggan)
         <div class="qr-card {{ ($index + 1) % 12 === 0 ? 'page-break' : '' }}">
             <div class="qr-card-header">
-                <h3>PAMSIMAS</h3>
-                <p>Kartu Pelanggan</p>
+                <h3>KP-SPAMS</h3>
+                <p>DAMAR WULAN</p>
             </div>
             
             <div class="qr-image">

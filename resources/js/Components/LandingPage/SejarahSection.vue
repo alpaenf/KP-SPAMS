@@ -1,12 +1,12 @@
 <template>
   <section class="py-16 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-12">
+      <div class="text-center mb-12 animate-on-scroll">
         <h2 class="text-4xl font-bold text-gray-900 mb-4">Sejarah & Latar Belakang</h2>
         <p class="text-lg text-gray-600">Perjalanan kami dalam menyediakan air bersih</p>
       </div>
 
-      <div v-if="sejarah" class="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div v-if="sejarah" class="bg-white rounded-2xl shadow-lg overflow-hidden animate-on-scroll">
         <div class="grid md:grid-cols-2 gap-8 items-center">
           <!-- Konten -->
           <div class="p-8 md:p-12">

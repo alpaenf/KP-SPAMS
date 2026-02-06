@@ -1,12 +1,12 @@
 <template>
   <section class="py-16 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-12">
+      <div class="text-center mb-12 animate-on-scroll">
         <h2 class="text-4xl font-bold text-gray-900 mb-4">Layanan Kami</h2>
         <p class="text-lg text-gray-600">Komitmen KP-SPAMS untuk kesejahteraan masyarakat</p>
       </div>
 
-      <div v-if="layanans && layanans.length > 0" class="grid md:grid-cols-3 gap-6">
+      <div v-if="layanans && layanans.length > 0" class="grid md:grid-cols-3 gap-6 animate-on-scroll">
         <div
           v-for="layanan in layanans"
           :key="layanan.id"

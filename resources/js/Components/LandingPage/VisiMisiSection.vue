@@ -1,12 +1,12 @@
 <template>
   <section class="py-16 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-12">
+      <div class="text-center mb-12 animate-on-scroll">
         <h2 class="text-4xl font-bold text-gray-900 mb-4">Visi & Misi</h2>
         <p class="text-lg text-gray-600">Komitmen kami untuk kesejahteraan masyarakat</p>
       </div>
 
-      <div v-if="visiMisi" class="grid md:grid-cols-2 gap-12 items-center">
+      <div v-if="visiMisi" class="grid md:grid-cols-2 gap-12 items-center animate-on-scroll">
         <!-- Visi -->
         <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8 shadow-lg hover:shadow-xl transition">
           <h3 class="text-2xl font-bold text-blue-900 mb-4 flex items-center gap-3">
