@@ -148,6 +148,27 @@ class QRScannerController extends Controller
         try {
             $pelanggan = Pelanggan::findOrFail($request->pelanggan_id);
             
+            // Ambil informasi tarif aktif berdasarkan kategori
+            $tarifPemakaian = InformasiTarif::where('is_active', true)
+                ->where('kategori', 'tarif')
+                ->first();
+            $biayaAbunemenData = InformasiTarif::where('is_active', true)
+                ->where('kategori', 'biaya')
+                ->first();
+            
+            // Fallback ke nilai default jika tidak ada data tarif
+            $tarifPerKubik = $tarifPemakaian ? (float)$tarifPemakaian->harga : 2000;
+            $biayaAbunemen = $biayaAbunemenData ? (float)$biayaAbunemenData->harga : 5000;
+            $minimalPemakaian = 10;
+            
+            // Validasi tarif tidak boleh null atau 0
+            if (!$tarifPerKubik || $tarifPerKubik <= 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data tarif tidak valid. Silakan hubungi administrator untuk mengatur tarif terlebih dahulu.',
+                ], 422);
+            }
+
             // Cek apakah tagihan untuk bulan ini sudah ada
             $existingTagihan = TagihanBulanan::where('pelanggan_id', $pelanggan->id)
                 ->where('bulan', $request->bulan)
