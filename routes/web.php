@@ -146,4 +146,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/testimoni/{id}/approve', [\App\Http\Controllers\Admin\TestimoniController::class, 'approve'])->name('testimoni.approve');
     Route::post('/testimoni/{id}/reject', [\App\Http\Controllers\Admin\TestimoniController::class, 'reject'])->name('testimoni.reject');
     Route::delete('/testimoni/{id}', [\App\Http\Controllers\Admin\TestimoniController::class, 'destroy'])->name('testimoni.destroy');
+
+    // Manajemen Pengelola (Admin Users)
+    Route::get('/admin/pengelola', [\App\Http\Controllers\Admin\PengelolaController::class, 'index'])->name('admin.pengelola.index');
+    Route::post('/admin/pengelola/verify', [\App\Http\Controllers\Admin\PengelolaController::class, 'verifyPin'])->name('admin.pengelola.verify');
+    Route::post('/admin/pengelola', [\App\Http\Controllers\Admin\PengelolaController::class, 'store'])->name('admin.pengelola.store');
+    Route::put('/admin/pengelola/{user}', [\App\Http\Controllers\Admin\PengelolaController::class, 'update'])->name('admin.pengelola.update');
+    Route::delete('/admin/pengelola/{user}', [\App\Http\Controllers\Admin\PengelolaController::class, 'destroy'])->name('admin.pengelola.destroy');
 });
