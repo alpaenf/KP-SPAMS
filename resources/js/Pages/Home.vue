@@ -634,10 +634,10 @@
         <!-- Developer Credit Section -->
         <section class="py-12 bg-white border-t border-gray-100">
             <div class="max-w-4xl mx-auto px-4 text-center">
-                <p class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">Dikembangkan Oleh</p>
+                <p class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6 animate-on-scroll">Dikembangkan Oleh</p>
                 <div class="flex flex-col md:flex-row items-center justify-center gap-8">
                     <!-- Profile Photo -->
-                    <div class="relative group mb-4 md:mb-0">
+                    <div class="relative group mb-4 md:mb-0 animate-on-scroll">
                         <div class="absolute -inset-2 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full opacity-60 group-hover:opacity-100 transition duration-500 blur-lg group-hover:blur-xl animate-pulse"></div>
                         <img 
                             src="/images/saya.png" 
@@ -651,7 +651,7 @@
                     </div>
                     
                     <!-- Text Info -->
-                    <div class="text-center md:text-left">
+                    <div class="text-center md:text-left animate-on-scroll">
                         <h3 class="text-2xl font-bold text-gray-900">Mukhammad Alfaen Fadillah</h3>
                         <p class="text-blue-700 font-medium mb-2">Mahasiswa KKN Universitas Jenderal Soedirman (UNSOED)</p>
                         <p class="text-gray-500 text-sm leading-relaxed max-w-lg">
@@ -663,12 +663,12 @@
                 </div>
 
                 <!-- Team KKN Photo Section -->
-                <div class="mt-16 pt-12 border-t border-gray-200">
+                <div class="mt-16 pt-12 border-t border-gray-200 animate-on-scroll">
                     <div class="flex flex-col items-center gap-6">
                         <img 
                             src="/images/team.png" 
                             alt="Tim KKN Desa Ciwuni" 
-                            class="w-full max-w-3xl h-auto rounded-xl shadow-lg object-cover"
+                            class="w-full max-w-3xl h-auto rounded-xl shadow-lg object-cover transform hover:scale-[1.02] transition-transform duration-500"
                         />
                         
                         <div class="text-center max-w-2xl">
