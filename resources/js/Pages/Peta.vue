@@ -68,7 +68,7 @@
                                 leave-from-class="transform translate-y-0 opacity-100"
                                 leave-to-class="transform translate-y-4 opacity-0"
                             >
-                                <div v-if="showStats" class="absolute top-4 right-4 z-[400] bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-xl border border-white/50 max-w-xs w-64">
+                                <div v-if="showStats" class="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-xl border border-white/50 max-w-xs w-64">
                                     <div class="flex justify-between items-center border-b border-gray-200 pb-2 mb-3">
                                         <h4 class="font-bold text-gray-800 flex items-center gap-2">
                                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
@@ -96,7 +96,7 @@
                             </Transition>
 
                             <!-- Restore Buttons Container -->
-                            <div class="absolute top-4 right-4 z-[400] flex flex-col gap-2">
+                            <div class="absolute top-4 right-4 z-10 flex flex-col gap-2">
                                 <Transition
                                     enter-active-class="transition duration-300 ease-out"
                                     enter-from-class="transform scale-90 opacity-0"
@@ -133,7 +133,7 @@
                                 leave-from-class="transform translate-y-0 opacity-100"
                                 leave-to-class="transform translate-y-4 opacity-0"
                             >
-                                <div v-if="showLegend" class="absolute bottom-4 left-4 z-[400] bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-xl border border-white/50 max-w-xs w-64 transition-opacity duration-300 opacity-90 hover:opacity-100">
+                                <div v-if="showLegend" class="absolute bottom-4 left-4 z-10 bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-xl border border-white/50 max-w-xs w-64 transition-opacity duration-300 opacity-90 hover:opacity-100">
                                     <div class="flex justify-between items-center mb-2">
                                         <h4 class="font-semibold text-gray-800 text-xs uppercase tracking-wider">Legenda</h4>
                                         <button @click="showLegend = false" class="text-gray-400 hover:text-gray-600 transition p-1 hover:bg-gray-100 rounded-full">
