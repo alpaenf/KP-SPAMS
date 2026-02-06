@@ -15,7 +15,7 @@
                 <div class="space-y-4">
                     <!-- Camera View -->
                     <div v-if="!scannedData" class="relative">
-                        <div class="relative aspect-video bg-black rounded-lg overflow-hidden">
+                        <div class="relative aspect-[3/4] sm:aspect-video bg-black rounded-lg overflow-hidden">
                             <video
                                 ref="videoElement"
                                 class="w-full h-full object-cover"
@@ -405,23 +405,13 @@ const processQRCode = async (qrData) => {
     stopCamera();
     
     try {
-        const response = await fetch('/api/qr-scanner/scan', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json',
-            },
-            credentials: 'same-origin', // FIX: Include cookies untuk session/CSRF
-            body: JSON.stringify({ id_pelanggan: qrData }),
+        // Use axios instead of fetch to automatically handle CSRF token (XSRF-TOKEN cookie)
+        // This prevents 419 Page Expired errors
+        const response = await axios.post('/api/qr-scanner/scan', { 
+            id_pelanggan: qrData 
         });
         
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
+        const data = response.data;
         
         if (data.success) {
             scannedData.value = data;
@@ -431,7 +421,19 @@ const processQRCode = async (qrData) => {
         }
     } catch (error) {
         console.error('Error processing QR code:', error);
-        alert(`Terjadi kesalahan saat memproses QR code: ${error.message}`);
+        
+        let msg = 'Terjadi kesalahan saat memproses QR code.';
+        if (error.response) {
+            // Server responded with a status code outside 2xx
+            msg += ` (${error.response.status}: ${error.response.data.message || error.response.statusText})`;
+        } else if (error.request) {
+            // Request was made but no response received
+            msg += ' Tidak ada respons dari server.';
+        } else {
+            msg += ` ${error.message}`;
+        }
+        
+        alert(msg);
         startCamera();
     } finally {
         loading.value = false;
