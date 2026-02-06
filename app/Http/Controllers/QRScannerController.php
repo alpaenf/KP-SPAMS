@@ -76,7 +76,7 @@ class QRScannerController extends Controller
             ] : null,
             'tarif_aktif' => [
                 'tarif_per_kubik' => $tarifPemakaian ? (float)$tarifPemakaian->harga : 2000,
-                'biaya_abunemen' => $biayaAbunemenData ? (float)$biayaAbunemenData->harga : 5000,
+                'biaya_abunemen' => $biayaAbunemenData ? (float)$biayaAbunemenData->harga : 3000,
                 'minimal_pemakaian' => 10,
             ],
         ]);
@@ -125,7 +125,7 @@ class QRScannerController extends Controller
             ] : null,
             'tarif_aktif' => [
                 'tarif_per_kubik' => $tarifPemakaian ? (float)$tarifPemakaian->harga : 2000,
-                'biaya_abunemen' => $biayaAbunemenData ? (float)$biayaAbunemenData->harga : 5000,
+                'biaya_abunemen' => $biayaAbunemenData ? (float)$biayaAbunemenData->harga : 3000,
                 'minimal_pemakaian' => 10,
             ],
         ]);
@@ -158,7 +158,7 @@ class QRScannerController extends Controller
             
             // Fallback ke nilai default jika tidak ada data tarif
             $tarifPerKubik = $tarifPemakaian ? (float)$tarifPemakaian->harga : 2000;
-            $biayaAbunemen = $biayaAbunemenData ? (float)$biayaAbunemenData->harga : 5000;
+            $biayaAbunemen = $biayaAbunemenData ? (float)$biayaAbunemenData->harga : 3000;
             $minimalPemakaian = 10;
             
             // Validasi tarif tidak boleh null atau 0

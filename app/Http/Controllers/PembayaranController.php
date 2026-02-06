@@ -265,6 +265,41 @@ class PembayaranController extends Controller
             ], 422);
         }
 
+        // Cek data tagihan untuk melengkapi informasi yang kurang
+        $tagihan = \App\Models\TagihanBulanan::where('pelanggan_id', $pembayaran->pelanggan_id)
+            ->where('bulan', $pembayaran->bulan_bayar)
+            ->first();
+            
+        $meteranSebelum = $pembayaran->meteran_sebelum;
+        $meteranSesudah = $pembayaran->meteran_sesudah;
+        $jumlahKubik = $pembayaran->jumlah_kubik;
+        $abunemen = $pembayaran->abunemen;
+        $biayaAbunemen = 3000; // Default lama
+        $tarifPerKubik = 2000; // Default
+        
+        if ($tagihan) {
+            if (is_null($meteranSebelum)) $meteranSebelum = $tagihan->meteran_sebelum;
+            if (is_null($meteranSesudah)) $meteranSesudah = $tagihan->meteran_sesudah;
+            
+            // Jika jumlah kubik 0, ambil dari tagihan
+            if ($jumlahKubik <= 0 && $tagihan->pemakaian_kubik > 0) {
+                $jumlahKubik = $tagihan->pemakaian_kubik;
+            }
+            
+            // Jika abunemen false/0, cek dari tagihan atau tarif default
+            if (!$abunemen && ($tagihan->ada_abunemen || $tagihan->biaya_abunemen > 0)) {
+                $abunemen = true;
+            }
+            
+            if ($tagihan->biaya_abunemen > 0) {
+                $biayaAbunemen = $tagihan->biaya_abunemen;
+            }
+            
+            if ($tagihan->tarif_per_kubik > 0) {
+                $tarifPerKubik = $tagihan->tarif_per_kubik;
+            }
+        }
+        
         // Generate PDF
         $data = [
             'pembayaran' => [
@@ -276,11 +311,13 @@ class PembayaranController extends Controller
                 'no_whatsapp' => $pembayaran->pelanggan->no_whatsapp,
                 'bulan_bayar' => \Carbon\Carbon::parse($pembayaran->bulan_bayar . '-01')->locale('id')->isoFormat('MMMM YYYY'),
                 'tanggal_bayar' => \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->locale('id')->isoFormat('D MMMM YYYY'),
-                'meteran_sebelum' => $pembayaran->meteran_sebelum,
-                'meteran_sesudah' => $pembayaran->meteran_sesudah,
-                'abunemen' => $pembayaran->abunemen,
+                'meteran_sebelum' => $meteranSebelum,
+                'meteran_sesudah' => $meteranSesudah,
+                'abunemen' => $abunemen,
+                'biaya_abunemen' => $biayaAbunemen,
+                'tarif_per_kubik' => $tarifPerKubik,
                 'tunggakan' => $pembayaran->tunggakan,
-                'jumlah_kubik' => $pembayaran->jumlah_kubik,
+                'jumlah_kubik' => $jumlahKubik,
                 'jumlah_bayar' => $pembayaran->jumlah_bayar,
                 'keterangan' => $pembayaran->keterangan,
             ]
