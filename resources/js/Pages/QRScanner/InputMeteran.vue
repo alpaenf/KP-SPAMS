@@ -265,8 +265,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
+import axios from 'axios';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
@@ -285,9 +286,10 @@ const form = ref({
 const loading = ref(false);
 const showSuccessModal = ref(false);
 const savedTagihan = ref(null);
+const meteranSebelumValue = ref(props.tagihan_terbaru ? props.tagihan_terbaru.meteran_sesudah : 0);
 
 const meteranSebelum = computed(() => {
-    return props.tagihan_terbaru ? props.tagihan_terbaru.meteran_sesudah : 0;
+    return meteranSebelumValue.value;
 });
 
 const pemakaianKubik = computed(() => {
@@ -366,6 +368,52 @@ async function submitForm() {
 function scanAnother() {
     router.visit('/qr-scanner');
 }
+
+function getPreviousMonth(monthStr) {
+    if (!monthStr) return null;
+    let [year, month] = monthStr.split('-').map(Number);
+    
+    // Kurangi 1 bulan
+    month = month - 1;
+    
+    // Jika bulan menjadi 0 (sebelum Januari), mundur 1 tahun dan set bulan ke Desember (12)
+    if (month === 0) {
+        year -= 1;
+        month = 12;
+    }
+    
+    return `${year}-${String(month).padStart(2, '0')}`;
+}
+
+async function fetchMeteranSebelum(bulan) {
+    if (!bulan) return;
+    
+    const prevMonth = getPreviousMonth(bulan);
+    if (!prevMonth) {
+        meteranSebelumValue.value = 0;
+        return;
+    }
+    
+    try {
+        // Cek tagihan bulan sebelumnya
+        const response = await axios.get(`/api/tagihan-bulanan/${props.pelanggan.id}/${prevMonth}`);
+        if (response.data && response.data.tagihan && response.data.tagihan.meteran_sesudah > 0) {
+            meteranSebelumValue.value = response.data.tagihan.meteran_sesudah;
+        } else {
+            meteranSebelumValue.value = 0;
+        }
+    } catch (error) {
+        console.log('Tidak ada tagihan bulan sebelumnya, meteran sebelum = 0');
+        meteranSebelumValue.value = 0;
+    }
+}
+
+// Watch bulan, jika berubah maka fetch meteran sebelum otomatis
+watch(() => form.value.bulan, (newBulan) => {
+    if (newBulan) {
+        fetchMeteranSebelum(newBulan);
+    }
+}, { immediate: true });
 
 function goToDashboard() {
     router.visit('/dashboard');
