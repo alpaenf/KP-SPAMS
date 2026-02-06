@@ -15,7 +15,7 @@
                 <div class="space-y-4">
                     <!-- Camera View -->
                     <div v-if="!scannedData" class="relative">
-                        <div class="relative aspect-video bg-black rounded-lg overflow-hidden shadow-inner">
+                        <div class="relative aspect-[3/4] bg-black rounded-lg overflow-hidden shadow-inner">
                             <video
                                 ref="videoElement"
                                 class="w-full h-full object-cover"
@@ -300,8 +300,8 @@ const startCamera = async () => {
         const constraints = {
             video: {
                 facingMode: 'environment',
-                width: { ideal: 1920 },
-                height: { ideal: 1080 }
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
             }
         };
         
@@ -395,7 +395,7 @@ const startScanning = () => {
                 processQRCode(code.data);
             }
         }
-    }, 500);
+    }, 250);
 };
 
 const processQRCode = async (qrData) => {
