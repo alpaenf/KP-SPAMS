@@ -148,71 +148,92 @@ class QRScannerController extends Controller
         try {
             $pelanggan = Pelanggan::findOrFail($request->pelanggan_id);
             
-            // Ambil meteran terakhir sebagai meteran_sebelum
-            $tagihanTerakhir = TagihanBulanan::where('pelanggan_id', $pelanggan->id)
-                ->orderBy('bulan', 'desc')
+            // Cek apakah tagihan untuk bulan ini sudah ada
+            $existingTagihan = TagihanBulanan::where('pelanggan_id', $pelanggan->id)
+                ->where('bulan', $request->bulan)
                 ->first();
-            
-            $meteranSebelum = $tagihanTerakhir ? $tagihanTerakhir->meteran_sesudah : 0;
-            
-            // Validasi meteran sesudah harus lebih besar dari meteran sebelum
-            if ($request->meteran_sesudah < $meteranSebelum) {
-                return response()->json([
-                    'success' => false,
-                    'message' => "Meteran sesudah ({$request->meteran_sesudah}) tidak boleh lebih kecil dari meteran sebelum ({$meteranSebelum}).",
-                ], 422);
+
+            if ($existingTagihan) {
+                // Jika sudah ada dan statusnya Lunas, tidak boleh diupdate
+                if ($existingTagihan->status_bayar === 'Lunas') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Tagihan untuk bulan {$request->bulan} sudah LUNAS dan tidak dapat diubah.",
+                    ], 422);
+                }
+
+                // Hitung ulang tagihan
+                $pemakaianKubik = $request->meteran_sesudah - $existingTagihan->meteran_sebelum;
+                
+                // Jika pemakaian kurang dari minimal, gunakan minimal pemakaian
+                $pemakaianDitagih = max($pemakaianKubik, $minimalPemakaian);
+                
+                // Hitung total tagihan
+                $totalTagihan = ($pemakaianDitagih * $tarifPerKubik) + $biayaAbunemen;
+
+                // Update tagihan yang ada
+                $existingTagihan->update([
+                    'meteran_sesudah' => $request->meteran_sesudah,
+                    'pemakaian_kubik' => $pemakaianKubik,
+                    'tarif_per_kubik' => $tarifPerKubik,
+                    'biaya_abunemen' => $biayaAbunemen,
+                    'total_tagihan' => $totalTagihan,
+                    'keterangan' => $request->keterangan,
+                ]);
+
+                $tagihan = $existingTagihan;
+                $message = 'Data tagihan berhasil diperbarui.';
+
+            } else {
+                // Skeario Baru: Cari meteran sebelum dari bulan sebelumnya
+                // Ambil tagihan terakhir SEBELUM bulan yang sedang diinput
+                $tagihanTerakhir = TagihanBulanan::where('pelanggan_id', $pelanggan->id)
+                    ->where('bulan', '<', $request->bulan) // Hanya cari bulan sebelumnya
+                    ->orderBy('bulan', 'desc')
+                    ->first();
+                
+                $meteranSebelum = $tagihanTerakhir ? $tagihanTerakhir->meteran_sesudah : 0;
+                
+                // Validasi meteran sesudah harus lebih besar dari meteran sebelum
+                if ($request->meteran_sesudah < $meteranSebelum) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Meteran sesudah ({$request->meteran_sesudah}) tidak boleh lebih kecil dari meteran sebelum ({$meteranSebelum}).",
+                    ], 422);
+                }
+
+                // Hitung pemakaian
+                $pemakaianKubik = $request->meteran_sesudah - $meteranSebelum;
+                
+                // Jika pemakaian kurang dari minimal, gunakan minimal pemakaian
+                $pemakaianDitagih = max($pemakaianKubik, $minimalPemakaian);
+                
+                // Hitung total tagihan
+                $totalTagihan = ($pemakaianDitagih * $tarifPerKubik) + $biayaAbunemen;
+                
+                // Buat tagihan baru
+                $tagihan = TagihanBulanan::create([
+                    'pelanggan_id' => $pelanggan->id,
+                    'bulan' => $request->bulan,
+                    'meteran_sebelum' => $meteranSebelum,
+                    'meteran_sesudah' => $request->meteran_sesudah,
+                    'pemakaian_kubik' => $pemakaianKubik,
+                    'tarif_per_kubik' => $tarifPerKubik,
+                    'ada_abunemen' => true,
+                    'biaya_abunemen' => $biayaAbunemen,
+                    'total_tagihan' => $totalTagihan,
+                    'status_bayar' => 'BELUM_BAYAR',
+                    'keterangan' => $request->keterangan,
+                ]);
+
+                $message = 'Data meteran berhasil disimpan.';
             }
-            
-            // Ambil informasi tarif aktif berdasarkan kategori
-            $tarifPemakaian = InformasiTarif::where('is_active', true)
-                ->where('kategori', 'tarif')
-                ->first();
-            $biayaAbunemenData = InformasiTarif::where('is_active', true)
-                ->where('kategori', 'biaya')
-                ->first();
-            
-            // Fallback ke nilai default jika tidak ada data tarif
-            $tarifPerKubik = $tarifPemakaian ? (float)$tarifPemakaian->harga : 2000;
-            $biayaAbunemen = $biayaAbunemenData ? (float)$biayaAbunemenData->harga : 5000;
-            $minimalPemakaian = 10;
-            
-            // Validasi tarif tidak boleh null atau 0
-            if (!$tarifPerKubik || $tarifPerKubik <= 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Data tarif tidak valid. Silakan hubungi administrator untuk mengatur tarif terlebih dahulu.',
-                ], 422);
-            }
-            
-            // Hitung pemakaian
-            $pemakaianKubik = $request->meteran_sesudah - $meteranSebelum;
-            
-            // Jika pemakaian kurang dari minimal, gunakan minimal pemakaian
-            $pemakaianDitagih = max($pemakaianKubik, $minimalPemakaian);
-            
-            // Hitung total tagihan
-            $totalTagihan = ($pemakaianDitagih * $tarifPerKubik) + $biayaAbunemen;
-            
-            // Buat tagihan baru
-            $tagihan = TagihanBulanan::create([
-                'pelanggan_id' => $pelanggan->id,
-                'bulan' => $request->bulan,
-                'meteran_sebelum' => $meteranSebelum,
-                'meteran_sesudah' => $request->meteran_sesudah,
-                'pemakaian_kubik' => $pemakaianKubik,
-                'tarif_per_kubik' => $tarifPerKubik,
-                'ada_abunemen' => true,
-                'biaya_abunemen' => $biayaAbunemen,
-                'total_tagihan' => $totalTagihan,
-                'status_bayar' => 'BELUM_BAYAR',
-                'keterangan' => $request->keterangan,
-            ]);
             
             DB::commit();
             
             return response()->json([
                 'success' => true,
-                'message' => 'Data meteran berhasil disimpan.',
+                'message' => $message,
                 'tagihan' => [
                     'id' => $tagihan->id,
                     'bulan' => $tagihan->bulan,
