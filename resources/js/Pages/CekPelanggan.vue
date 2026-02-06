@@ -887,9 +887,18 @@ const showPembayaranModal = async (pelanggan) => {
 
 const getPreviousMonth = (monthStr) => {
     if (!monthStr) return null;
-    const [year, month] = monthStr.split('-').map(Number);
-    const date = new Date(year, month - 1 - 1, 1); // Subtract 1 for index, then 1 month back
-    return date.toISOString().slice(0, 7);
+    let [year, month] = monthStr.split('-').map(Number);
+    
+    // Kurangi 1 bulan
+    month = month - 1;
+    
+    // Jika bulan menjadi 0 (sebelum Januari), maka mundur 1 tahun dan set bulan ke Desember (12)
+    if (month === 0) {
+        year -= 1;
+        month = 12;
+    }
+    
+    return `${year}-${String(month).padStart(2, '0')}`;
 };
 
 const fetchMeteranData = async (bulan) => {

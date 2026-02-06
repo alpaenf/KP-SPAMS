@@ -334,9 +334,15 @@ function getCurrentMonth() {
 
 const getPreviousMonth = (monthStr) => {
     if (!monthStr) return null;
-    const [year, month] = monthStr.split('-').map(Number);
-    const date = new Date(year, month - 1 - 1, 1);
-    return date.toISOString().slice(0, 7);
+    let [year, month] = monthStr.split('-').map(Number);
+    
+    month = month - 1;
+    if (month === 0) {
+        year -= 1;
+        month = 12;
+    }
+    
+    return `${year}-${String(month).padStart(2, '0')}`;
 };
 
 const fetchMeteranInfo = async (bulan) => {
