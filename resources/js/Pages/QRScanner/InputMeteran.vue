@@ -341,7 +341,9 @@ async function submitForm() {
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
             },
+            credentials: 'same-origin', // FIX: Include cookies untuk session/CSRF
             body: JSON.stringify(form.value),
         });
         

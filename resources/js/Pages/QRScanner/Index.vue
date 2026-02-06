@@ -15,7 +15,7 @@
                 <div class="space-y-4">
                     <!-- Camera View -->
                     <div v-if="!scannedData" class="relative">
-                        <div class="aspect-video bg-black rounded-lg overflow-hidden">
+                        <div class="relative aspect-video bg-black rounded-lg overflow-hidden">
                             <video
                                 ref="videoElement"
                                 class="w-full h-full object-cover"
@@ -23,9 +23,31 @@
                                 playsinline
                             ></video>
                             
-                            <!-- Scanning Overlay -->
-                            <div class="absolute inset-0 flex items-center justify-center">
-                                <div class="border-4 border-blue-500 w-64 h-64 rounded-lg opacity-50"></div>
+                            <!-- Scanning Overlay - Fixed positioning -->
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div class="relative">
+                                    <!-- Kotak scanner dengan garis sudut -->
+                                    <div class="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 relative">
+                                        <!-- Border sudut kiri atas -->
+                                        <div class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-blue-500"></div>
+                                        <!-- Border sudut kanan atas -->
+                                        <div class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-blue-500"></div>
+                                        <!-- Border sudut kiri bawah -->
+                                        <div class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-blue-500"></div>
+                                        <!-- Border sudut kanan bawah -->
+                                        <div class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-blue-500"></div>
+                                        
+                                        <!-- Garis animasi scan -->
+                                        <div class="absolute inset-0 overflow-hidden">
+                                            <div class="h-0.5 w-full bg-gradient-to-r from-transparent via-blue-400 to-transparent animate-scan"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Label -->
+                                    <div class="mt-4 text-center">
+                                        <p class="text-white text-sm font-medium bg-black/50 px-3 py-1 rounded-full">Arahkan QR Code ke sini</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
@@ -388,12 +410,15 @@ const processQRCode = async (qrData) => {
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
             },
+            credentials: 'same-origin', // FIX: Include cookies untuk session/CSRF
             body: JSON.stringify({ id_pelanggan: qrData }),
         });
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
@@ -442,3 +467,21 @@ const formatBulan = (bulan) => {
     return date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long' });
 };
 </script>
+
+<style scoped>
+@keyframes scan {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(100%);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+.animate-scan {
+    animation: scan 2s ease-in-out infinite;
+}
+</style>
