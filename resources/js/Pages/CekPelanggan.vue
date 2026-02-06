@@ -864,10 +864,13 @@ const showPembayaranModal = async (pelanggan) => {
         const response = await axios.get(`/pelanggan/${pelanggan.id}/pembayaran`);
         pembayaranList.value = response.data.pembayarans;
         
-        // Fetch meter data for the initial month
+        // PENTING: Ambil data meteran setelah history pembayaran dimuat
+        // Ini memastikan fitur "auto-fill meteran dari bulan lalu" bekerja dengan benar
+        // karena fetchMeteranData perlu mengakses pembayaranList.value
         await fetchMeteranData(currentMonth);
         
-        // Calculate tunggakan from history
+        // Hitung tunggakan otomatis dari bulan sebelumnya yang belum bayar
+        // Logic ini tetap di sini karena spesifik untuk inisialisasi form
         const tunggakanBulanSebelumnya = pembayaranList.value
             .filter(p => {
                 return p.bulan_bayar < currentMonth && 
@@ -877,6 +880,8 @@ const showPembayaranModal = async (pelanggan) => {
         
         if (tunggakanBulanSebelumnya > 0) {
             pembayaranForm.value.tunggakan = tunggakanBulanSebelumnya;
+            // Jika ada tunggakan, hitung ulang total
+            hitungTagihan();
         }
     } catch (error) {
         console.error('Error loading data:', error);
