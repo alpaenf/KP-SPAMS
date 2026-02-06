@@ -110,6 +110,10 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                 PDF
                             </a>
+                            <a :href="`/pelanggan/${pelanggan.id}/download-qr`" target="_blank" class="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-full text-sm font-medium backdrop-blur-sm transition flex items-center gap-1" title="Unduh QR Code">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4h-4v-2h-2v4h6v-2h2v-2zm-6 8h2v2h-2v-2zm-2-2h2v2h-2v-2zm-2 2h2v2H2v-2zm2-2h2v2H4v-2zm2 2h2v2H6v-2zm2 2h2v2H8v-2zm-2-4h2v2H6v-2zm-2-2h2v2H4v-2zm4-2v2H6v-2h2zm-2-2h2v2H6v-2zm4 2v2H8v-2h2zm-2-2h2v2H8v-2zm2-2h2v2h-2V4zm2 2v2h-2v-2h2zm-2-2v2h-2V4h2zm2 2v2h-2V6h2z"></path></svg>
+                                QR
+                            </a>
                         </div>
                     </div>
                     

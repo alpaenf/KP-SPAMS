@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Route;
 // Public routes
 Route::get('/', [HomeController::class, 'index'])->name('home')->middleware('guest.redirect');
 Route::get('/download-pdf/{id}', [HomeController::class, 'downloadPdf'])->name('pelanggan.pdf');
+Route::get('/pelanggan/{id}/download-qr', [QRScannerController::class, 'downloadQR'])->name('pelanggan.download-qr');
+Route::get('/pelanggan/{id}/download-qr-image', [QRScannerController::class, 'downloadQRImage'])->name('pelanggan.download-qr-image');
 Route::get('/pembayaran/{id}', [HomeController::class, 'pembayaran'])->name('pembayaran.public');
 Route::post('/konfirmasi-pembayaran', [HomeController::class, 'konfirmasiPembayaran'])->name('konfirmasi.pembayaran');
 
@@ -49,8 +51,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/api/qr-scanner/scan', [QRScannerController::class, 'scan'])->name('qr-scanner.scan');
     Route::get('/qr-scanner/input-meteran/{id}', [QRScannerController::class, 'inputMeteran'])->name('qr-scanner.input-meteran');
     Route::post('/api/qr-scanner/store-meteran', [QRScannerController::class, 'storeMeteran'])->name('qr-scanner.store-meteran');
-    Route::get('/pelanggan/{id}/download-qr', [QRScannerController::class, 'downloadQR'])->name('pelanggan.download-qr');
-    Route::get('/pelanggan/{id}/download-qr-image', [QRScannerController::class, 'downloadQRImage'])->name('pelanggan.download-qr-image');
+
     Route::get('/qr-code/bulk-preview', [QRCodeBulkController::class, 'preview'])->name('qr-code.bulk-preview');
     Route::get('/qr-code/bulk-download-pdf', [QRCodeBulkController::class, 'downloadPDF'])->name('qr-code.bulk-download-pdf');
     
