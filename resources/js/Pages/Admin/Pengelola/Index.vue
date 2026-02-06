@@ -115,7 +115,7 @@
                 </div>
 
                 <!-- Create/Edit Modal -->
-                <div v-show="showModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                <div v-show="showModal" class="fixed inset-0 z-[200] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
                     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                         <!-- Overlay -->
                         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeModal" aria-hidden="true"></div>
@@ -249,7 +249,7 @@ const openModal = (user = null) => {
         form.name = user.name;
         form.email = user.email;
         form.role = user.role;
-        form.pin = user.pin;
+        form.pin = user.pin || '';
         form.password = ''; // Don't show password
     } else {
         form.reset();
