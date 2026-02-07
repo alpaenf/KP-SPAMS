@@ -5,9 +5,12 @@
                 <!-- Header -->
                 <div class="mb-6 sm:mb-8">
                     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                        <div>
+                        <div class="flex-1">
                             <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard Pengelola</h1>
                             <p class="text-sm sm:text-base text-gray-600 mt-1">Selamat datang, {{ $page.props.auth.user.name }}</p>
+                            <div class="mt-3">
+                                <InstallPWAButton />
+                            </div>
                         </div>
                         <div class="w-full sm:w-auto">
                             <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Filter Wilayah</label>
@@ -584,6 +587,7 @@
 import { computed, ref } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import InstallPWAButton from '@/Components/InstallPWAButton.vue';
 
 const props = defineProps({
     stats: {

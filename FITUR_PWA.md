@@ -25,6 +25,13 @@ Aplikasi PAMSIMAS sekarang sudah mendukung PWA dan bisa di-install sebagai aplik
 - Otomatis register service worker saat page load
 - Console logging untuk debugging
 
+### 5. Install Button Component (`resources/js/Components/InstallPWAButton.vue`) ✨
+- Tombol install yang muncul otomatis di dashboard
+- Smart detection: hanya muncul jika aplikasi belum di-install
+- Fallback ke instruksi manual jika browser tidak support
+- Auto-hide setelah aplikasi di-install
+- Solusi untuk masalah "prompt tidak muncul setelah uninstall"
+
 ## Langkah Selanjutnya 🚀
 
 ### 1. Buat Icon untuk Aplikasi
@@ -32,6 +39,8 @@ Aplikasi PAMSIMAS sekarang sudah mendukung PWA dan bisa di-install sebagai aplik
 Anda perlu membuat icon aplikasi dalam berbagai ukuran dan menyimpannya di folder `public/images/`:
 
 **Icon yang dibutuhkan:**
+
+**Icon Biasa (any purpose):**
 - `icon-72x72.png` (72×72 pixels)
 - `icon-96x96.png` (96×96 pixels)
 - `icon-128x128.png` (128×128 pixels)
@@ -41,15 +50,31 @@ Anda perlu membuat icon aplikasi dalam berbagai ukuran dan menyimpannya di folde
 - `icon-384x384.png` (384×384 pixels)
 - `icon-512x512.png` (512×512 pixels)
 
+**Maskable Icon (untuk splash screen - PENTING!):**
+- `icon-maskable-192x192.png` (192×192 pixels dengan padding 20%)
+- `icon-maskable-512x512.png` (512×512 pixels dengan padding 20%)
+
+⚠️ **PENTING untuk Splash Screen:**
+Maskable icon harus punya **safe zone** (padding 20% di semua sisi) agar logo tidak kena crop oleh berbagai bentuk icon device (circle, rounded square, dll).
+
+**Splash screen akan pakai:**
+- `background_color: #FFFFFF` (putih) dari manifest
+- `icon-maskable-512x512.png` sebagai logo
+
 **Tips membuat icon:**
-- Gunakan logo PAMSIMAS sebagai dasar
-- Icon harus square (persegi)
-- Background sebaiknya solid color atau transparent
-- File format: PNG dengan transparency
-- Bisa gunakan tool online seperti:
-  - https://www.pwa-icon-generator.com/
-  - https://favicon.io/favicon-converter/
-  - https://realfavicongenerator.net/
+- Logo harus di dalam safe zone (80% tengah canvas)
+- Background icon harus **PUTIH** (`#FFFFFF`) sesuai background_color
+- Format: PNG
+- **Jangan ada border hitam di file icon!**
+
+**📖 Panduan Lengkap:** Lihat [CARA_BIKIN_ICON_PWA.md](CARA_BIKIN_ICON_PWA.md) untuk tutorial detail cara bikin icon yang benar (termasuk solusi border hitam di splash screen).
+
+**Cara Tercepat - Auto Generate:**
+1. Buka: https://www.pwabuilder.com/imageGenerator
+2. Upload logo DASAR WULAN
+3. Set padding: 20%, background: putih `#FFFFFF`
+4. Download semua icon (sudah include maskable!)
+5. Upload ke folder `public/images/`
 
 ### 2. Build Aplikasi
 
@@ -86,6 +111,71 @@ Untuk PWA berfungsi optimal di production:
 
 ## Troubleshooting
 
+### ❗ Install Prompt Tidak Muncul Setelah Uninstall (PENTING!)
+
+**Masalah:** Setelah uninstall aplikasi, ketika mau install lagi prompt/notifikasi tidak muncul.
+
+**Penyebab:** Browser mengingat bahwa user pernah uninstall dan tidak akan menampilkan prompt otomatis lagi untuk menghindari spam.
+
+**Solusi:**
+
+#### 1. **Clear Site Settings (Tercepat)**
+**Android Chrome:**
+1. Buka aplikasi di Chrome
+2. Tap ikon 🔒 atau ⓘ di address bar
+3. Tap "Site settings"
+4. Scroll ke bawah, tap "Clear & reset"
+5. Refresh halaman, prompt install akan muncul lagi
+
+**iOS Safari:**
+- Hapus website data di Settings > Safari > Advanced > Website Data
+
+#### 2. **Install Manual via Menu**
+Prompt tidak muncul BUKAN berarti tidak bisa install!
+
+**Android Chrome:**
+- Tap menu (⋮) kanan atas → "Install app" (selalu ada di menu)
+
+**iOS Safari:**
+- Tap Share (📤) → "Add to Home Screen"
+
+#### 3. **Tombol Install di Dashboard (TERBAIK!)**
+✅ **Sudah diimplementasikan!** Sekarang ada tombol "Install Aplikasi" di dashboard yang akan:
+- Muncul secara otomatis jika aplikasi belum di-install
+- Menampilkan instruksi manual jika browser tidak support install prompt
+- Hilang otomatis setelah aplikasi di-install
+
+Dengan tombol ini, user tidak perlu bingung lagi!
+
+### Background/Border Hitam di Splash Screen
+
+**Masalah:** Logo muncul dengan border/background hitam saat splash screen loading.
+
+**Penyebab:** 
+- File icon asli memang punya background hitam
+- Icon tidak punya padding yang cukup (safe zone)
+- Background color di manifest tidak sesuai dengan background icon
+
+**Solusi:**
+1. **Buat maskable icon dengan benar:**
+   - Background icon harus putih `#FFFFFF` (sesuai `background_color` di manifest)
+   - Logo harus di dalam safe zone (20% padding dari semua sisi)
+   - Ukuran: `icon-maskable-192x192.png` dan `icon-maskable-512x512.png`
+
+2. **Generate otomatis:** https://www.pwabuilder.com/imageGenerator
+   - Upload logo
+   - Set padding: 20%
+   - Background: putih
+   - Download & upload ke `public/images/`
+
+3. **Setelah upload icon baru:**
+   - Uninstall aplikasi dari HP
+   - Clear browser cache
+   - Install ulang
+   - Splash screen sekarang putih bersih!
+
+📖 **Panduan lengkap:** [CARA_BIKIN_ICON_PWA.md](CARA_BIKIN_ICON_PWA.md)
+
 ### Icon tidak muncul
 - Pastikan semua icon sudah diupload ke `public/images/`
 - Clear browser cache
@@ -107,10 +197,13 @@ Untuk PWA berfungsi optimal di production:
 ### File Baru:
 - `public/manifest.webmanifest` - PWA manifest configuration
 - `public/sw.js` - Service Worker untuk offline support
+- `resources/js/Components/InstallPWAButton.vue` - Tombol install PWA dengan smart detection
 
 ### File Dimodifikasi:
 - `resources/views/app.blade.php` - Tambah PWA meta tags
 - `resources/js/app.js` - Register Service Worker
+- `resources/js/Pages/Dashboard.vue` - Tambah tombol install di user dashboard
+- `resources/js/Pages/Admin/Dashboard.vue` - Tambah tombol install di admin dashboard
 
 ## Keuntungan PWA
 
