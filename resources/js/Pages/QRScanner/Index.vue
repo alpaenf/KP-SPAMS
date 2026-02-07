@@ -516,25 +516,47 @@ const startCamera = async () => {
             throw lastError || new Error('Tidak dapat mengakses kamera');
         }
         
+        // Set cameraStarted FIRST so video element appears in DOM
+        cameraStarted.value = true;
+        cameraLoading.value = false;
+        
+        console.log('[QR Scanner] Camera started, waiting for video element...');
+        
+        // Wait for Vue to render the video element
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         if (videoElement.value) {
+            console.log('[QR Scanner] Video element found, assigning stream...');
             videoElement.value.srcObject = stream;
             
             // Wait for video to be ready and play it
             videoElement.value.onloadedmetadata = async () => {
+                console.log('[QR Scanner] Video metadata loaded, playing...');
                 try {
                     // Explicitly play video (required for mobile)
                     await videoElement.value.play();
-                    cameraStarted.value = true;
-                    cameraLoading.value = false;
+                    console.log('[QR Scanner] Video playing, starting scanner...');
                     startScanning();
                 } catch (playError) {
-                    console.error('Video play error:', playError);
+                    console.error('[QR Scanner] Video play error:', playError);
                     cameraError.value = 'Tidak dapat memulai video. Silakan coba lagi.';
-                    cameraLoading.value = false;
+                }
+            };
+            
+            // Also handle canplay event as backup
+            videoElement.value.oncanplay = async () => {
+                if (!videoElement.value.paused) return; // Already playing
+                console.log('[QR Scanner] Video can play (backup), trying to play...');
+                try {
+                    await videoElement.value.play();
+                    startScanning();
+                } catch (playError) {
+                    console.error('[QR Scanner] Backup play error:', playError);
                 }
             };
         } else {
-            cameraLoading.value = false;
+            console.error('[QR Scanner] Video element not found after wait!');
+            cameraError.value = 'Video element tidak ditemukan. Silakan refresh halaman.';
         }
     } catch (error) {
         cameraLoading.value = false;
