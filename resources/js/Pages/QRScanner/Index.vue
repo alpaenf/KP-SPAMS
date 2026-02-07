@@ -74,13 +74,23 @@
                         />
                         
                         <!-- Error Display -->
-                        <div v-if="cameraError" class="p-4 bg-red-50 border border-red-200 rounded-lg">
-                            <p class="text-sm text-red-800">{{ cameraError }}</p>
+                        <div v-if="cameraError" class="p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+                            <div class="flex items-start gap-2 mb-3">
+                                <svg class="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-red-900 mb-1">{{ cameraError }}</p>
+                                    <p class="text-xs text-red-700">
+                                        Gunakan <strong>"Upload Foto"</strong> atau <strong>"Input Manual"</strong> sebagai alternatif yang lebih mudah.
+                                    </p>
+                                </div>
+                            </div>
                             <button 
                                 @click="cameraError = ''"
-                                class="mt-2 text-xs text-red-600 underline hover:text-red-800"
+                                class="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-xs font-medium"
                             >
-                                Tutup
+                                Tutup Pesan
                             </button>
                         </div>
                         
@@ -90,9 +100,20 @@
                                 <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                                 </svg>
-                                <p class="text-sm text-blue-800">
-                                    <strong>Tips:</strong> Jika popup izin kamera tidak muncul atau sudah ditolak, gunakan opsi <strong>"Upload Foto"</strong> atau <strong>"Input Manual"</strong> sebagai alternatif.
-                                </p>
+                                <div class="flex-1">
+                                    <p class="text-sm text-blue-800 mb-2">
+                                        <strong>Tips:</strong> Jika popup izin kamera tidak muncul atau sudah ditolak, gunakan opsi <strong>"Upload Foto"</strong> atau <strong>"Input Manual"</strong> sebagai alternatif.
+                                    </p>
+                                    <details class="text-xs text-blue-700 mt-2">
+                                        <summary class="cursor-pointer font-semibold hover:text-blue-900">Cara Reset Izin Kamera (klik untuk lihat)</summary>
+                                        <ul class="mt-2 space-y-1 ml-4 list-disc">
+                                            <li><strong>Chrome:</strong> Klik ikon 🔒 atau 🎥 di sebelah kiri URL → Kamera → Izinkan → Refresh (F5)</li>
+                                            <li><strong>Mobile Chrome:</strong> Menu ⋮ → Info Situs → Izin → Kamera → Izinkan → Refresh</li>
+                                            <li><strong>Firefox:</strong> Klik ikon 🛡️ di address bar → Hapus izin → Refresh</li>
+                                            <li><strong>Safari:</strong> Settings → Safari → Camera → Allow</li>
+                                        </ul>
+                                    </details>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -406,6 +427,30 @@ const checkEnvironment = () => {
 };
 
 const requestCameraPermission = async () => {
+    console.log('[QR Scanner] requestCameraPermission called');
+    
+    // Pre-check permission state to give user better guidance
+    if (navigator.permissions) {
+        try {
+            const permissionStatus = await navigator.permissions.query({ name: 'camera' });
+            console.log('[QR Scanner] Current permission state:', permissionStatus.state);
+            
+            if (permissionStatus.state === 'denied') {
+                // Permission is permanently blocked
+                cameraError.value = 'Izin kamera DIBLOKIR oleh browser. Klik detail di bawah untuk cara membuka blokir, atau gunakan Upload Foto.';
+                alert('⚠️ Izin Kamera Diblokir!\\n\\nAnda pernah memblokir akses kamera untuk situs ini.\\n\\nUntuk mengaktifkan:\\n1. Klik ikon kunci (🔒) di sebelah kiri URL\\n2. Cari setting \"Kamera\"\\n3. Ubah ke \"Izinkan\"\\n4. Refresh halaman (F5)\\n\\nATAU gunakan opsi \"Upload Foto\" untuk scan tanpa kamera.');
+                return;
+            } else if (permissionStatus.state === 'granted') {
+                console.log('[QR Scanner] Permission already granted, starting camera...');
+            } else {
+                console.log('[QR Scanner] Permission state is prompt, will request...');
+            }
+        } catch (permErr) {
+            console.log('[QR Scanner] Cannot query permission:', permErr);
+            // Continue to request anyway
+        }
+    }
+    
     await startCamera();
 };
 
@@ -416,6 +461,11 @@ const startCamera = async () => {
     
     cameraLoading.value = true;
     cameraError.value = '';
+    
+    // Log untuk debugging
+    console.log('[QR Scanner] Starting camera request...');
+    console.log('[QR Scanner] Protocol:', window.location.protocol);
+    console.log('[QR Scanner] Hostname:', window.location.hostname);
     
     try {
         // Directly request camera access - this will trigger browser permission prompt
@@ -428,7 +478,10 @@ const startCamera = async () => {
             }
         };
         
+        console.log('[QR Scanner] Requesting getUserMedia with constraints:', constraints);
         stream = await navigator.mediaDevices.getUserMedia(constraints);
+        console.log('[QR Scanner] Camera access granted!');
+        
         
         if (videoElement.value) {
             videoElement.value.srcObject = stream;
@@ -452,13 +505,33 @@ const startCamera = async () => {
         }
     } catch (error) {
         cameraLoading.value = false;
-        console.error('Camera error:', error);
+        console.error('[QR Scanner] Camera error:', error);
+        console.error('[QR Scanner] Error name:', error.name);
+        console.error('[QR Scanner] Error message:', error.message);
         
         // Detailed error messages
         let errorMessage = '';
+        let isPermissionDenied = false;
         
         if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError' || error.message.includes('permission denied')) {
-            errorMessage = 'Izin akses kamera ditolak. Silakan coba lagi atau gunakan metode lain.';
+            isPermissionDenied = true;
+            errorMessage = 'Izin akses kamera ditolak atau sudah diblokir sebelumnya.';
+            
+            // Try to check current permission state
+            if (navigator.permissions) {
+                try {
+                    const permissionStatus = await navigator.permissions.query({ name: 'camera' });
+                    console.log('[QR Scanner] Permission state:', permissionStatus.state);
+                    
+                    if (permissionStatus.state === 'denied') {
+                        errorMessage = 'Izin kamera DIBLOKIR oleh browser. Ikuti petunjuk di bawah untuk membuka blokir.';
+                    } else if (permissionStatus.state === 'prompt') {
+                        errorMessage = 'Popup izin kamera mungkin diblokir oleh browser. Cek popup blocker atau gunakan metode Upload Foto.';
+                    }
+                } catch (permErr) {
+                    console.log('[QR Scanner] Cannot check permission state:', permErr);
+                }
+            }
         } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
             errorMessage = 'Kamera tidak ditemukan pada perangkat Anda.';
         } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
@@ -492,7 +565,14 @@ const startCamera = async () => {
         }
         
         cameraError.value = errorMessage;
-        showManualInput.value = false;
+        
+        // Show manual input if permission denied
+        if (isPermissionDenied) {
+            console.log('[QR Scanner] Permission denied - showing alternative options');
+            // Don't auto-switch to manual, let user see error and instructions
+        } else {
+            showManualInput.value = false;
+        }
     }
 };
 
