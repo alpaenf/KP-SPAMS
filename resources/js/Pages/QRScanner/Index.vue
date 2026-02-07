@@ -29,19 +29,24 @@
                             <!-- Option 1: Camera -->
                             <button
                                 @click="requestCameraPermission"
-                                class="p-6 border-2 border-blue-500 rounded-lg hover:bg-blue-50 transition-colors"
+                                class="p-6 border-2 border-blue-500 rounded-lg hover:bg-blue-50 transition-colors group"
                             >
-                                <div class="text-4xl mb-2">📷</div>
-                                <div class="font-semibold text-gray-800">Gunakan Kamera</div>
-                                <div class="text-xs text-gray-500 mt-1">Butuh izin akses</div>
+                                <svg class="w-16 h-16 mx-auto mb-3 text-blue-600 group-hover:text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <div class="font-semibold text-gray-800">Scan Live</div>
+                                <div class="text-xs text-gray-500 mt-1">Real-time scanning</div>
                             </button>
                             
                             <!-- Option 2: Upload Image -->
                             <button
                                 @click="triggerFileInput"
-                                class="p-6 border-2 border-green-500 rounded-lg hover:bg-green-50 transition-colors"
+                                class="p-6 border-2 border-green-500 rounded-lg hover:bg-green-50 transition-colors group"
                             >
-                                <div class="text-4xl mb-2">🖼️</div>
+                                <svg class="w-16 h-16 mx-auto mb-3 text-green-600 group-hover:text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
                                 <div class="font-semibold text-gray-800">Upload Foto</div>
                                 <div class="text-xs text-gray-500 mt-1">Tanpa izin kamera</div>
                             </button>
@@ -49,9 +54,11 @@
                             <!-- Option 3: Manual Input -->
                             <button
                                 @click="showManualInput = true"
-                                class="p-6 border-2 border-yellow-500 rounded-lg hover:bg-yellow-50 transition-colors"
+                                class="p-6 border-2 border-yellow-500 rounded-lg hover:bg-yellow-50 transition-colors group"
                             >
-                                <div class="text-4xl mb-2">⌨️</div>
+                                <svg class="w-16 h-16 mx-auto mb-3 text-yellow-600 group-hover:text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
                                 <div class="font-semibold text-gray-800">Input Manual</div>
                                 <div class="text-xs text-gray-500 mt-1">Ketik ID pelanggan</div>
                             </button>
@@ -79,9 +86,14 @@
                         
                         <!-- Info Note -->
                         <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-left">
-                            <p class="text-sm text-blue-800">
-                                <strong>💡 Tips:</strong> Jika izin kamera tidak muncul atau sudah ditolak, gunakan opsi <strong>"Upload Foto"</strong> atau <strong>"Input Manual"</strong> sebagai alternatif.
-                            </p>
+                            <div class="flex items-start gap-2">
+                                <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                </svg>
+                                <p class="text-sm text-blue-800">
+                                    <strong>Tips:</strong> Jika popup izin kamera tidak muncul atau sudah ditolak, gunakan opsi <strong>"Upload Foto"</strong> atau <strong>"Input Manual"</strong> sebagai alternatif.
+                                </p>
+                            </div>
                         </div>
                     </div>
 
@@ -135,41 +147,63 @@
                         
                         <!-- Camera Status -->
                         <div class="mt-4 text-center">
-                            <p v-if="cameraError" class="text-red-600 text-sm">
+                            <p v-if="cameraError" class="text-red-600 text-sm font-medium">
                                 {{ cameraError }}
                             </p>
-                            <p v-else-if="cameraLoading" class="text-blue-600 text-sm">
-                                ⏳ Memuat kamera...
-                            </p>
+                            <div v-else-if="cameraLoading" class="flex items-center justify-center gap-2 text-blue-600 text-sm">
+                                <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Memuat kamera...</span>
+                            </div>
                             <p v-else class="text-gray-600">
-                                Arahkan kamera ke QR code pelanggan
+                                <span class="inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                    </svg>
+                                    Scanning QR code secara real-time...
+                                </span>
                             </p>
                             
                             <!-- Help Instructions -->
                             <div v-if="cameraError" class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-left">
-                                <p class="font-semibold text-sm text-yellow-800 mb-2">💡 Cara Mengaktifkan Kamera:</p>
-                                <div class="text-xs text-yellow-700 space-y-2">
-                                    <p class="font-semibold text-red-600">⚠️ Jika tombol izin tidak muncul lagi:</p>
-                                    <ul class="space-y-2 ml-4">
-                                        <li><strong>Chrome Desktop:</strong> Klik ikon kunci/kamera di sebelah kiri address bar → Pilih "Kamera" → Pilih "Izinkan" → Refresh halaman (F5)</li>
-                                        <li><strong>Chrome Mobile:</strong> Klik ikon <strong>⋮</strong> (3 titik) → <strong>Setelan Situs</strong> → <strong>Kamera</strong> → Pilih <strong>Izinkan</strong> → Kembali dan refresh</li>
-                                        <li><strong>Safari iOS:</strong> Settings iPhone → Safari → Camera → Pilih "Ask" atau "Allow"</li>
-                                        <li><strong>Firefox:</strong> Klik ikon kamera dengan garis merah di address bar → Hapus izin yang ditolak → Refresh halaman</li>
-                                        <li class="pt-2 border-t border-yellow-300"><strong>Penting:</strong> Setelah mengubah setting, <strong class="text-red-600">REFRESH HALAMAN</strong> (F5 atau swipe down)</li>
-                                    </ul>
+                                <div class="flex items-start gap-2 mb-3">
+                                    <svg class="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                    </svg>
+                                    <div>
+                                        <p class="font-semibold text-sm text-yellow-800 mb-2">Cara Mengaktifkan Kamera:</p>
+                                        <div class="text-xs text-yellow-700 space-y-2">
+                                            <p class="font-semibold text-red-600">Jika popup izin tidak muncul:</p>
+                                            <ul class="space-y-2 ml-4 list-disc">
+                                                <li><strong>Chrome Desktop:</strong> Klik ikon kunci/kamera di address bar → Pilih "Kamera" → "Izinkan" → Refresh (F5)</li>
+                                                <li><strong>Chrome Mobile:</strong> Menu (3 titik) → Setelan Situs → Kamera → Izinkan → Refresh</li>
+                                                <li><strong>Safari iOS:</strong> Settings → Safari → Camera → Allow</li>
+                                                <li><strong>Firefox:</strong> Klik ikon kamera di address bar → Hapus blokir → Refresh</li>
+                                                <li class="pt-2 border-t border-yellow-300"><strong class="text-red-600">Setelah ubah setting, REFRESH HALAMAN</strong></li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="mt-3 flex gap-2">
                                     <button 
                                         @click="retryCamera"
-                                        class="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm font-medium"
+                                        class="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm font-medium inline-flex items-center justify-center gap-2"
                                     >
-                                        🔄 Coba Lagi
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        Coba Lagi
                                     </button>
                                     <button 
                                         @click="reloadPage"
-                                        class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+                                        class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium inline-flex items-center justify-center gap-2"
                                     >
-                                        ↻ Refresh Halaman
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        Refresh Halaman
                                     </button>
                                 </div>
                             </div>
@@ -356,14 +390,14 @@ const checkEnvironment = () => {
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     
     if (!isHttps && !isLocalhost) {
-        cameraError.value = '⚠️ Kamera hanya dapat diakses melalui HTTPS di production. Gunakan input manual.';
+        cameraError.value = 'Kamera hanya dapat diakses melalui HTTPS di production. Gunakan input manual.';
         showManualInput.value = true;
         return false;
     }
     
     // Check if getUserMedia is available
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        cameraError.value = '❌ Browser tidak mendukung akses kamera. Gunakan input manual.';
+        cameraError.value = 'Browser tidak mendukung akses kamera. Gunakan input manual.';
         showManualInput.value = true;
         return false;
     }
@@ -384,20 +418,8 @@ const startCamera = async () => {
     cameraError.value = '';
     
     try {
-        // Check permission first
-        if (navigator.permissions) {
-            try {
-                const permissionStatus = await navigator.permissions.query({ name: 'camera' });
-                
-                if (permissionStatus.state === 'denied') {
-                    throw new Error('Camera permission denied by user');
-                }
-            } catch (permErr) {
-                // Permission query not supported in some browsers
-            }
-        }
-        
-        // Request camera access
+        // Directly request camera access - this will trigger browser permission prompt
+        // Don't check permission state first as it can block the prompt from showing
         const constraints = {
             video: {
                 facingMode: 'environment',
@@ -421,7 +443,7 @@ const startCamera = async () => {
                     startScanning();
                 } catch (playError) {
                     console.error('Video play error:', playError);
-                    cameraError.value = '⚠️ Tidak dapat memulai video. Silakan coba lagi.';
+                    cameraError.value = 'Tidak dapat memulai video. Silakan coba lagi.';
                     cameraLoading.value = false;
                 }
             };
@@ -436,13 +458,13 @@ const startCamera = async () => {
         let errorMessage = '';
         
         if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError' || error.message.includes('permission denied')) {
-            errorMessage = '🚫 Izin akses kamera ditolak. Silakan klik "Refresh Halaman" setelah mengubah pengaturan browser Anda.';
+            errorMessage = 'Izin akses kamera ditolak. Silakan coba lagi atau gunakan metode lain.';
         } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-            errorMessage = '📷 Kamera tidak ditemukan pada perangkat Anda.';
+            errorMessage = 'Kamera tidak ditemukan pada perangkat Anda.';
         } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-            errorMessage = '⚠️ Kamera sedang digunakan oleh aplikasi lain.';
+            errorMessage = 'Kamera sedang digunakan oleh aplikasi lain.';
         } else if (error.name === 'OverconstrainedError') {
-            errorMessage = '⚠️ Kamera tidak memenuhi persyaratan. Mencoba dengan pengaturan alternatif...';
+            errorMessage = 'Kamera tidak memenuhi persyaratan. Mencoba dengan pengaturan alternatif...';
             
             // Retry with simpler constraints
             try {
@@ -461,16 +483,16 @@ const startCamera = async () => {
                     return;
                 }
             } catch (retryError) {
-                errorMessage = '❌ Tidak dapat mengakses kamera dengan pengaturan apapun.';
+                errorMessage = 'Tidak dapat mengakses kamera dengan pengaturan apapun.';
             }
         } else if (error.name === 'TypeError') {
-            errorMessage = '❌ Kamera hanya dapat diakses melalui HTTPS atau localhost.';
+            errorMessage = 'Kamera hanya dapat diakses melalui HTTPS atau localhost.';
         } else {
-            errorMessage = `❌ Error: ${error.message}`;
+            errorMessage = `Error: ${error.message}`;
         }
         
         cameraError.value = errorMessage;
-        showManualInput.value = true;
+        showManualInput.value = false;
     }
 };
 
@@ -629,22 +651,8 @@ const resetScanner = () => {
 
 const retryCamera = async () => {
     cameraError.value = '';
-    
-    // Check if permission is permanently denied
-    if (navigator.permissions) {
-        try {
-            const permissionStatus = await navigator.permissions.query({ name: 'camera' });
-            
-            if (permissionStatus.state === 'denied') {
-                cameraError.value = '🚫 Izin kamera masih ditolak. Silakan ikuti instruksi di bawah untuk mengaktifkan kamera, lalu klik "Refresh Halaman".';
-                return;
-            }
-        } catch (permErr) {
-            // Permission query not supported, continue anyway
-            console.log('Permission query not supported');
-        }
-    }
-    
+    // Simply call startCamera, don't pre-check permission state
+    // This allows the browser to show the permission prompt again
     requestCameraPermission();
 };
 
@@ -701,14 +709,14 @@ const handleImageUpload = async (event) => {
         if (code) {
             await processQRCode(code.data);
         } else {
-            cameraError.value = '❌ Tidak dapat mendeteksi QR code pada gambar. Pastikan foto jelas dan QR code terlihat.';
+            cameraError.value = 'Tidak dapat mendeteksi QR code pada gambar. Pastikan foto jelas dan QR code terlihat.';
         }
         
         // Clean up
         URL.revokeObjectURL(img.src);
     } catch (error) {
         console.error('Image upload error:', error);
-        cameraError.value = '❌ Gagal memproses gambar. Silakan coba lagi dengan foto yang lebih jelas.';
+        cameraError.value = 'Gagal memproses gambar. Silakan coba lagi dengan foto yang lebih jelas.';
     } finally {
         loading.value = false;
         // Reset file input
