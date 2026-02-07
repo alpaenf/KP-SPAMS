@@ -703,7 +703,7 @@
                     <!-- Google Maps Embed -->
                     <div class="w-full h-[500px] bg-gray-100">
                         <iframe 
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3956.0!2d109.1!3d-7.5!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zN8KwMzAnMDAuMCJTIDEwOcKwMDYnMDAuMCJF!5e0!3m2!1sid!2sid!4v1234567890123!5m2!1sid!2sid"
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3952.846!2d109.08140!3d-7.60043!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zN8KwMzYnMDEuNSJTIDEwOcKwMDQnNTMuMCJF!5e0!3m2!1sid!2sid!4v1707307890123!5m2!1sid!2sid"
                             width="100%" 
                             height="100%" 
                             style="border:0;" 
@@ -728,7 +728,7 @@
                                 </div>
                             </div>
                             <a 
-                                href="https://maps.app.goo.gl/EfMGp1zRDZTtExBf9" 
+                                href="https://maps.app.goo.gl/dCMnJs3RFM7WJAjh7" 
                                 target="_blank"
                                 class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition whitespace-nowrap shadow-lg hover:shadow-xl"
                             >

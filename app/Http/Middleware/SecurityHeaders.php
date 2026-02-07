@@ -36,7 +36,8 @@ class SecurityHeaders
             "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for Tailwind
             "img-src 'self' data: https:", // data: for base64 images, https: for external images
             "font-src 'self' data:",
-            "connect-src 'self'",
+            "connect-src 'self' https://www.google.com", // Allow Google Maps API connections
+            "frame-src 'self' https://www.google.com", // Allow Google Maps iframe embed
             "frame-ancestors 'self'",
         ];
         $response->headers->set('Content-Security-Policy', implode('; ', $csp));
