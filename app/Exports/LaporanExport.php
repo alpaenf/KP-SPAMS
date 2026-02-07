@@ -12,6 +12,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use App\Models\TagihanBulanan;
 
 class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithTitle, ShouldAutoSize, WithDrawings
 {
@@ -19,6 +20,7 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithTit
     protected $summary;
     protected $detail;
     protected $filters;
+    protected $tagihans;
 
     public function __construct($data, $summary, $detail, $filters)
     {
@@ -26,6 +28,17 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithTit
         $this->summary = $summary;
         $this->detail = $detail;
         $this->filters = $filters;
+        
+        // Pre-load all tagihan for better performance (avoid N+1 query)
+        $pelangganIds = $data->pluck('pelanggan_id')->unique();
+        $bulans = $data->pluck('bulan_bayar')->unique();
+        
+        $this->tagihans = TagihanBulanan::whereIn('pelanggan_id', $pelangganIds)
+            ->whereIn('bulan', $bulans)
+            ->get()
+            ->groupBy(function($tagihan) {
+                return $tagihan->pelanggan_id . '_' . $tagihan->bulan;
+            });
     }
 
     public function collection()
@@ -87,6 +100,25 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithTit
         $no = 1;
         foreach ($this->data as $pembayaran) {
             $pelanggan = $pembayaran->pelanggan;
+            
+            // Get tarif dan abonemen dari tagihan atau default
+            $tarifPerKubik = 2000; // Default
+            $biayaAbunemen = 3000; // Default
+            
+            // Ambil tagihan dari pre-loaded data
+            $key = $pembayaran->pelanggan_id . '_' . $pembayaran->bulan_bayar;
+            $tagihans = $this->tagihans->get($key);
+            
+            if ($tagihans && $tagihans->isNotEmpty()) {
+                $tagihan = $tagihans->first();
+                if ($tagihan->tarif_per_kubik > 0) {
+                    $tarifPerKubik = $tagihan->tarif_per_kubik;
+                }
+                if ($tagihan->biaya_abunemen > 0) {
+                    $biayaAbunemen = $tagihan->biaya_abunemen;
+                }
+            }
+            
             $rows->push([
                 $no++,
                 $pembayaran->tanggal_bayar->format('d/m/Y'),
@@ -96,8 +128,8 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithTit
                 $pelanggan->wilayah ?? '-',
                 \Carbon\Carbon::parse($pembayaran->bulan_bayar)->locale('id')->isoFormat('MMMM Y'),
                 number_format($pembayaran->jumlah_kubik ?? 0, 2, ',', '.'),
-                'Rp ' . number_format($pembayaran->tarif_per_kubik ?? 0, 0, ',', '.'),
-                'Rp ' . number_format($pembayaran->abunemen ?? 0, 0, ',', '.'),
+                'Rp ' . number_format($tarifPerKubik, 0, ',', '.'),
+                'Rp ' . number_format($biayaAbunemen, 0, ',', '.'),
                 'Rp ' . number_format($pembayaran->jumlah_bayar, 0, ',', '.')
             ]);
         }
