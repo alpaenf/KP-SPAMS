@@ -129,7 +129,7 @@
         <div class="header">
             <h1>KP-SPAMS "DAMAR WULAN"</h1>
             <p>Air Bersih untuk Kehidupan Sehat</p>
-            <p>Desa Ciwuni, Kec. Kesugihan, Kab. Cilacap</p>
+            <p>Desa Lempeni, Kec. Swakarya, Grobogan</p>
         </div>
 
         <!-- Struk Title -->
@@ -179,7 +179,7 @@
 
         <!-- Rincian Pembayaran -->
         <div class="total-section">
-            @if(!is_null($pembayaran['meteran_sebelum']) && !is_null($pembayaran['meteran_sesudah']))
+            @if($pembayaran['meteran_sebelum'] && $pembayaran['meteran_sesudah'])
             <div class="total-row">
                 <div class="total-label">Meteran Sebelum</div>
                 <div class="total-value">{{ number_format($pembayaran['meteran_sebelum'], 0, ',', '.') }} m³</div>
@@ -191,18 +191,18 @@
             <div class="divider"></div>
             @endif
 
-            @if(!is_null($pembayaran['jumlah_kubik']))
+            @if($pembayaran['jumlah_kubik'])
             <div class="total-row">
                 <div class="total-label">Pemakaian Air</div>
                 <div class="total-value">{{ number_format($pembayaran['jumlah_kubik'], 2, ',', '.') }} m³</div>
             </div>
             <div class="total-row">
                 <div class="total-label">Tarif per m³</div>
-                <div class="total-value">Rp {{ number_format($pembayaran['tarif_per_kubik'] ?? 2000, 0, ',', '.') }}</div>
+                <div class="total-value">Rp {{ number_format(2000, 0, ',', '.') }}</div>
             </div>
             <div class="total-row">
                 <div class="total-label">Subtotal</div>
-                <div class="total-value">Rp {{ number_format($pembayaran['jumlah_kubik'] * ($pembayaran['tarif_per_kubik'] ?? 2000), 0, ',', '.') }}</div>
+                <div class="total-value">Rp {{ number_format($pembayaran['jumlah_kubik'] * 2000, 0, ',', '.') }}</div>
             </div>
             <div class="divider"></div>
             @endif
@@ -210,7 +210,7 @@
             @if($pembayaran['abunemen'])
             <div class="total-row">
                 <div class="total-label">Abunemen</div>
-                <div class="total-value">Rp {{ number_format($pembayaran['biaya_abunemen'] ?? 3000, 0, ',', '.') }}</div>
+                <div class="total-value">Rp {{ number_format(3000, 0, ',', '.') }}</div>
             </div>
             @endif
 
