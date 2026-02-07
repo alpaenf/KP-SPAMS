@@ -438,7 +438,7 @@ const requestCameraPermission = async () => {
             if (permissionStatus.state === 'denied') {
                 // Permission is permanently blocked
                 cameraError.value = 'Izin kamera DIBLOKIR oleh browser. Klik detail di bawah untuk cara membuka blokir, atau gunakan Upload Foto.';
-                alert('⚠️ Izin Kamera Diblokir!\\n\\nAnda pernah memblokir akses kamera untuk situs ini.\\n\\nUntuk mengaktifkan:\\n1. Klik ikon kunci (🔒) di sebelah kiri URL\\n2. Cari setting \"Kamera\"\\n3. Ubah ke \"Izinkan\"\\n4. Refresh halaman (F5)\\n\\nATAU gunakan opsi \"Upload Foto\" untuk scan tanpa kamera.');
+                alert('⚠️ Izin Kamera Diblokir!\n\nAnda pernah memblokir akses kamera untuk situs ini.\n\nUntuk mengaktifkan:\n1. Klik ikon kunci (🔒) di sebelah kiri URL\n2. Cari setting "Kamera"\n3. Ubah ke "Izinkan"\n4. Refresh halaman (F5)\n\nATAU gunakan opsi "Upload Foto" untuk scan tanpa kamera.');
                 return;
             } else if (permissionStatus.state === 'granted') {
                 console.log('[QR Scanner] Permission already granted, starting camera...');
@@ -468,20 +468,53 @@ const startCamera = async () => {
     console.log('[QR Scanner] Hostname:', window.location.hostname);
     
     try {
-        // Directly request camera access - this will trigger browser permission prompt
-        // Don't check permission state first as it can block the prompt from showing
-        const constraints = {
-            video: {
-                facingMode: 'environment',
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
+        // Try multiple camera configurations for better compatibility
+        const constraintsList = [
+            // First try: back camera with high resolution
+            {
+                video: {
+                    facingMode: { exact: 'environment' },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            },
+            // Second try: back camera without exact
+            {
+                video: {
+                    facingMode: 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            },
+            // Third try: any camera with resolution
+            {
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            },
+            // Fourth try: just video true (simplest)
+            { video: true }
+        ];
+        
+        let lastError = null;
+        
+        for (const constraints of constraintsList) {
+            try {
+                console.log('[QR Scanner] Trying constraints:', JSON.stringify(constraints));
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                console.log('[QR Scanner] Camera access granted with constraints:', JSON.stringify(constraints));
+                break; // Success, exit loop
+            } catch (err) {
+                console.log('[QR Scanner] Failed with constraints:', err.name, err.message);
+                lastError = err;
+                // Continue to next constraints
             }
-        };
+        }
         
-        console.log('[QR Scanner] Requesting getUserMedia with constraints:', constraints);
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-        console.log('[QR Scanner] Camera access granted!');
-        
+        if (!stream) {
+            throw lastError || new Error('Tidak dapat mengakses kamera');
+        }
         
         if (videoElement.value) {
             videoElement.value.srcObject = stream;
@@ -535,33 +568,17 @@ const startCamera = async () => {
         } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
             errorMessage = 'Kamera tidak ditemukan pada perangkat Anda.';
         } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-            errorMessage = 'Kamera sedang digunakan oleh aplikasi lain.';
+            errorMessage = 'Kamera sedang digunakan oleh aplikasi lain. Tutup aplikasi lain yang menggunakan kamera, lalu coba lagi.';
         } else if (error.name === 'OverconstrainedError') {
-            errorMessage = 'Kamera tidak memenuhi persyaratan. Mencoba dengan pengaturan alternatif...';
-            
-            // Retry with simpler constraints
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                if (videoElement.value) {
-                    videoElement.value.srcObject = stream;
-                    videoElement.value.onloadedmetadata = async () => {
-                        try {
-                            await videoElement.value.play();
-                            cameraStarted.value = true;
-                            startScanning();
-                        } catch (playError) {
-                            console.error('Video play error:', playError);
-                        }
-                    };
-                    return;
-                }
-            } catch (retryError) {
-                errorMessage = 'Tidak dapat mengakses kamera dengan pengaturan apapun.';
-            }
+            errorMessage = 'Kamera tidak mendukung pengaturan yang diperlukan. Gunakan "Upload Foto" sebagai alternatif.';
+        } else if (error.name === 'AbortError') {
+            errorMessage = 'Permintaan kamera dibatalkan. Silakan coba lagi.';
         } else if (error.name === 'TypeError') {
             errorMessage = 'Kamera hanya dapat diakses melalui HTTPS atau localhost.';
+        } else if (error.name === 'SecurityError') {
+            errorMessage = 'Akses kamera diblokir karena alasan keamanan. Pastikan website menggunakan HTTPS.';
         } else {
-            errorMessage = `Error: ${error.message}`;
+            errorMessage = `Error: ${error.message || error.name || 'Unknown error'}`;
         }
         
         cameraError.value = errorMessage;

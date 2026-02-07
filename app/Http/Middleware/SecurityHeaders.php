@@ -33,9 +33,9 @@ class SecurityHeaders
         $csp = [
             "default-src 'self'",
             "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-inline needed for Inertia/Vue
-            "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for Tailwind
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // Allow Google Fonts
             "img-src 'self' data: https:", // data: for base64 images, https: for external images
-            "font-src 'self' data:",
+            "font-src 'self' data: https://fonts.gstatic.com", // Allow Google Fonts
             "connect-src 'self' https://www.google.com", // Allow Google Maps API connections
             "frame-src 'self' https://www.google.com", // Allow Google Maps iframe embed
             "frame-ancestors 'self'",
@@ -48,7 +48,8 @@ class SecurityHeaders
         }
 
         // Permissions Policy (formerly Feature Policy)
-        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
+        // Allow camera for QR Scanner feature, microphone disabled, geolocation for self
+        $response->headers->set('Permissions-Policy', 'camera=(self), microphone=(), geolocation=(self)');
 
         return $response;
     }
