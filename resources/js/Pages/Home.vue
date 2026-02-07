@@ -21,8 +21,8 @@
             <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-20">
                 <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight text-shadow-lg animate-fade-in-up">
                     KP-SPAMS <br class="hidden md:block" />
-                    <span class="text-blue-300">
-                        "<span ref="typingText" class="typing-text"></span><span class="typing-cursor">|</span>"
+                    <span class="text-blue-300 inline-block">
+                        "<span ref="typingText" class="typing-text-wrapper"></span><span class="typing-cursor">|</span>"
                     </span>
                 </h1>
                 <p class="text-xl md:text-2xl text-blue-50 mb-10 max-w-3xl mx-auto font-light text-shadow animate-fade-in-up" style="animation-delay: 0.2s;">
@@ -959,25 +959,36 @@ const tarifs = ref([]);
 const isTarifsLoaded = ref(false);
 const typingText = ref(null);
 
-// Typing animation function
-const typeWriter = (text, element, speed = 150) => {
+// Typing animation function with loop
+const typeWriter = (text, element, typeSpeed = 150, deleteSpeed = 100, pauseTime = 3000) => {
     let i = 0;
-    const type = () => {
-        if (i < text.length && element) {
-            element.textContent += text.charAt(i);
+    let isDeleting = false;
+    
+    const animate = () => {
+        if (!element) return;
+        
+        if (!isDeleting && i < text.length) {
+            // Typing
+            element.textContent = text.substring(0, i + 1);
             i++;
-            setTimeout(type, speed);
-        } else if (element) {
-            // Remove cursor after typing is done
-            setTimeout(() => {
-                const cursor = element.parentElement.querySelector('.typing-cursor');
-                if (cursor) {
-                    cursor.style.display = 'none';
-                }
-            }, 1000);
+            setTimeout(animate, typeSpeed);
+        } else if (!isDeleting && i === text.length) {
+            // Pause before deleting
+            isDeleting = true;
+            setTimeout(animate, pauseTime);
+        } else if (isDeleting && i > 0) {
+            // Deleting
+            element.textContent = text.substring(0, i - 1);
+            i--;
+            setTimeout(animate, deleteSpeed);
+        } else if (isDeleting && i === 0) {
+            // Reset and start typing again
+            isDeleting = false;
+            setTimeout(animate, 500); // Short pause before retyping
         }
     };
-    type();
+    
+    animate();
 };
 
 // Fetch tarif data from API
@@ -1068,7 +1079,7 @@ onMounted(() => {
     // Start typing animation after a short delay
     setTimeout(() => {
         if (typingText.value) {
-            typeWriter('DAMAR WULAN', typingText.value, 150);
+            typeWriter('DAMAR WULAN', typingText.value, 150, 100, 3000);
         }
     }, 800); // Start after fade-in animation
     
@@ -1183,15 +1194,23 @@ onMounted(() => {
 }
 
 /* Typing Animation */
-.typing-text {
+.typing-text-wrapper {
     display: inline-block;
-    min-width: 1ch; /* Prevent layout shift */
+    min-width: 300px; /* Fixed width untuk prevent layout shift */
+    text-align: left;
+}
+
+@media (max-width: 768px) {
+    .typing-text-wrapper {
+        min-width: 200px; /* Smaller on mobile */
+    }
 }
 
 .typing-cursor {
     display: inline-block;
     animation: blink 0.7s steps(2) infinite;
     margin-left: 2px;
+    font-weight: lighter;
 }
 
 @keyframes blink {
