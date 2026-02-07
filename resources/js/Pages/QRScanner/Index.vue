@@ -405,16 +405,30 @@ const processQRCode = async (qrData) => {
     stopCamera();
     
     try {
-        const response = await fetch('/api/qr-scanner/scan', {
+        // Gunakan fetchWithCsrfRetry untuk auto-retry jika CSRF error
+        const response = await window.fetchWithCsrfRetry('/api/qr-scanner/scan', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json',
             },
-            credentials: 'same-origin', // FIX: Include cookies untuk session/CSRF
             body: JSON.stringify({ id_pelanggan: qrData }),
         });
+        
+        // Handle specific error status
+        if (response.status === 419) {
+            alert('Sesi Anda telah berakhir. Silakan refresh halaman dan coba lagi.');
+            setTimeout(() => window.location.reload(), 2000);
+            return;
+        }
+        
+        // Handle rate limiting (429)
+        if (response.status === 429) {
+            const errorData = await response.json().catch(() => ({}));
+            alert(errorData.message || 'Terlalu banyak permintaan. Silakan tunggu beberapa saat.');
+            startCamera();
+            loading.value = false;
+            return;
+        }
         
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
@@ -431,7 +445,13 @@ const processQRCode = async (qrData) => {
         }
     } catch (error) {
         console.error('Error processing QR code:', error);
-        alert(`Terjadi kesalahan saat memproses QR code: ${error.message}`);
+        
+        // User-friendly error message
+        const errorMessage = error.message.includes('Failed to fetch') 
+            ? 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.'
+            : `Terjadi kesalahan saat memproses QR code: ${error.message}`;
+        
+        alert(errorMessage);
         startCamera();
     } finally {
         loading.value = false;

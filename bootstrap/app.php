@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Middleware aliases
         $middleware->alias([
             'guest.redirect' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'qr.rate.limit' => \App\Http\Middleware\QRScanRateLimiter::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

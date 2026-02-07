@@ -34,11 +34,29 @@ class QRScannerController extends Controller
         $pelanggan = Pelanggan::where('id_pelanggan', $request->id_pelanggan)->first();
         
         if (!$pelanggan) {
+            // Log scan attempt yang gagal
+            \Log::info('QR Scan Failed', [
+                'id_pelanggan' => $request->id_pelanggan,
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'timestamp' => now(),
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Pelanggan tidak ditemukan.',
             ], 404);
         }
+        
+        // Log scan yang berhasil untuk audit trail
+        \Log::info('QR Scan Success', [
+            'id_pelanggan' => $pelanggan->id_pelanggan,
+            'nama_pelanggan' => $pelanggan->nama_pelanggan,
+            'ip' => $request->ip(),
+            'user_id' => auth()->id(),
+            'user_agent' => $request->userAgent(),
+            'timestamp' => now(),
+        ]);
         
         // Ambil tagihan terbaru
         $tagihanTerbaru = TagihanBulanan::where('pelanggan_id', $pelanggan->id)

@@ -32,6 +32,30 @@ Aplikasi PAMSIMAS sekarang sudah mendukung PWA dan bisa di-install sebagai aplik
 - Auto-hide setelah aplikasi di-install
 - Solusi untuk masalah "prompt tidak muncul setelah uninstall"
 
+### 6. CSRF Token Auto-Refresh (`resources/js/app.js`) 🔒
+- **Auto-refresh token setiap 50 menit** untuk mencegah token expired
+- **Retry mechanism** otomatis jika kena error 419 (CSRF mismatch)
+- **Global error handler** untuk semua Inertia request
+- **Visibility change detection** - refresh token saat user kembali ke app
+- Solusi permanen untuk error "CSRF token mismatch" di PWA
+- 📖 Panduan lengkap: [SOLUSI_CSRF_MISMATCH.md](SOLUSI_CSRF_MISMATCH.md)
+
+### 7. Security Layer untuk QR Scanner 🛡️
+- **Rate limiting**: Max 30 scan/menit per IP, max 5 scan/2 menit per pelanggan
+- **Audit logging**: Semua scan tercatat (IP, user, timestamp)
+- **Authentication required**: Hanya user login yang bisa scan
+- **Database validation**: QR code palsu tidak akan berfungsi
+- 📖 Analisa lengkap: [KEAMANAN_QR_CODE.md](KEAMANAN_QR_CODE.md)
+
+### 6. CSRF Token Auto-Refresh & Retry System ([app.js](resources/js/app.js)) 🔒
+- **Auto-refresh CSRF token setiap 50 menit** untuk mencegah token expiry
+- **Retry mechanism** otomatis jika request gagal karena CSRF mismatch (error 419)
+- **Global error handler** untuk Inertia request
+- **Visibility detection** - refresh token saat user kembali ke aplikasi
+- **Solusi permanen untuk error "CSRF token mismatch"** di PWA
+
+📖 **Detail lengkap:** [SOLUSI_CSRF_MISMATCH.md](SOLUSI_CSRF_MISMATCH.md)
+
 ## Langkah Selanjutnya 🚀
 
 ### 1. Buat Icon untuk Aplikasi
@@ -67,8 +91,11 @@ Maskable icon harus punya **safe zone** (padding 20% di semua sisi) agar logo ti
 - Format: PNG
 - **Jangan ada border hitam di file icon!**
 
-**📖 Panduan Lengkap:** Lihat [CARA_BIKIN_ICON_PWA.md](CARA_BIKIN_ICON_PWA.md) untuk tutorial detail cara bikin icon yang benar (termasuk solusi border hitam di splash screen).
+📖 **Panduan lengkap:** [CARA_BIKIN_ICON_PWA.md](CARA_BIKIN_ICON_PWA.md)
 
+### Background/Border Hitam di Splash Screen
+
+**Masalah:** Logo muncul dengan border/background hitam saat splash screen loading.
 **Cara Tercepat - Auto Generate:**
 1. Buka: https://www.pwabuilder.com/imageGenerator
 2. Upload logo DASAR WULAN
@@ -76,7 +103,11 @@ Maskable icon harus punya **safe zone** (padding 20% di semua sisi) agar logo ti
 4. Download semua icon (sudah include maskable!)
 5. Upload ke folder `public/images/`
 
-### 2. Build Aplikasi
+📖 **Panduan lengkap:** [CARA_BIKIN_ICON_PWA.md](CARA_BIKIN_ICON_PWA.md)
+
+### Background/Border Hitam di Splash Screen
+
+**Masalah:** Logo muncul dengan border/background hitam saat splash screen loading.
 
 Setelah icon siap, jalankan build untuk compile assets:
 
@@ -192,18 +223,44 @@ Dengan tombol ini, user tidak perlu bingung lagi!
 3. Check status dan error messages
 4. Bisa unregister dan refresh untuk test ulang
 
+### Error "CSRF token mismatch" ⚠️
+
+**Masalah:** Error ini muncul saat scan QR code atau submit form setelah aplikasi lama tidak digunakan.
+
+**Penyebab:** Token CSRF expired karena aplikasi di-minimize berjam-jam atau session timeout.
+
+**Solusi:** ✅ **Sudah diimplementasikan!**
+- Token otomatis refresh setiap 50 menit di background
+- Auto-retry jika tetap kena error 419
+- Reload page otomatis dengan token baru
+
+**Jika masih terjadi:**
+1. Build aplikasi: `npm run build`
+2. Clear browser cache (Ctrl+Shift+R)
+3. Uninstall & install ulang PWA
+4. Lihat console untuk error log
+
+📖 **Detail lengkap:** [SOLUSI_CSRF_MISMATCH.md](SOLUSI_CSRF_MISMATCH.md)
+
 ## File Changes Summary
 
 ### File Baru:
 - `public/manifest.webmanifest` - PWA manifest configuration
 - `public/sw.js` - Service Worker untuk offline support
 - `resources/js/Components/InstallPWAButton.vue` - Tombol install PWA dengan smart detection
+- `app/Http/Middleware/QRScanRateLimiter.php` - Rate limiting untuk QR scanner
+- `SOLUSI_CSRF_MISMATCH.md` - Dokumentasi solusi CSRF token mismatch
+- `KEAMANAN_QR_CODE.md` - Analisa keamanan QR code & best practices
 
 ### File Dimodifikasi:
 - `resources/views/app.blade.php` - Tambah PWA meta tags
-- `resources/js/app.js` - Register Service Worker
+- `resources/js/app.js` - Register Service Worker + Auto-refresh CSRF token
 - `resources/js/Pages/Dashboard.vue` - Tambah tombol install di user dashboard
 - `resources/js/Pages/Admin/Dashboard.vue` - Tambah tombol install di admin dashboard
+- `resources/js/Pages/QRScanner/Index.vue` - Pakai fetchWithCsrfRetry + Handle rate limit error
+- `app/Http/Controllers/QRScannerController.php` - Tambah audit logging
+- `bootstrap/app.php` - Register middleware QR rate limiter
+- `routes/web.php` - Tambah API endpoint /api/csrf-token + Apply rate limit middleware
 
 ## Keuntungan PWA
 

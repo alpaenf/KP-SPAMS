@@ -22,6 +22,11 @@ Route::get('/pelanggan/{id}/download-qr-image', [QRScannerController::class, 'do
 Route::get('/pembayaran/{id}', [HomeController::class, 'pembayaran'])->name('pembayaran.public');
 Route::post('/konfirmasi-pembayaran', [HomeController::class, 'konfirmasiPembayaran'])->name('konfirmasi.pembayaran');
 
+// API untuk refresh CSRF token (untuk PWA)
+Route::get('/api/csrf-token', function () {
+    return response()->json(['token' => csrf_token()]);
+});
+
 // API routes for landing page (public)
 Route::get('/api/berita', [BeritaController::class, 'getPublished']);
 Route::get('/api/visi-misi', [VisiMisiController::class, 'get']);
@@ -48,7 +53,9 @@ Route::middleware(['auth'])->group(function () {
     
     // QR Scanner Routes
     Route::get('/qr-scanner', [QRScannerController::class, 'index'])->name('qr-scanner.index');
-    Route::post('/api/qr-scanner/scan', [QRScannerController::class, 'scan'])->name('qr-scanner.scan');
+    Route::post('/api/qr-scanner/scan', [QRScannerController::class, 'scan'])
+        ->middleware('qr.rate.limit')
+        ->name('qr-scanner.scan');
     Route::get('/qr-scanner/input-meteran/{id}', [QRScannerController::class, 'inputMeteran'])->name('qr-scanner.input-meteran');
     Route::post('/api/qr-scanner/store-meteran', [QRScannerController::class, 'storeMeteran'])->name('qr-scanner.store-meteran');
 
