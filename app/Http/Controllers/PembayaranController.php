@@ -329,13 +329,22 @@ class PembayaranController extends Controller
         $pdf = Pdf::loadView('pdf.struk-pembayaran', $data);
         $pdf->setPaper([0, 0, 302.36, 566.93], 'portrait'); // 80mm x 200mm struk paper
         
-        // Save PDF temporarily to public folder
-        $fileName = 'struk_' . $pembayaran->pelanggan->id_pelanggan . '_' . str_replace('-', '', $pembayaran->bulan_bayar) . '.pdf';
+        // Generate unique filename with timestamp to prevent caching
+        $timestamp = time();
+        $fileName = 'struk_' . $pembayaran->pelanggan->id_pelanggan . '_' . str_replace('-', '', $pembayaran->bulan_bayar) . '_' . $timestamp . '.pdf';
         $filePath = public_path('storage/struk/' . $fileName);
         
         // Create directory if not exists
         if (!file_exists(public_path('storage/struk'))) {
             mkdir(public_path('storage/struk'), 0755, true);
+        }
+        
+        // Delete old struk files for this pelanggan and month to save space
+        $oldPattern = public_path('storage/struk/struk_' . $pembayaran->pelanggan->id_pelanggan . '_' . str_replace('-', '', $pembayaran->bulan_bayar) . '_*.pdf');
+        foreach (glob($oldPattern) as $oldFile) {
+            if (file_exists($oldFile)) {
+                @unlink($oldFile);
+            }
         }
         
         $pdf->save($filePath);
@@ -386,45 +395,7 @@ class PembayaranController extends Controller
             ], 422);
         }
 
-        // Check if PDF already exists
-        $fileName = 'struk_' . $pembayaran->pelanggan->id_pelanggan . '_' . str_replace('-', '', $pembayaran->bulan_bayar) . '.pdf';
-        $filePath = public_path('storage/struk/' . $fileName);
-        
-        if (!file_exists($filePath)) {
-            // Generate PDF if not exists
-            return $this->sendReceipt($id);
-        }
-
-        // Generate WhatsApp link
-        $waNumber = preg_replace('/[^0-9]/', '', $pembayaran->pelanggan->no_whatsapp);
-        if (substr($waNumber, 0, 1) === '0') {
-            $waNumber = '62' . substr($waNumber, 1);
-        }
-
-        $bulanBayar = \Carbon\Carbon::parse($pembayaran->bulan_bayar . '-01')->locale('id')->isoFormat('MMMM YYYY');
-        $tanggalBayar = \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->locale('id')->isoFormat('D MMMM YYYY');
-
-        $message = "Halo *{$pembayaran->pelanggan->nama_pelanggan}*,\n\n";
-        $message .= "Terima kasih atas pembayaran Anda untuk tagihan bulan *{$bulanBayar}*.\n\n";
-        $message .= "📋 *Detail Pembayaran:*\n";
-        $message .= "• ID Pelanggan: {$pembayaran->pelanggan->id_pelanggan}\n";
-        $message .= "• Bulan Tagihan: {$bulanBayar}\n";
-        $message .= "• Tanggal Bayar: {$tanggalBayar}\n";
-        $message .= "• Total Bayar: Rp " . number_format($pembayaran->jumlah_bayar, 0, ',', '.') . "\n\n";
-        $message .= "✅ Status: *LUNAS*\n\n";
-        $message .= "Struk pembayaran Anda dapat diunduh melalui link berikut:\n";
-        $message .= url('storage/struk/' . $fileName) . "\n\n";
-        $message .= "Simpan struk ini sebagai bukti pembayaran yang sah.\n\n";
-        $message .= "Salam,\n*KP-SPAMS DAMAR WULAN*";
-
-        $waLink = "https://wa.me/{$waNumber}?text=" . urlencode($message);
-
-        return response()->json([
-            'message' => 'Link WhatsApp berhasil digenerate',
-            'wa_link' => $waLink,
-            'pdf_url' => url('storage/struk/' . $fileName),
-            'pelanggan_nama' => $pembayaran->pelanggan->nama_pelanggan,
-            'no_whatsapp' => $pembayaran->pelanggan->no_whatsapp,
-        ]);
+        // Always regenerate PDF to ensure fresh data
+        return $this->sendReceipt($id);
     }
 }
