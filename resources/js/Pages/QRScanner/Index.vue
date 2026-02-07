@@ -236,6 +236,7 @@ import jsQR from 'jsqr';
 const videoElement = ref(null);
 const cameraError = ref('');
 const cameraLoading = ref(false);
+const cameraStarted = ref(false);
 const scannedData = ref(null);
 const loading = ref(false);
 const showManualInput = ref(false);
@@ -245,8 +246,8 @@ let stream = null;
 let scanInterval = null;
 
 onMounted(() => {
+    // Don't auto-start camera, let user click button first
     checkEnvironment();
-    startCamera();
 });
 
 onUnmounted(() => {
@@ -272,6 +273,10 @@ const checkEnvironment = () => {
     }
     
     return true;
+};
+
+const requestCameraPermission = async () => {
+    await startCamera();
 };
 
 const startCamera = async () => {
@@ -306,6 +311,8 @@ const startCamera = async () => {
         };
         
         stream = await navigator.mediaDevices.getUserMedia(constraints);
+        
+        cameraStarted.value = true;
         
         if (videoElement.value) {
             videoElement.value.srcObject = stream;
@@ -479,7 +486,7 @@ const resetScanner = () => {
 
 const retryCamera = () => {
     cameraError.value = '';
-    startCamera();
+    requestCameraPermission();
 };
 
 const formatBulan = (bulan) => {
