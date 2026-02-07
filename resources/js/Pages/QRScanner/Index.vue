@@ -246,8 +246,11 @@ let stream = null;
 let scanInterval = null;
 
 onMounted(() => {
-    // Don't auto-start camera, let user click button first
     checkEnvironment();
+    // Auto-start camera for better UX (especially on mobile)
+    setTimeout(() => {
+        requestCameraPermission();
+    }, 300); // Small delay to ensure DOM is ready
 });
 
 onUnmounted(() => {
@@ -312,18 +315,26 @@ const startCamera = async () => {
         
         stream = await navigator.mediaDevices.getUserMedia(constraints);
         
-        cameraStarted.value = true;
-        
         if (videoElement.value) {
             videoElement.value.srcObject = stream;
             
-            // Wait for video to be ready
-            videoElement.value.onloadedmetadata = () => {
-                startScanning();
+            // Wait for video to be ready and play it
+            videoElement.value.onloadedmetadata = async () => {
+                try {
+                    // Explicitly play video (required for mobile)
+                    await videoElement.value.play();
+                    cameraStarted.value = true;
+                    cameraLoading.value = false;
+                    startScanning();
+                } catch (playError) {
+                    console.error('Video play error:', playError);
+                    cameraError.value = '⚠️ Tidak dapat memulai video. Silakan coba lagi.';
+                    cameraLoading.value = false;
+                }
             };
+        } else {
+            cameraLoading.value = false;
         }
-        
-        cameraLoading.value = false;
     } catch (error) {
         cameraLoading.value = false;
         console.error('Camera error:', error);
@@ -345,7 +356,15 @@ const startCamera = async () => {
                 stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 if (videoElement.value) {
                     videoElement.value.srcObject = stream;
-                    startScanning();
+                    videoElement.value.onloadedmetadata = async () => {
+                        try {
+                            await videoElement.value.play();
+                            cameraStarted.value = true;
+                            startScanning();
+                        } catch (playError) {
+                            console.error('Video play error:', playError);
+                        }
+                    };
                     return;
                 }
             } catch (retryError) {
@@ -363,6 +382,8 @@ const startCamera = async () => {
 };
 
 const stopCamera = () => {
+    cameraStarted.value = false;
+    
     if (scanInterval) {
         clearInterval(scanInterval);
         scanInterval = null;
@@ -381,11 +402,27 @@ const stopCamera = () => {
 };
 
 const startScanning = () => {
+    // Clear any existing interval
+    if (scanInterval) {
+        clearInterval(scanInterval);
+        scanInterval = null;
+    }
+    
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     
+    let attempts = 0;
+    const maxAttempts = 5;
+    
     scanInterval = setInterval(() => {
-        if (videoElement.value && videoElement.value.readyState === videoElement.value.HAVE_ENOUGH_DATA) {
+        if (!videoElement.value) {
+            return;
+        }
+        
+        // Check if video is ready
+        if (videoElement.value.readyState === videoElement.value.HAVE_ENOUGH_DATA) {
+            attempts = 0; // Reset attempts on success
+            
             canvas.width = videoElement.value.videoWidth;
             canvas.height = videoElement.value.videoHeight;
             
@@ -393,13 +430,26 @@ const startScanning = () => {
                 return;
             }
             
-            context.drawImage(videoElement.value, 0, 0, canvas.width, canvas.height);
-            
-            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-            const code = jsQR(imageData.data, imageData.width, imageData.height);
-            
-            if (code && code.data) {
-                processQRCode(code.data);
+            try {
+                context.drawImage(videoElement.value, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: 'dontInvert' // Faster scanning
+                });
+                
+                if (code && code.data) {
+                    processQRCode(code.data);
+                }
+            } catch (err) {
+                console.error('Scanning error:', err);
+            }
+        } else {
+            // Video not ready yet
+            attempts++;
+            if (attempts > maxAttempts) {
+                console.warn('Video not ready after', maxAttempts, 'attempts. ReadyState:', videoElement.value.readyState);
+                attempts = 0; // Reset to keep trying
             }
         }
     }, 250);
