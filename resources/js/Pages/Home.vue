@@ -21,7 +21,9 @@
             <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-20">
                 <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight text-shadow-lg animate-fade-in-up">
                     KP-SPAMS <br class="hidden md:block" />
-                    <span class="text-blue-300">"DAMAR WULAN"</span>
+                    <span class="text-blue-300">
+                        "<span ref="typingText" class="typing-text"></span><span class="typing-cursor">|</span>"
+                    </span>
                 </h1>
                 <p class="text-xl md:text-2xl text-blue-50 mb-10 max-w-3xl mx-auto font-light text-shadow animate-fade-in-up" style="animation-delay: 0.2s;">
                     Mewujudkan akses air bersih yang berkelanjutan untuk kesehatan dan kesejahteraan masyarakat desa.
@@ -955,6 +957,28 @@ const error = ref(props.error);
 const pelanggan = ref(props.pelanggan);
 const tarifs = ref([]);
 const isTarifsLoaded = ref(false);
+const typingText = ref(null);
+
+// Typing animation function
+const typeWriter = (text, element, speed = 150) => {
+    let i = 0;
+    const type = () => {
+        if (i < text.length && element) {
+            element.textContent += text.charAt(i);
+            i++;
+            setTimeout(type, speed);
+        } else if (element) {
+            // Remove cursor after typing is done
+            setTimeout(() => {
+                const cursor = element.parentElement.querySelector('.typing-cursor');
+                if (cursor) {
+                    cursor.style.display = 'none';
+                }
+            }, 1000);
+        }
+    };
+    type();
+};
 
 // Fetch tarif data from API
 const fetchTarifs = async () => {
@@ -1040,6 +1064,13 @@ Mohon untuk diverifikasi. Terima kasih.`;
 // Scroll Animation Observer
 onMounted(() => {
     fetchTarifs(); // Load tarif data on mount
+    
+    // Start typing animation after a short delay
+    setTimeout(() => {
+        if (typingText.value) {
+            typeWriter('DAMAR WULAN', typingText.value, 150);
+        }
+    }, 800); // Start after fade-in animation
     
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -1149,6 +1180,27 @@ onMounted(() => {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+}
+
+/* Typing Animation */
+.typing-text {
+    display: inline-block;
+    min-width: 1ch; /* Prevent layout shift */
+}
+
+.typing-cursor {
+    display: inline-block;
+    animation: blink 0.7s steps(2) infinite;
+    margin-left: 2px;
+}
+
+@keyframes blink {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0;
+    }
 }
 
 /* Stagger animation delays */
