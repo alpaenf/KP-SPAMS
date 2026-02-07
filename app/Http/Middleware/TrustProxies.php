@@ -13,7 +13,7 @@ class TrustProxies
      *
      * @var array<int, string>|string|null
      */
-    protected $proxies = '*';
+    protected $proxies = null;
 
     /**
      * The headers that should be used to detect proxies.

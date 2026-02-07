@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class AuthController extends Controller
@@ -26,6 +28,16 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
+        // Rate limiting: 5 attempts per minute per email
+        $key = 'login:' . $request->input('email');
+        
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $seconds = RateLimiter::availableIn($key);
+            throw ValidationException::withMessages([
+                'message' => "Terlalu banyak percobaan login. Silakan coba lagi dalam {$seconds} detik.",
+            ]);
+        }
+        
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
@@ -34,6 +46,9 @@ class AuthController extends Controller
         $remember = $request->boolean('remember');
 
         if (Auth::attempt($credentials, $remember)) {
+            // Clear rate limiter on successful login
+            RateLimiter::clear($key);
+            
             $request->session()->regenerate();
 
             $user = Auth::user();
@@ -53,6 +68,9 @@ class AuthController extends Controller
             ]);
         }
 
+        // Increment rate limiter on failed login
+        RateLimiter::hit($key, 60);
+        
         return back()->withErrors([
             'message' => 'Email atau password salah.',
         ]);

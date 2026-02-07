@@ -24,7 +24,7 @@ class GaleriController extends Controller
         $this->authorize('canAccessFilament');
         
         $validated = $request->validate([
-            'foto' => 'required|image|max:5120',
+            'foto' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'caption' => 'nullable|string|max:255',
             'kategori' => 'nullable|string|max:100',
         ]);

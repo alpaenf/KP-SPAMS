@@ -24,7 +24,7 @@ class SejarahController extends Controller
         
         $validated = $request->validate([
             'konten' => 'required|string',
-            'foto' => 'nullable|image|max:5120',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
 
         $validated['updated_by'] = auth()->id();

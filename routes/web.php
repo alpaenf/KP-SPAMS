@@ -22,20 +22,24 @@ Route::get('/pelanggan/{id}/download-qr-image', [QRScannerController::class, 'do
 Route::get('/pembayaran/{id}', [HomeController::class, 'pembayaran'])->name('pembayaran.public');
 Route::post('/konfirmasi-pembayaran', [HomeController::class, 'konfirmasiPembayaran'])->name('konfirmasi.pembayaran');
 
-// API untuk refresh CSRF token (untuk PWA)
-Route::get('/api/csrf-token', function () {
-    return response()->json(['token' => csrf_token()]);
+// Public API endpoints (with rate limiting to prevent abuse)
+Route::middleware('api.rate.limit')->group(function () {
+    // API untuk refresh CSRF token (untuk PWA)
+    Route::get('/api/csrf-token', function () {
+        return response()->json(['token' => csrf_token()]);
+    });
+
+    // API routes for landing page (public)
+    Route::get('/api/berita', [BeritaController::class, 'getPublished']);
+    Route::get('/api/visi-misi', [VisiMisiController::class, 'get']);
+    Route::get('/api/galeri', [GaleriController::class, 'getAll']);
+    Route::get('/api/sejarah', [SejarahController::class, 'get']);
+    Route::get('/api/layanan', [LayananSpamController::class, 'getAll']);
+    Route::get('/api/testimoni', [TestimoniController::class, 'getApproved']);
+    Route::get('/api/faqs', [\App\Http\Controllers\Admin\FaqController::class, 'getActive']);
+    Route::get('/api/informasi-tarif', [\App\Http\Controllers\Admin\InformasiTarifController::class, 'getActive']);
 });
 
-// API routes for landing page (public)
-Route::get('/api/berita', [BeritaController::class, 'getPublished']);
-Route::get('/api/visi-misi', [VisiMisiController::class, 'get']);
-Route::get('/api/galeri', [GaleriController::class, 'getAll']);
-Route::get('/api/sejarah', [SejarahController::class, 'get']);
-Route::get('/api/layanan', [LayananSpamController::class, 'getAll']);
-Route::get('/api/testimoni', [TestimoniController::class, 'getApproved']);
-Route::get('/api/faqs', [\App\Http\Controllers\Admin\FaqController::class, 'getActive']);
-Route::get('/api/informasi-tarif', [\App\Http\Controllers\Admin\InformasiTarifController::class, 'getActive']);
 Route::post('/testimoni', [TestimoniController::class, 'store'])->name('testimoni.store');
 
 // Auth routes untuk pengelola

@@ -28,7 +28,7 @@ class PaymentSettingController extends Controller
             'payment_instructions' => 'nullable|string',
             'qris_enabled' => 'boolean',
             'bank_transfer_enabled' => 'boolean',
-            'qris_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'qris_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         $settings = PaymentSetting::getSettings();

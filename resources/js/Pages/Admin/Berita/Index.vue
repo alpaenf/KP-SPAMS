@@ -59,8 +59,13 @@
               'bg-gray-200 text-gray-800 hover:bg-gray-300': !link.active,
               'opacity-50 cursor-not-allowed': !link.url,
             }"
-            v-html="link.label"
-          ></Link>
+          >
+            <span v-if="link.label.includes('Previous')">← Previous</span>
+            <span v-else-if="link.label.includes('Next')">Next →</span>
+            <span v-else-if="link.label.includes('laquo')">«</span>
+            <span v-else-if="link.label.includes('raquo')">»</span>
+            <span v-else>{{ link.label }}</span>
+          </Link>
         </div>
       </div>
     </div>

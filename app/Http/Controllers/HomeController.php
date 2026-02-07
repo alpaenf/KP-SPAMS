@@ -292,7 +292,7 @@ class HomeController extends Controller
     {
         $validated = $request->validate([
             'id_pelanggan' => 'required|string|exists:pelanggan,id_pelanggan',
-            'bukti_transfer' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'bukti_transfer' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         $pelangganData = Pelanggan::where('id_pelanggan', $validated['id_pelanggan'])->firstOrFail();
@@ -651,10 +651,11 @@ class HomeController extends Controller
             'lng' => (float) $kantorData->longitude,
             'description' => $kantorData->description,
         ] : [
-            // Default jika belum ada di database
-            'name' => 'Kantor PAMSIMAS',
-            'lat' => -6.200000,
-            'lng' => 106.816666,
+            // Default ke koordinat Damar Wulan jika belum ada di database
+            'name' => 'Kantor Pusat KP-SPAMS DAMAR WULAN',
+            'lat' => -7.60043000,
+            'lng' => 109.08140000,
+            'description' => 'Sekretariat KP-SPAMS Desa',
         ];
         
         // Ambil sumber air dari database
@@ -669,11 +670,12 @@ class HomeController extends Controller
                 ];
             })->values()->toArray() // Tambah values() untuk reset keys
             : [
-                // Default jika belum ada di database
+                // Default ke koordinat Damar Wulan jika belum ada di database
                 [
-                    'name' => 'Sumber Air Utama',
-                    'lat' => -6.201000,
-                    'lng' => 106.817000,
+                    'name' => 'Sumber Air Curug Dammar Wulan Tiparjaya',
+                    'lat' => -7.58129100,
+                    'lng' => 109.08441200,
+                    'description' => 'Sumber air utama yang melayani wilayah desa',
                 ],
             ];
         

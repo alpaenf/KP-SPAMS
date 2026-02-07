@@ -33,7 +33,7 @@ class LayananSpamController extends Controller
             'judul' => 'required|string|max:255',
             'deskripsi' => 'required|string',
             'icon' => 'nullable|string',
-            'foto' => 'nullable|image|max:5120',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
 
         $validated['updated_by'] = auth()->id();
@@ -62,7 +62,7 @@ class LayananSpamController extends Controller
             'judul' => 'required|string|max:255',
             'deskripsi' => 'required|string',
             'icon' => 'nullable|string',
-            'foto' => 'nullable|image|max:5120',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
 
         $validated['updated_by'] = auth()->id();
