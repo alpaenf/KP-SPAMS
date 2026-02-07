@@ -66,19 +66,30 @@
                             <!-- Help Instructions -->
                             <div v-if="cameraError" class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-left">
                                 <p class="font-semibold text-sm text-yellow-800 mb-2">💡 Cara Mengaktifkan Kamera:</p>
-                                <ul class="text-xs text-yellow-700 space-y-2">
-                                    <li><strong>Chrome Desktop:</strong> Klik ikon kunci/kamera di address bar → Izinkan kamera</li>
-                                    <li><strong>Chrome Mobile:</strong> Settings → Site Settings → Camera → Izinkan untuk situs ini</li>
-                                    <li><strong>Safari iOS:</strong> Settings → Safari → Camera → Ask atau Allow</li>
-                                    <li><strong>Firefox:</strong> Klik ikon kamera dengan garis merah di address bar → Izinkan akses</li>
-                                    <li class="pt-2 border-t border-yellow-300"><strong>Penting:</strong> Situs harus menggunakan HTTPS (bukan HTTP)</li>
-                                </ul>
-                                <button 
-                                    @click="retryCamera"
-                                    class="mt-3 px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm"
-                                >
-                                    🔄 Coba Lagi
-                                </button>
+                                <div class="text-xs text-yellow-700 space-y-2">
+                                    <p class="font-semibold text-red-600">⚠️ Jika tombol izin tidak muncul lagi:</p>
+                                    <ul class="space-y-2 ml-4">
+                                        <li><strong>Chrome Desktop:</strong> Klik ikon kunci/kamera di sebelah kiri address bar → Pilih "Kamera" → Pilih "Izinkan" → Refresh halaman (F5)</li>
+                                        <li><strong>Chrome Mobile:</strong> Klik ikon <strong>⋮</strong> (3 titik) → <strong>Setelan Situs</strong> → <strong>Kamera</strong> → Pilih <strong>Izinkan</strong> → Kembali dan refresh</li>
+                                        <li><strong>Safari iOS:</strong> Settings iPhone → Safari → Camera → Pilih "Ask" atau "Allow"</li>
+                                        <li><strong>Firefox:</strong> Klik ikon kamera dengan garis merah di address bar → Hapus izin yang ditolak → Refresh halaman</li>
+                                        <li class="pt-2 border-t border-yellow-300"><strong>Penting:</strong> Setelah mengubah setting, <strong class="text-red-600">REFRESH HALAMAN</strong> (F5 atau swipe down)</li>
+                                    </ul>
+                                </div>
+                                <div class="mt-3 flex gap-2">
+                                    <button 
+                                        @click="retryCamera"
+                                        class="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm font-medium"
+                                    >
+                                        🔄 Coba Lagi
+                                    </button>
+                                    <button 
+                                        @click="reloadPage"
+                                        class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+                                    >
+                                        ↻ Refresh Halaman
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         
@@ -342,8 +353,8 @@ const startCamera = async () => {
         // Detailed error messages
         let errorMessage = '';
         
-        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-            errorMessage = '🚫 Izin akses kamera ditolak. Silakan izinkan akses kamera di pengaturan browser Anda.';
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError' || error.message.includes('permission denied')) {
+            errorMessage = '🚫 Izin akses kamera ditolak. Silakan klik "Refresh Halaman" setelah mengubah pengaturan browser Anda.';
         } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
             errorMessage = '📷 Kamera tidak ditemukan pada perangkat Anda.';
         } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
@@ -534,9 +545,29 @@ const resetScanner = () => {
     startCamera();
 };
 
-const retryCamera = () => {
+const retryCamera = async () => {
     cameraError.value = '';
+    
+    // Check if permission is permanently denied
+    if (navigator.permissions) {
+        try {
+            const permissionStatus = await navigator.permissions.query({ name: 'camera' });
+            
+            if (permissionStatus.state === 'denied') {
+                cameraError.value = '🚫 Izin kamera masih ditolak. Silakan ikuti instruksi di bawah untuk mengaktifkan kamera, lalu klik "Refresh Halaman".';
+                return;
+            }
+        } catch (permErr) {
+            // Permission query not supported, continue anyway
+            console.log('Permission query not supported');
+        }
+    }
+    
     requestCameraPermission();
+};
+
+const reloadPage = () => {
+    window.location.reload();
 };
 
 const formatBulan = (bulan) => {
