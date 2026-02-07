@@ -19,9 +19,9 @@
 
             <!-- Hero Content -->
             <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-20">
-                <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight text-shadow-lg animate-fade-in-up">
-                    KP-SPAMS <br class="hidden md:block" />
-                    <span class="text-blue-300 inline-block">
+                <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight text-shadow-lg animate-fade-in-up" style="line-height: 1.2;">
+                    KP-SPAMS<br class="md:hidden" />
+                    <span class="text-blue-300">
                         "<span ref="typingText" class="typing-text-wrapper"></span><span class="typing-cursor">|</span>"
                     </span>
                 </h1>
@@ -1195,19 +1195,12 @@ onMounted(() => {
 
 /* Typing Animation */
 .typing-text-wrapper {
-    display: inline-block;
-    min-width: 300px; /* Fixed width untuk prevent layout shift */
-    text-align: left;
-}
-
-@media (max-width: 768px) {
-    .typing-text-wrapper {
-        min-width: 200px; /* Smaller on mobile */
-    }
+    display: inline;
+    white-space: nowrap;
 }
 
 .typing-cursor {
-    display: inline-block;
+    display: inline;
     animation: blink 0.7s steps(2) infinite;
     margin-left: 2px;
     font-weight: lighter;
