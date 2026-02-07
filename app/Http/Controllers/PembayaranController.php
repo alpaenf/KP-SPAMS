@@ -273,31 +273,35 @@ class PembayaranController extends Controller
         $meteranSebelum = $pembayaran->meteran_sebelum;
         $meteranSesudah = $pembayaran->meteran_sesudah;
         $jumlahKubik = $pembayaran->jumlah_kubik;
-        $abunemen = $pembayaran->abunemen;
-        $biayaAbunemen = 3000; // Default lama
-        $tarifPerKubik = 2000; // Default
+        $biayaAbunemen = 3000; // Default abonemen wajib
+        $tarifPerKubik = 2000; // Default tarif per kubik
         
+        // Ambil data dari tagihan jika ada
         if ($tagihan) {
+            // Meteran
             if (is_null($meteranSebelum)) $meteranSebelum = $tagihan->meteran_sebelum;
             if (is_null($meteranSesudah)) $meteranSesudah = $tagihan->meteran_sesudah;
             
-            // Jika jumlah kubik 0, ambil dari tagihan
-            if ($jumlahKubik <= 0 && $tagihan->pemakaian_kubik > 0) {
+            // Jumlah kubik - prioritas dari tagihan
+            if (!is_null($tagihan->pemakaian_kubik) && $tagihan->pemakaian_kubik > 0) {
                 $jumlahKubik = $tagihan->pemakaian_kubik;
+            } elseif ($jumlahKubik <= 0 && $meteranSebelum && $meteranSesudah) {
+                // Hitung dari meteran
+                $jumlahKubik = $meteranSesudah - $meteranSebelum;
             }
             
-            // Jika abunemen false/0, cek dari tagihan atau tarif default
-            if (!$abunemen && ($tagihan->ada_abunemen || $tagihan->biaya_abunemen > 0)) {
-                $abunemen = true;
-            }
-            
+            // Biaya abonemen dari tagihan (jika ada)
             if ($tagihan->biaya_abunemen > 0) {
                 $biayaAbunemen = $tagihan->biaya_abunemen;
             }
             
+            // Tarif per kubik dari tagihan
             if ($tagihan->tarif_per_kubik > 0) {
                 $tarifPerKubik = $tagihan->tarif_per_kubik;
             }
+        } elseif ($jumlahKubik <= 0 && $meteranSebelum && $meteranSesudah) {
+            // Jika tidak ada tagihan, hitung dari meteran
+            $jumlahKubik = $meteranSesudah - $meteranSebelum;
         }
         
         // Generate PDF
@@ -313,7 +317,6 @@ class PembayaranController extends Controller
                 'tanggal_bayar' => \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->locale('id')->isoFormat('D MMMM YYYY'),
                 'meteran_sebelum' => $meteranSebelum,
                 'meteran_sesudah' => $meteranSesudah,
-                'abunemen' => $abunemen,
                 'biaya_abunemen' => $biayaAbunemen,
                 'tarif_per_kubik' => $tarifPerKubik,
                 'tunggakan' => $pembayaran->tunggakan,
