@@ -12,6 +12,206 @@
                     </p>
                 </div>
 
+                <!-- Statistics Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <!-- Total Pelanggan Card -->
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl shadow-lg p-5 text-white transform hover:scale-105 transition-transform duration-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-blue-100 text-sm font-medium mb-1">Total Pelanggan</p>
+                                <p class="text-3xl font-bold">{{ pelangganList.length }}</p>
+                                <p class="text-blue-100 text-xs mt-1">Terdaftar</p>
+                            </div>
+                            <div class="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pelanggan Aktif Card -->
+                    <div class="bg-gradient-to-br from-green-500 to-green-700 rounded-xl shadow-lg p-5 text-white transform hover:scale-105 transition-transform duration-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-green-100 text-sm font-medium mb-1">Pelanggan Aktif</p>
+                                <p class="text-3xl font-bold">{{ pelangganList.filter(p => p.status_aktif).length }}</p>
+                                <p class="text-green-100 text-xs mt-1">{{ Math.round((pelangganList.filter(p => p.status_aktif).length / pelangganList.length) * 100) }}% dari total</p>
+                            </div>
+                            <div class="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pelanggan Non-Aktif Card -->
+                    <div class="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl shadow-lg p-5 text-white transform hover:scale-105 transition-transform duration-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-orange-100 text-sm font-medium mb-1">Non-Aktif</p>
+                                <p class="text-3xl font-bold">{{ pelangganList.filter(p => !p.status_aktif).length }}</p>
+                                <p class="text-orange-100 text-xs mt-1">Memerlukan perhatian</p>
+                            </div>
+                            <div class="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Wilayah Card -->
+                    <div class="bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl shadow-lg p-5 text-white transform hover:scale-105 transition-transform duration-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-purple-100 text-sm font-medium mb-1">Cakupan Wilayah</p>
+                                <p class="text-3xl font-bold">{{ uniqueWilayah.length }}</p>
+                                <p class="text-purple-100 text-xs mt-1">Desa/Dusun</p>
+                            </div>
+                            <div class="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Distribution & Quick Actions Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <!-- Wilayah Distribution Chart -->
+                    <div class="lg:col-span-2 bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                Distribusi per Wilayah
+                            </h3>
+                            <span class="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">{{ uniqueWilayah.length }} wilayah</span>
+                        </div>
+                        <div class="space-y-3 max-h-64 overflow-y-auto pr-2">
+                            <div v-for="wilayah in sortedWilayahDistribution" :key="wilayah.name" class="group hover:bg-gray-50 p-3 rounded-lg transition-colors cursor-pointer" @click="filterByWilayah(wilayah.name)">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-semibold text-gray-700 group-hover:text-blue-600 transition-colors">{{ wilayah.name || 'Tidak Diketahui' }}</span>
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-xs text-gray-500">{{ wilayah.count }}</span>
+                                        <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{{ wilayah.percentage }}%</span>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                                    <div 
+                                        class="bg-gradient-to-r from-blue-500 to-purple-600 h-2.5 rounded-full transition-all duration-500 group-hover:from-blue-600 group-hover:to-purple-700" 
+                                        :style="{ width: wilayah.percentage + '%' }"
+                                    ></div>
+                                </div>
+                                <div class="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                                    <span class="flex items-center gap-1">
+                                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                        {{ wilayah.aktif }} aktif
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                                        {{ wilayah.nonaktif }} non-aktif
+                                    </span>
+                                </div>
+                            </div>
+                            <div v-if="uniqueWilayah.length === 0" class="text-center py-8 text-gray-400">
+                                <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                <p class="text-sm">Belum ada data distribusi wilayah</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions Panel -->
+                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Aksi Cepat
+                        </h3>
+                        <div class="space-y-3">
+                            <button 
+                                @click="fitToBounds" 
+                                class="w-full flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors group"
+                            >
+                                <div class="bg-blue-600 p-2 rounded-lg group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                                    </svg>
+                                </div>
+                                <div class="text-left flex-1">
+                                    <p class="font-semibold text-sm">Paskan Semua</p>
+                                    <p class="text-xs text-blue-600">Tampilkan semua marker</p>
+                                </div>
+                            </button>
+
+                            <button 
+                                @click="resetFilters" 
+                                class="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors group"
+                            >
+                                <div class="bg-gray-600 p-2 rounded-lg group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                </div>
+                                <div class="text-left flex-1">
+                                    <p class="font-semibold text-sm">Reset Filter</p>
+                                    <p class="text-xs text-gray-600">Hapus semua filter</p>
+                                </div>
+                            </button>
+
+                            <button 
+                                @click="exportData" 
+                                class="w-full flex items-center gap-3 px-4 py-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors group"
+                            >
+                                <div class="bg-green-600 p-2 rounded-lg group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </div>
+                                <div class="text-left flex-1">
+                                    <p class="font-semibold text-sm">Export Data</p>
+                                    <p class="text-xs text-green-600">Download CSV/Excel</p>
+                                </div>
+                            </button>
+
+                            <a 
+                                href="/cek-pelanggan" 
+                                class="w-full flex items-center gap-3 px-4 py-3 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors group"
+                            >
+                                <div class="bg-purple-600 p-2 rounded-lg group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                </div>
+                                <div class="text-left flex-1">
+                                    <p class="font-semibold text-sm">Kelola Data</p>
+                                    <p class="text-xs text-purple-600">Halaman pelanggan</p>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- Filtered Info -->
+                        <div v-if="isFiltered" class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <div class="flex items-start gap-2">
+                                <svg class="w-5 h-5 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-xs font-semibold text-yellow-800 mb-1">Filter Aktif</p>
+                                    <p class="text-xs text-yellow-700">Menampilkan {{ filteredPelanggan.length }} dari {{ pelangganList.length }} pelanggan</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Controls -->
                 <div class="bg-white rounded-lg shadow-md p-4 mb-6">
                     <div class="flex flex-col gap-3">
@@ -430,7 +630,11 @@ const filteredPelanggan = computed(() => {
     }
     if (searchQuery.value) {
         const q = searchQuery.value.toLowerCase();
-        data = data.filter(p => (p.nama_pelanggan || '').toLowerCase().includes(q) || (p.id_pelanggan || '').toLowerCase().includes(q));
+        data = data.filter(p => 
+            (p.nama_pelanggan || '').toLowerCase().includes(q) || 
+            (p.id_pelanggan || '').toLowerCase().includes(q) ||
+            (p.wilayah || '').toLowerCase().includes(q)
+        );
     }
     return data;
 });
@@ -500,6 +704,129 @@ const fitToBounds = () => {
     if (bounds.isValid()) {
         map.fitBounds(bounds, { padding: [50, 50] });
     }
+};
+
+// Computed: Unique wilayah list
+const uniqueWilayah = computed(() => {
+    const wilayahSet = new Set(props.pelangganList.map(p => p.wilayah).filter(Boolean));
+    return Array.from(wilayahSet);
+});
+
+// Computed: Wilayah distribution dengan sorting
+const sortedWilayahDistribution = computed(() => {
+    const distribution = {};
+    const total = props.pelangganList.length;
+    
+    props.pelangganList.forEach(pelanggan => {
+        const wilayah = pelanggan.wilayah || 'Tidak Diketahui';
+        if (!distribution[wilayah]) {
+            distribution[wilayah] = {
+                name: wilayah,
+                count: 0,
+                aktif: 0,
+                nonaktif: 0,
+                percentage: 0
+            };
+        }
+        distribution[wilayah].count++;
+        if (pelanggan.status_aktif) {
+            distribution[wilayah].aktif++;
+        } else {
+            distribution[wilayah].nonaktif++;
+        }
+    });
+    
+    // Calculate percentage dan sort
+    const result = Object.values(distribution).map(item => ({
+        ...item,
+        percentage: Math.round((item.count / total) * 100)
+    }));
+    
+    return result.sort((a, b) => b.count - a.count);
+});
+
+// Computed: Check if any filter is active
+const isFiltered = computed(() => {
+    return searchQuery.value !== '' || 
+           statusFilter.value !== 'all' || 
+           rtFilter.value !== '' || 
+           rwFilter.value !== '';
+});
+
+// Function: Reset all filters
+const resetFilters = () => {
+    searchQuery.value = '';
+    statusFilter.value = 'all';
+    rtFilter.value = '';
+    rwFilter.value = '';
+    selectedPelanggan.value = null;
+    
+    // Fit bounds setelah reset
+    setTimeout(() => {
+        fitToBounds();
+    }, 100);
+};
+
+// Function: Filter by wilayah (from distribution chart click)
+const filterByWilayah = (wilayahName) => {
+    // Reset filters first
+    searchQuery.value = '';
+    statusFilter.value = 'all';
+    rtFilter.value = '';
+    rwFilter.value = '';
+    
+    // Set search to wilayah name (will filter in computed)
+    searchQuery.value = wilayahName;
+    
+    // Fit bounds untuk wilayah yang dipilih
+    setTimeout(() => {
+        fitToBounds();
+    }, 100);
+};
+
+// Function: Export data to CSV
+const exportData = () => {
+    const data = filteredPelanggan.value;
+    
+    if (data.length === 0) {
+        alert('Tidak ada data untuk di-export');
+        return;
+    }
+    
+    // CSV headers
+    const headers = ['ID Pelanggan', 'Nama', 'RT', 'RW', 'Wilayah', 'Status', 'No WhatsApp', 'Latitude', 'Longitude'];
+    
+    // CSV rows
+    const rows = data.map(p => [
+        p.id_pelanggan || '',
+        p.nama_pelanggan || '',
+        p.rt || '',
+        p.rw || '',
+        p.wilayah || '',
+        p.status_aktif ? 'Aktif' : 'Non-Aktif',
+        p.no_whatsapp || '',
+        p.latitude || '',
+        p.longitude || ''
+    ]);
+    
+    // Combine headers and rows
+    const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+    
+    // Create blob and download
+    const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `peta-pelanggan-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 };
 
 const mapsHref = (pelanggan) => {
