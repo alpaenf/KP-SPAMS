@@ -13,8 +13,80 @@
             <!-- Camera Scanner -->
             <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
                 <div class="space-y-4">
+                    <!-- Pilihan Metode Scan -->
+                    <div v-if="!scannedData && !cameraStarted" class="text-center space-y-4">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">Pilih Cara Scan QR Code</h2>
+                        
+                        <!-- Loading overlay during image processing -->
+                        <div v-if="loading" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                            <div class="bg-white rounded-lg p-6 text-center">
+                                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                                <p class="text-gray-700 font-medium">Memproses gambar...</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Option 1: Camera -->
+                            <button
+                                @click="requestCameraPermission"
+                                class="p-6 border-2 border-blue-500 rounded-lg hover:bg-blue-50 transition-colors"
+                            >
+                                <div class="text-4xl mb-2">📷</div>
+                                <div class="font-semibold text-gray-800">Gunakan Kamera</div>
+                                <div class="text-xs text-gray-500 mt-1">Butuh izin akses</div>
+                            </button>
+                            
+                            <!-- Option 2: Upload Image -->
+                            <button
+                                @click="triggerFileInput"
+                                class="p-6 border-2 border-green-500 rounded-lg hover:bg-green-50 transition-colors"
+                            >
+                                <div class="text-4xl mb-2">🖼️</div>
+                                <div class="font-semibold text-gray-800">Upload Foto</div>
+                                <div class="text-xs text-gray-500 mt-1">Tanpa izin kamera</div>
+                            </button>
+                            
+                            <!-- Option 3: Manual Input -->
+                            <button
+                                @click="showManualInput = true"
+                                class="p-6 border-2 border-yellow-500 rounded-lg hover:bg-yellow-50 transition-colors"
+                            >
+                                <div class="text-4xl mb-2">⌨️</div>
+                                <div class="font-semibold text-gray-800">Input Manual</div>
+                                <div class="text-xs text-gray-500 mt-1">Ketik ID pelanggan</div>
+                            </button>
+                        </div>
+                        
+                        <!-- Hidden File Input -->
+                        <input
+                            ref="fileInput"
+                            type="file"
+                            accept="image/*"
+                            @change="handleImageUpload"
+                            class="hidden"
+                        />
+                        
+                        <!-- Error Display -->
+                        <div v-if="cameraError" class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <p class="text-sm text-red-800">{{ cameraError }}</p>
+                            <button 
+                                @click="cameraError = ''"
+                                class="mt-2 text-xs text-red-600 underline hover:text-red-800"
+                            >
+                                Tutup
+                            </button>
+                        </div>
+                        
+                        <!-- Info Note -->
+                        <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-left">
+                            <p class="text-sm text-blue-800">
+                                <strong>💡 Tips:</strong> Jika izin kamera tidak muncul atau sudah ditolak, gunakan opsi <strong>"Upload Foto"</strong> atau <strong>"Input Manual"</strong> sebagai alternatif.
+                            </p>
+                        </div>
+                    </div>
+
                     <!-- Camera View -->
-                    <div v-if="!scannedData" class="relative">
+                    <div v-if="!scannedData && cameraStarted" class="relative">
                         <div class="relative aspect-[3/4] bg-black rounded-lg overflow-hidden shadow-inner">
                             <video
                                 ref="videoElement"
@@ -49,6 +121,16 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        
+                        <!-- Back to Options Button -->
+                        <div class="mt-4 text-center">
+                            <button
+                                @click="backToOptions"
+                                class="text-gray-600 hover:text-gray-800 underline text-sm"
+                            >
+                                ← Kembali ke Pilihan Scan
+                            </button>
                         </div>
                         
                         <!-- Camera Status -->
@@ -93,19 +175,19 @@
                             </div>
                         </div>
                         
-                        <!-- Manual Input Toggle -->
-                        <div class="mt-4 text-center">
-                            <button
-                                @click="showManualInput = !showManualInput"
-                                class="text-blue-600 hover:text-blue-800 underline text-sm"
-                            >
-                                {{ showManualInput ? 'Gunakan Kamera' : 'Input Manual ID Pelanggan' }}
-                            </button>
-                        </div>
                     </div>
 
                     <!-- Manual Input -->
-                    <div v-if="showManualInput && !scannedData" class="border-t pt-4">
+                    <div v-if="showManualInput && !scannedData" class="space-y-4">
+                        <div class="text-center">
+                            <button
+                                @click="backToOptions"
+                                class="text-gray-600 hover:text-gray-800 underline text-sm mb-4"
+                            >
+                                ← Kembali ke Pilihan Scan
+                            </button>
+                        </div>
+                        <div class="border-t pt-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             ID Pelanggan
                         </label>
@@ -124,6 +206,7 @@
                             >
                                 {{ loading ? 'Memproses...' : 'Cari' }}
                             </button>
+                        </div>
                         </div>
                     </div>
 
@@ -252,16 +335,15 @@ const scannedData = ref(null);
 const loading = ref(false);
 const showManualInput = ref(false);
 const manualIdPelanggan = ref('');
+const fileInput = ref(null);
 
 let stream = null;
 let scanInterval = null;
 
 onMounted(() => {
     checkEnvironment();
-    // Auto-start camera for better UX (especially on mobile)
-    setTimeout(() => {
-        requestCameraPermission();
-    }, 300); // Small delay to ensure DOM is ready
+    // Don't auto-start camera to avoid permission issues
+    // Let user choose their preferred method
 });
 
 onUnmounted(() => {
@@ -568,6 +650,72 @@ const retryCamera = async () => {
 
 const reloadPage = () => {
     window.location.reload();
+};
+
+const backToOptions = () => {
+    stopCamera();
+    cameraStarted.value = false;
+    showManualInput.value = false;
+    cameraError.value = '';
+};
+
+const triggerFileInput = () => {
+    fileInput.value?.click();
+};
+
+const handleImageUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    loading.value = true;
+    cameraError.value = '';
+    
+    try {
+        // Create image element
+        const img = new Image();
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Load image
+        await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = URL.createObjectURL(file);
+        });
+        
+        // Set canvas size to image size
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        // Draw image on canvas
+        ctx.drawImage(img, 0, 0);
+        
+        // Get image data
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        
+        // Try to decode QR code
+        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: 'attemptBoth',
+        });
+        
+        if (code) {
+            await processQRCode(code.data);
+        } else {
+            cameraError.value = '❌ Tidak dapat mendeteksi QR code pada gambar. Pastikan foto jelas dan QR code terlihat.';
+        }
+        
+        // Clean up
+        URL.revokeObjectURL(img.src);
+    } catch (error) {
+        console.error('Image upload error:', error);
+        cameraError.value = '❌ Gagal memproses gambar. Silakan coba lagi dengan foto yang lebih jelas.';
+    } finally {
+        loading.value = false;
+        // Reset file input
+        if (fileInput.value) {
+            fileInput.value.value = '';
+        }
+    }
 };
 
 const formatBulan = (bulan) => {
