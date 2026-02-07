@@ -643,7 +643,7 @@ const startScanning = () => {
     }
     
     const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext('2d', { willReadFrequently: true });
     
     let attempts = 0;
     const maxAttempts = 5;
@@ -801,7 +801,7 @@ const handleImageUpload = async (event) => {
         // Create image element
         const img = new Image();
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         
         // Load image
         await new Promise((resolve, reject) => {
