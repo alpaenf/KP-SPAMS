@@ -18,21 +18,23 @@
             </div>
 
             <!-- Hero Content -->
-            <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-20">
-                <div class="max-w-4xl mx-auto">
+            <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
+                <!-- Title & Description -->
+                <div class="text-center mb-10">
                     <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight text-shadow-lg animate-fade-in-up" style="line-height: 1.2;">
                         KP-SPAMS<br class="md:hidden" />
                         <span class="text-blue-300">
                             "<span ref="typingText" class="typing-text-wrapper"></span><span class="typing-cursor">|</span>"
                         </span>
                     </h1>
-                    <p class="text-xl md:text-2xl text-blue-50 mb-10 max-w-3xl mx-auto font-light text-shadow animate-fade-in-up" style="animation-delay: 0.2s;">
+                    <p class="text-xl md:text-2xl text-blue-50 max-w-3xl mx-auto font-light text-shadow animate-fade-in-up" style="animation-delay: 0.2s;">
                         Mewujudkan akses air bersih yang berkelanjutan untuk kesehatan dan kesejahteraan masyarakat desa.
                     </p>
                 </div>
                 
-                <!-- Search Box (Glassmorphism) -->
-                <div class="max-w-xl mx-auto glass-card rounded-2xl p-6 md:p-8 transform transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] touch-manipulation animate-fade-in-up" style="animation-delay: 0.4s;">
+                <!-- Search Box (Glassmorphism) - Isolated width -->
+                <div class="w-full max-w-md mx-auto">
+                    <div class="glass-card rounded-2xl p-6 md:p-8 transform transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] touch-manipulation animate-fade-in-up" style="animation-delay: 0.4s;">
                     <div class="text-center mb-6">
                         <h2 class="text-2xl font-bold text-gray-800 mb-2">Cek Data Pelanggan</h2>
                         <p class="text-gray-600 text-sm">Masukkan ID Pelanggan Anda untuk melihat tagihan dan riwayat</p>
@@ -75,6 +77,7 @@
                             {{ error }}
                         </p>
                     </form>
+                </div>
                 </div>
             </div>
             
