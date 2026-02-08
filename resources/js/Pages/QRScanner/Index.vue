@@ -480,27 +480,97 @@ const startCamera = async () => {
         
         console.log('[QR Scanner] Requesting getUserMedia with constraints:', constraints);
         stream = await navigator.mediaDevices.getUserMedia(constraints);
-        console.log('[QR Scanner] Camera access granted!');
+        console.log('[QR Scanner] Camera access granted! Stream tracks:', stream.getTracks().length);
         
         
         if (videoElement.value) {
+            console.log('[QR Scanner] Video element found, attaching stream...');
             videoElement.value.srcObject = stream;
             
-            // Wait for video to be ready and play it
-            videoElement.value.onloadedmetadata = async () => {
+            // Multiple approaches to ensure video plays across all browsers/devices
+            let videoStarted = false;
+            
+            // Approach 1: loadedmetadata event
+            const handleLoadedMetadata = async () => {
+                if (videoStarted) return;
+                console.log('[QR Scanner] loadedmetadata event fired');
                 try {
-                    // Explicitly play video (required for mobile)
                     await videoElement.value.play();
+                    videoStarted = true;
                     cameraStarted.value = true;
                     cameraLoading.value = false;
+                    console.log('[QR Scanner] Video playing successfully');
                     startScanning();
                 } catch (playError) {
-                    console.error('Video play error:', playError);
+                    console.error('[QR Scanner] Video play error:', playError);
                     cameraError.value = 'Tidak dapat memulai video. Silakan coba lagi.';
                     cameraLoading.value = false;
                 }
             };
+            
+            // Approach 2: loadeddata event (backup)
+            const handleLoadedData = async () => {
+                if (videoStarted) return;
+                console.log('[QR Scanner] loadeddata event fired');
+                try {
+                    await videoElement.value.play();
+                    videoStarted = true;
+                    cameraStarted.value = true;
+                    cameraLoading.value = false;
+                    console.log('[QR Scanner] Video playing successfully (via loadeddata)');
+                    startScanning();
+                } catch (playError) {
+                    console.error('[QR Scanner] Video play error (loadeddata):', playError);
+                }
+            };
+            
+            // Approach 3: canplay event (final backup)
+            const handleCanPlay = async () => {
+                if (videoStarted) return;
+                console.log('[QR Scanner] canplay event fired');
+                try {
+                    await videoElement.value.play();
+                    videoStarted = true;
+                    cameraStarted.value = true;
+                    cameraLoading.value = false;
+                    console.log('[QR Scanner] Video playing successfully (via canplay)');
+                    startScanning();
+                } catch (playError) {
+                    console.error('[QR Scanner] Video play error (canplay):', playError);
+                }
+            };
+            
+            // Attach all event listeners
+            videoElement.value.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
+            videoElement.value.addEventListener('loadeddata', handleLoadedData, { once: true });
+            videoElement.value.addEventListener('canplay', handleCanPlay, { once: true });
+            
+            // Approach 4: Force play after timeout if events don't fire
+            setTimeout(async () => {
+                if (!videoStarted && videoElement.value && videoElement.value.srcObject) {
+                    console.log('[QR Scanner] Force playing video after timeout...');
+                    console.log('[QR Scanner] Video readyState:', videoElement.value.readyState);
+                    console.log('[QR Scanner] Video videoWidth:', videoElement.value.videoWidth);
+                    console.log('[QR Scanner] Video videoHeight:', videoElement.value.videoHeight);
+                    try {
+                        await videoElement.value.play();
+                        videoStarted = true;
+                        cameraStarted.value = true;
+                        cameraLoading.value = false;
+                        console.log('[QR Scanner] Video playing successfully (forced)');
+                        startScanning();
+                    } catch (playError) {
+                        console.error('[QR Scanner] Force play error:', playError);
+                        cameraError.value = 'Video tidak dapat dimulai. Gunakan Upload Foto atau Input Manual.';
+                        cameraLoading.value = false;
+                    }
+                } else if (videoStarted) {
+                    console.log('[QR Scanner] Video already started, skipping force play');
+                }
+            }, 2000); // Wait 2 seconds for events
         } else {
+            console.error('[QR Scanner] Video element not found!');
+            cameraError.value = 'Video element tidak ditemukan. Refresh halaman dan coba lagi.';
             cameraLoading.value = false;
         }
     } catch (error) {
@@ -541,21 +611,37 @@ const startCamera = async () => {
             
             // Retry with simpler constraints
             try {
+                console.log('[QR Scanner] Retrying with simpler constraints...');
                 stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                console.log('[QR Scanner] Simple constraints worked! Stream obtained.');
+                
                 if (videoElement.value) {
                     videoElement.value.srcObject = stream;
-                    videoElement.value.onloadedmetadata = async () => {
+                    
+                    // Use same multi-approach play strategy
+                    const attemptPlay = async () => {
                         try {
                             await videoElement.value.play();
                             cameraStarted.value = true;
+                            cameraLoading.value = false;
+                            console.log('[QR Scanner] Retry video playing successfully');
                             startScanning();
                         } catch (playError) {
-                            console.error('Video play error:', playError);
+                            console.error('[QR Scanner] Retry video play error:', playError);
+                            cameraError.value = 'Tidak dapat memulai video meskipun dengan pengaturan sederhana.';
+                            cameraLoading.value = false;
                         }
                     };
+                    
+                    videoElement.value.addEventListener('loadedmetadata', attemptPlay, { once: true });
+                    videoElement.value.addEventListener('canplay', attemptPlay, { once: true });
+                    
+                    // Force play after timeout
+                    setTimeout(attemptPlay, 1500);
                     return;
                 }
             } catch (retryError) {
+                console.error('[QR Scanner] Retry failed:', retryError);
                 errorMessage = 'Tidak dapat mengakses kamera dengan pengaturan apapun.';
             }
         } else if (error.name === 'TypeError') {
