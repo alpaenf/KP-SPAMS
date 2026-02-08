@@ -71,7 +71,7 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nama & Email</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Role</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Role & Wilayah</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">PIN Akses</th>
                                         <th scope="col" class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Aksi</th>
                                     </tr>
@@ -90,9 +90,14 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <span :class="roleClass(user.role)" class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize">
-                                                {{ user.role }}
-                                            </span>
+                                            <div>
+                                                <span :class="roleClass(user.role)" class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize">
+                                                    {{ user.role }}
+                                                </span>
+                                                <div v-if="user.wilayah" class="text-xs text-gray-500 mt-1">
+                                                    📍 {{ wilayahOptions[user.wilayah] || user.wilayah }}
+                                                </div>
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
                                             {{ user.pin || '-' }}
@@ -145,7 +150,20 @@
                                             <select v-model="form.role" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                                 <option value="pengelola">Pengelola Staf</option>
                                                 <option value="admin">Administrator</option>
+                                                <option value="penarik">Penarik</option>
                                             </select>
+                                        </div>
+
+                                        <!-- Wilayah field (only for penarik) -->
+                                        <div v-if="form.role === 'penarik'">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Wilayah <span class="text-red-500">*</span></label>
+                                            <select v-model="form.wilayah" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                                                <option value="">-- Pilih Wilayah --</option>
+                                                <option v-for="(label, value) in wilayahOptions" :key="value" :value="value">
+                                                    {{ label }}
+                                                </option>
+                                            </select>
+                                            <p v-if="form.errors.wilayah" class="text-red-500 text-xs mt-1">{{ form.errors.wilayah }}</p>
                                         </div>
 
                                         <div class="grid grid-cols-2 gap-4">
@@ -212,6 +230,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 const props = defineProps({
     isVerified: Boolean,
     users: Array,
+    wilayahOptions: Object,
 });
 
 // PIN Verification
@@ -237,11 +256,14 @@ const form = useForm({
     email: '',
     password: '',
     role: 'pengelola',
+    wilayah: '',
     pin: '',
 });
 
 const roleClass = (role) => {
-    return role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800';
+    if (role === 'admin') return 'bg-purple-100 text-purple-800';
+    if (role === 'penarik') return 'bg-blue-100 text-blue-800';
+    return 'bg-green-100 text-green-800';
 };
 
 const openModal = (user = null) => {
@@ -250,6 +272,7 @@ const openModal = (user = null) => {
         form.name = user.name;
         form.email = user.email;
         form.role = user.role;
+        form.wilayah = user.wilayah || '';
         form.pin = user.pin || '';
         form.password = ''; // Don't show password
     } else {

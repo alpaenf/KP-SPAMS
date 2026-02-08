@@ -20,8 +20,7 @@ class PengelolaController extends Controller
         
         $users = [];
         if ($isVerified) {
-            $users = User::where('role', 'pengelola')
-                ->orWhere('role', 'admin')
+            $users = User::whereIn('role', ['admin', 'pengelola', 'penarik'])
                 ->latest()
                 ->get();
         }
@@ -29,6 +28,13 @@ class PengelolaController extends Controller
         return Inertia::render('Admin/Pengelola/Index', [
             'isVerified' => $isVerified,
             'users' => $users,
+            'wilayahOptions' => [
+                'dawuhan' => 'Dawuhan',
+                'kubangsari_kulon' => 'Kubangsari Kulon',
+                'kubangsari_wetan' => 'Kubangsari Wetan',
+                'sokarame' => 'Sokarame',
+                'tiparjaya' => 'Tiparjaya',
+            ],
         ]);
     }
 
@@ -87,14 +93,21 @@ class PengelolaController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
             'pin' => 'nullable|string|min:4|max:8',
-            'role' => 'required|in:admin,pengelola',
+            'role' => 'required|in:admin,pengelola,penarik',
+            'wilayah' => 'nullable|in:dawuhan,kubangsari_kulon,kubangsari_wetan,sokarame,tiparjaya',
         ]);
+
+        // Validasi: Jika role penarik, wilayah wajib diisi
+        if ($validated['role'] === 'penarik' && empty($validated['wilayah'])) {
+            return back()->withErrors(['wilayah' => 'Wilayah wajib diisi untuk role penarik']);
+        }
 
         User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
+            'wilayah' => $validated['wilayah'] ?? null,
             'pin' => $validated['pin'],
         ]);
 
@@ -116,12 +129,19 @@ class PengelolaController extends Controller
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8',
             'pin' => 'nullable|string|min:4|max:8',
-            'role' => 'required|in:admin,pengelola',
+            'role' => 'required|in:admin,pengelola,penarik',
+            'wilayah' => 'nullable|in:dawuhan,kubangsari_kulon,kubangsari_wetan,sokarame,tiparjaya',
         ]);
+
+        // Validasi: Jika role penarik, wilayah wajib diisi
+        if ($validated['role'] === 'penarik' && empty($validated['wilayah'])) {
+            return back()->withErrors(['wilayah' => 'Wilayah wajib diisi untuk role penarik']);
+        }
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
         $user->role = $validated['role'];
+        $user->wilayah = $validated['wilayah'] ?? null;
         
         if ($validated['password']) {
             $user->password = Hash::make($validated['password']);
