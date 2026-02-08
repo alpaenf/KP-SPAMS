@@ -18,7 +18,9 @@ class TagihanBulananController extends Controller
         $bulan = $request->input('bulan', now()->format('Y-m'));
         
         // Ambil semua pelanggan aktif dengan tagihan bulan ini (jika ada)
-        $pelangganList = Pelanggan::where('status_aktif', true)
+        // Apply filter wilayah berdasarkan user yang login
+        $pelangganList = Pelanggan::forUser()
+            ->where('status_aktif', true)
             ->with(['tagihanBulanan' => function ($query) use ($bulan) {
                 $query->where('bulan', $bulan);
             }])
@@ -160,7 +162,8 @@ class TagihanBulananController extends Controller
         $masukkanTunggakan = $validated['masukkan_tunggakan'] ?? false;
         
         // Ambil semua pelanggan aktif
-        $pelanggans = Pelanggan::where('status_aktif', true)->get();
+        // Apply filter wilayah berdasarkan user yang login
+        $pelanggans = Pelanggan::forUser()->where('status_aktif', true)->get();
         
         $created = 0;
         $skipped = 0;

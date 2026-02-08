@@ -22,6 +22,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'wilayah',
         'pin',
     ];
 
@@ -53,13 +54,29 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
     
+    public function isPenarik(): bool
+    {
+        return $this->role === 'penarik';
+    }
+    
     public function isPengelola(): bool
     {
-        return $this->role === 'pengelola';
+        // Untuk backward compatibility
+        return $this->role === 'pengelola' || $this->role === 'admin';
     }
     
     public function canAccessFilament(): bool
     {
-        return in_array($this->role, ['admin', 'pengelola']);
+        return $this->role === 'admin';
+    }
+    
+    public function hasWilayah(): bool
+    {
+        return !empty($this->wilayah);
+    }
+    
+    public function getWilayah(): ?string
+    {
+        return $this->wilayah;
     }
 }

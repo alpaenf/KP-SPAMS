@@ -331,12 +331,14 @@ class HomeController extends Controller
         $bulanIni = now()->format('Y-m');
         
         // Ambil semua pelanggan dengan pembayaran dan tagihan bulanan
-        $pelangganList = Pelanggan::with(['pembayarans', 'tagihanBulanan' => function ($query) use ($bulanIni) {
-            $query->where('bulan', $bulanIni);
-        }])
-        ->orderBy('id_pelanggan', 'asc')
-        ->get()
-        ->map(function ($p) use ($bulanIni) {
+        // Apply filter wilayah berdasarkan user yang login
+        $pelangganList = Pelanggan::forUser()
+            ->with(['pembayarans', 'tagihanBulanan' => function ($query) use ($bulanIni) {
+                $query->where('bulan', $bulanIni);
+            }])
+            ->orderBy('id_pelanggan', 'asc')
+            ->get()
+            ->map(function ($p) use ($bulanIni) {
             // Cek apakah sudah bayar bulan ini
             $pembayaranBulanIni = $p->pembayarans->firstWhere('bulan_bayar', $bulanIni);
             
@@ -391,8 +393,11 @@ class HomeController extends Controller
     {
         $wilayahFilter = $request->input('wilayah');
         
-        $pelangganQuery = Pelanggan::query();
-        if ($wilayahFilter) {
+        // Apply filter wilayah berdasarkan user yang login
+        $pelangganQuery = Pelanggan::forUser();
+        
+        // Admin bisa filter wilayah manual, penarik otomatis filtered
+        if ($wilayahFilter && auth()->user()->isAdmin()) {
             $pelangganQuery->where('wilayah', $wilayahFilter);
         }
         

@@ -50,6 +50,46 @@ class Pelanggan extends Model
         return !is_null($this->latitude) && !is_null($this->longitude);
     }
     
+    /**
+     * Scope: Filter berdasarkan wilayah user yang login
+     * Jika user admin, return semua data
+     * Jika user penarik, return hanya data wilayahnya
+     */
+    public function scopeForUser($query, $user = null)
+    {
+        if (!$user) {
+            $user = auth()->user();
+        }
+        
+        if (!$user) {
+            return $query;
+        }
+        
+        // Admin bisa lihat semua
+        if ($user->isAdmin()) {
+            return $query;
+        }
+        
+        // Penarik hanya bisa lihat wilayahnya
+        if ($user->isPenarik() && $user->hasWilayah()) {
+            return $query->where('wilayah', $user->getWilayah());
+        }
+        
+        return $query;
+    }
+    
+    /**
+     * Scope: Filter berdasarkan wilayah tertentu
+     */
+    public function scopeByWilayah($query, $wilayah)
+    {
+        if (empty($wilayah)) {
+            return $query;
+        }
+        
+        return $query->where('wilayah', $wilayah);
+    }
+    
     public function getGoogleMapsLinkAttribute(): ?string
     {
         if (!$this->hasCoordinates()) {

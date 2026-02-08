@@ -84,8 +84,10 @@ class LaporanController extends Controller
 
         // === 3. Statistik SR (Sambungan Rumah) ===
         // Hitung total pelanggan aktif (SR) sesuai filter wilayah
-        $pelangganQuery = Pelanggan::where('status_aktif', true);
-        if ($wilayah && $wilayah !== 'semua') {
+        // Apply filter wilayah berdasarkan user yang login
+        $pelangganQuery = Pelanggan::forUser()->where('status_aktif', true);
+        if ($wilayah && $wilayah !== 'semua' && auth()->user()->isAdmin()) {
+            // Admin bisa filter wilayah manual, penarik sudah auto-filtered
             $pelangganQuery->where(function ($q) use ($wilayah) {
                 $q->where('wilayah', $wilayah)
                   ->orWhere('rw', $wilayah)
@@ -204,8 +206,10 @@ class LaporanController extends Controller
         $saldoAkhir = $totalPemasukan - $totalPengeluaran;
         
         // Count active customers
-        $pelangganQuery = Pelanggan::where('status_aktif', true);
-        if ($wilayah && $wilayah !== 'semua') {
+        // Apply filter wilayah berdasarkan user yang login
+        $pelangganQuery = Pelanggan::forUser()->where('status_aktif', true);
+        if ($wilayah && $wilayah !== 'semua' && auth()->user()->isAdmin()) {
+            // Admin bisa filter wilayah manual
             $pelangganQuery->where(function ($q) use ($wilayah) {
                 $q->where('wilayah', $wilayah)
                   ->orWhere('rw', $wilayah)
@@ -293,8 +297,10 @@ class LaporanController extends Controller
         $totalTarikanBersih = $totalPemasukan - $honorPenarik;
 
         // Statistik SR
-        $pelangganQuery = Pelanggan::where('status_aktif', true);
-        if ($wilayah && $wilayah !== 'semua') {
+        // Apply filter wilayah berdasarkan user yang login
+        $pelangganQuery = Pelanggan::forUser()->where('status_aktif', true);
+        if ($wilayah && $wilayah !== 'semua' && auth()->user()->isAdmin()) {
+            // Admin bisa filter wilayah manual
             $pelangganQuery->where(function ($q) use ($wilayah) {
                 $q->where('wilayah', $wilayah)
                   ->orWhere('rw', $wilayah)

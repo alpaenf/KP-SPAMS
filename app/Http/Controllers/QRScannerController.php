@@ -48,6 +48,27 @@ class QRScannerController extends Controller
             ], 404);
         }
         
+        // VALIDASI WILAYAH untuk Penarik
+        $user = auth()->user();
+        if ($user && $user->isPenarik() && $user->hasWilayah()) {
+            // Penarik hanya bisa scan pelanggan di wilayahnya
+            if ($pelanggan->wilayah !== $user->getWilayah()) {
+                \Log::warning('QR Scan - Unauthorized Wilayah Access', [
+                    'user_id' => $user->id,
+                    'user_wilayah' => $user->getWilayah(),
+                    'pelanggan_id' => $pelanggan->id_pelanggan,
+                    'pelanggan_wilayah' => $pelanggan->wilayah,
+                    'ip' => $request->ip(),
+                    'timestamp' => now(),
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses ke pelanggan dari wilayah ' . ($pelanggan->wilayah ?? 'ini') . '. Anda hanya dapat mengakses pelanggan di wilayah ' . $user->getWilayah() . '.',
+                ], 403);
+            }
+        }
+        
         // Log scan yang berhasil untuk audit trail
         \Log::info('QR Scan Success', [
             'id_pelanggan' => $pelanggan->id_pelanggan,
@@ -107,6 +128,14 @@ class QRScannerController extends Controller
     {
         $pelanggan = Pelanggan::findOrFail($id);
         
+        // VALIDASI WILAYAH untuk Penarik
+        $user = auth()->user();
+        if ($user && $user->isPenarik() && $user->hasWilayah()) {
+            if ($pelanggan->wilayah !== $user->getWilayah()) {
+                abort(403, 'Anda tidak memiliki akses ke pelanggan dari wilayah ' . ($pelanggan->wilayah ?? 'ini'));
+            }
+        }
+        
         // Ambil tagihan terbaru
         $tagihanTerbaru = TagihanBulanan::where('pelanggan_id', $pelanggan->id)
             ->orderBy('bulan', 'desc')
@@ -165,6 +194,18 @@ class QRScannerController extends Controller
         
         try {
             $pelanggan = Pelanggan::findOrFail($request->pelanggan_id);
+            
+            // VALIDASI WILAYAH untuk Penarik
+            $user = auth()->user();
+            if ($user && $user->isPenarik() && $user->hasWilayah()) {
+                if ($pelanggan->wilayah !== $user->getWilayah()) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Anda tidak memiliki akses ke pelanggan dari wilayah ' . ($pelanggan->wilayah ?? 'ini'),
+                    ], 403);
+                }
+            }
             
             // Ambil informasi tarif aktif berdasarkan kategori
             $tarifPemakaian = InformasiTarif::where('is_active', true)
@@ -300,6 +341,23 @@ class QRScannerController extends Controller
     {
         $pelanggan = Pelanggan::findOrFail($id);
         
+        // Validasi akses wilayah untuk penarik
+        $user = auth()->user();
+        if ($user && $user->isPenarik() && $user->hasWilayah()) {
+            if ($pelanggan->wilayah !== $user->getWilayah()) {
+                Log::warning('Penarik mencoba download QR dari wilayah lain', [
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'user_wilayah' => $user->getWilayah(),
+                    'pelanggan_id' => $pelanggan->id_pelanggan,
+                    'pelanggan_wilayah' => $pelanggan->wilayah,
+                    'timestamp' => now(),
+                ]);
+                
+                abort(403, 'Anda tidak memiliki akses untuk download QR code pelanggan dari wilayah ' . ucfirst($pelanggan->wilayah) . '. Anda hanya dapat mengakses wilayah ' . ucfirst($user->getWilayah()) . '.');
+            }
+        }
+        
         // Generate QR code as SVG
         $qrCodeSvg = QrCode::format('svg')
             ->size(300)
@@ -325,6 +383,23 @@ class QRScannerController extends Controller
     public function downloadQRImage($id)
     {
         $pelanggan = Pelanggan::findOrFail($id);
+        
+        // Validasi akses wilayah untuk penarik
+        $user = auth()->user();
+        if ($user && $user->isPenarik() && $user->hasWilayah()) {
+            if ($pelanggan->wilayah !== $user->getWilayah()) {
+                Log::warning('Penarik mencoba download QR image dari wilayah lain', [
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'user_wilayah' => $user->getWilayah(),
+                    'pelanggan_id' => $pelanggan->id_pelanggan,
+                    'pelanggan_wilayah' => $pelanggan->wilayah,
+                    'timestamp' => now(),
+                ]);
+                
+                abort(403, 'Anda tidak memiliki akses untuk download QR code pelanggan dari wilayah ' . ucfirst($pelanggan->wilayah) . '. Anda hanya dapat mengakses wilayah ' . ucfirst($user->getWilayah()) . '.');
+            }
+        }
         
         // Generate QR code as SVG
         $qrCode = QrCode::format('svg')
