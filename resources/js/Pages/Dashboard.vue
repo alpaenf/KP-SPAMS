@@ -12,7 +12,7 @@
                                 <InstallPWAButton />
                             </div>
                         </div>
-                        <div class="w-full sm:w-auto">
+                        <div v-if="$page.props.auth.user.role !== 'penarik'" class="w-full sm:w-auto">
                             <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Filter Wilayah</label>
                             <select
                                 v-model="selectedWilayah"
