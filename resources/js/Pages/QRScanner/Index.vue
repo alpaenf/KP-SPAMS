@@ -118,8 +118,17 @@
                         </div>
                     </div>
 
-                    <!-- Camera View -->
-                    <div v-if="!scannedData && cameraStarted" class="relative">
+                    <!-- Camera View - Show when loading OR started -->
+                    <div v-if="!scannedData && (cameraLoading || cameraStarted)" class="relative">
+                        <!-- Loading Overlay -->
+                        <div v-if="cameraLoading" class="absolute inset-0 bg-black/70 rounded-lg flex items-center justify-center z-10">
+                            <div class="text-center text-white">
+                                <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-white mx-auto mb-4"></div>
+                                <p class="text-lg font-medium">Membuka kamera...</p>
+                                <p class="text-sm text-gray-300 mt-2">Tunggu sebentar</p>
+                            </div>
+                        </div>
+                        
                         <div class="relative aspect-[3/4] bg-black rounded-lg overflow-hidden shadow-inner">
                             <video
                                 ref="videoElement"
@@ -377,7 +386,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import jsQR from 'jsqr';
@@ -462,12 +471,27 @@ const startCamera = async () => {
     cameraLoading.value = true;
     cameraError.value = '';
     
+    // Wait for DOM update to render video element
+    await nextTick();
+    
+    // Give a small additional delay to ensure video element is fully mounted
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     // Log untuk debugging
     console.log('[QR Scanner] Starting camera request...');
     console.log('[QR Scanner] Protocol:', window.location.protocol);
     console.log('[QR Scanner] Hostname:', window.location.hostname);
+    console.log('[QR Scanner] Video element exists:', !!videoElement.value);
     
     try {
+        // Check if video element is now available
+        if (!videoElement.value) {
+            console.error('[QR Scanner] Video element still not found after waiting!');
+            cameraError.value = 'Video element tidak ditemukan. Refresh halaman dan coba lagi.';
+            cameraLoading.value = false;
+            return;
+        }
+        
         // Directly request camera access - this will trigger browser permission prompt
         // Don't check permission state first as it can block the prompt from showing
         const constraints = {
