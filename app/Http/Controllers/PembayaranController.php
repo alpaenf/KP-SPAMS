@@ -398,4 +398,124 @@ class PembayaranController extends Controller
         // Always regenerate PDF to ensure fresh data
         return $this->sendReceipt($id);
     }
+
+    public function downloadPdf($id)
+    {
+        $pembayaran = Pembayaran::with(['pelanggan', 'tagihan'])->findOrFail($id);
+        
+        if (!$pembayaran->pelanggan) {
+            abort(404, 'Data pelanggan tidak ditemukan');
+        }
+
+        // Get tagihan data
+        $biayaAbunemen = 0;
+        $meteranSebelum = 0;
+        $meteranSesudah = 0;
+        $jumlahKubik = 0;
+        $tarifPerKubik = 0;
+        
+        if ($pembayaran->tagihan) {
+            $tagihan = $pembayaran->tagihan;
+            $biayaAbunemen = $tagihan->biaya_abunemen;
+            $jumlahKubik = $tagihan->jumlah_kubik;
+            $tarifPerKubik = $tagihan->tarif_per_kubik;
+            
+            if ($tagihan->meteranSesudah && $tagihan->meteranSebelum) {
+                $meteranSesudah = $tagihan->meteranSesudah->angka ?? 0;
+                $meteranSebelum = $tagihan->meteranSebelum->angka ?? 0;
+            } else {
+                $meteranSebelum = $tagihan->meteran_sebelum;
+                $meteranSesudah = $tagihan->meteran_sesudah;
+                $tarifPerKubik = $tagihan->tarif_per_kubik;
+            }
+        } elseif ($jumlahKubik <= 0 && $meteranSebelum && $meteranSesudah) {
+            $jumlahKubik = $meteranSesudah - $meteranSebelum;
+        }
+        
+        // Generate PDF
+        $data = [
+            'pembayaran' => [
+                'id' => $pembayaran->id,
+                'pelanggan_id' => $pembayaran->pelanggan->id_pelanggan,
+                'pelanggan_nama' => $pembayaran->pelanggan->nama_pelanggan,
+                'rt' => $pembayaran->pelanggan->rt,
+                'rw' => $pembayaran->pelanggan->rw,
+                'no_whatsapp' => $pembayaran->pelanggan->no_whatsapp,
+                'bulan_bayar' => \Carbon\Carbon::parse($pembayaran->bulan_bayar . '-01')->locale('id')->isoFormat('MMMM YYYY'),
+                'tanggal_bayar' => \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->locale('id')->isoFormat('D MMMM YYYY'),
+                'meteran_sebelum' => $meteranSebelum,
+                'meteran_sesudah' => $meteranSesudah,
+                'biaya_abunemen' => $biayaAbunemen,
+                'tarif_per_kubik' => $tarifPerKubik,
+                'tunggakan' => $pembayaran->tunggakan,
+                'jumlah_kubik' => $jumlahKubik,
+                'jumlah_bayar' => $pembayaran->jumlah_bayar,
+                'keterangan' => $pembayaran->keterangan,
+            ]
+        ];
+
+        $pdf = Pdf::loadView('pdf.struk-pembayaran', $data);
+        $pdf->setPaper([0, 0, 302.36, 566.93], 'portrait');
+        
+        $fileName = 'struk_' . $pembayaran->pelanggan->id_pelanggan . '_' . str_replace('-', '', $pembayaran->bulan_bayar) . '.pdf';
+        
+        return $pdf->download($fileName);
+    }
+
+    public function printReceipt($id)
+    {
+        $pembayaran = Pembayaran::with(['pelanggan', 'tagihan'])->findOrFail($id);
+        
+        if (!$pembayaran->pelanggan) {
+            abort(404, 'Data pelanggan tidak ditemukan');
+        }
+
+        // Get tagihan data
+        $biayaAbunemen = 0;
+        $meteranSebelum = 0;
+        $meteranSesudah = 0;
+        $jumlahKubik = 0;
+        $tarifPerKubik = 0;
+        
+        if ($pembayaran->tagihan) {
+            $tagihan = $pembayaran->tagihan;
+            $biayaAbunemen = $tagihan->biaya_abunemen;
+            $jumlahKubik = $tagihan->jumlah_kubik;
+            $tarifPerKubik = $tagihan->tarif_per_kubik;
+            
+            if ($tagihan->meteranSesudah && $tagihan->meteranSebelum) {
+                $meteranSesudah = $tagihan->meteranSesudah->angka ?? 0;
+                $meteranSebelum = $tagihan->meteranSebelum->angka ?? 0;
+            } else {
+                $meteranSebelum = $tagihan->meteran_sebelum;
+                $meteranSesudah = $tagihan->meteran_sesudah;
+                $tarifPerKubik = $tagihan->tarif_per_kubik;
+            }
+        } elseif ($jumlahKubik <= 0 && $meteranSebelum && $meteranSesudah) {
+            $jumlahKubik = $meteranSesudah - $meteranSebelum;
+        }
+        
+        $data = [
+            'pembayaran' => [
+                'id' => $pembayaran->id,
+                'pelanggan_id' => $pembayaran->pelanggan->id_pelanggan,
+                'pelanggan_nama' => $pembayaran->pelanggan->nama_pelanggan,
+                'rt' => $pembayaran->pelanggan->rt,
+                'rw' => $pembayaran->pelanggan->rw,
+                'no_whatsapp' => $pembayaran->pelanggan->no_whatsapp,
+                'bulan_bayar' => \Carbon\Carbon::parse($pembayaran->bulan_bayar . '-01')->locale('id')->isoFormat('MMMM YYYY'),
+                'tanggal_bayar' => \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->locale('id')->isoFormat('D MMMM YYYY'),
+                'meteran_sebelum' => $meteranSebelum,
+                'meteran_sesudah' => $meteranSesudah,
+                'biaya_abunemen' => $biayaAbunemen,
+                'tarif_per_kubik' => $tarifPerKubik,
+                'tunggakan' => $pembayaran->tunggakan,
+                'jumlah_kubik' => $jumlahKubik,
+                'jumlah_bayar' => $pembayaran->jumlah_bayar,
+                'keterangan' => $pembayaran->keterangan,
+            ]
+        ];
+        
+        return view('print.struk-pembayaran', $data);
+    }
 }

@@ -83,6 +83,8 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/pembayaran/{pembayaran}', [PembayaranController::class, 'destroy'])->name('pembayaran.destroy');
     Route::post('/pembayaran/{pembayaran}/send-receipt', [PembayaranController::class, 'sendReceipt'])->name('pembayaran.send-receipt');
     Route::get('/pembayaran/{pembayaran}/receipt-link', [PembayaranController::class, 'getReceiptLink'])->name('pembayaran.receipt-link');
+    Route::get('/pembayaran/{pembayaran}/download-pdf', [PembayaranController::class, 'downloadPdf'])->name('pembayaran.download-pdf');
+    Route::get('/pembayaran/{pembayaran}/print', [PembayaranController::class, 'printReceipt'])->name('pembayaran.print');
     
     // API Tagihan by Pelanggan
     Route::get('/api/tagihan-bulanan/{pelangganId}/{bulan}', [\App\Http\Controllers\TagihanBulananController::class, 'getByPelangganBulan'])->name('tagihan-bulanan.get-by-pelanggan-bulan');
