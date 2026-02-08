@@ -86,8 +86,8 @@
                             </select>
                         </div>
 
-                        <!-- Wilayah Filter -->
-                        <div>
+                        <!-- Wilayah Filter (Hidden for penarik) -->
+                        <div v-if="$page.props.auth.user.role !== 'penarik'">
                             <label for="wilayah" class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Wilayah / RW</label>
                             <select 
                                 id="wilayah" 
