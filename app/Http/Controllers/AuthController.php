@@ -53,18 +53,18 @@ class AuthController extends Controller
 
             $user = Auth::user();
             
-            // Cek role pengelola
-            if ($user->role === 'pengelola') {
+            // Cek role - Allow: admin, pengelola, penarik
+            if (in_array($user->role, ['admin', 'pengelola', 'penarik'])) {
                 return redirect()->intended(route('dashboard'));
             }
             
-            // Jika bukan pengelola, logout dan tampilkan error
+            // Jika role tidak valid, logout dan tampilkan error
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
             
             return back()->withErrors([
-                'message' => 'Akun ini tidak memiliki akses sebagai pengelola.',
+                'message' => 'Akun ini tidak memiliki akses ke sistem.',
             ]);
         }
 
