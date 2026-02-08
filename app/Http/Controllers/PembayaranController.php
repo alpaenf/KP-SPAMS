@@ -401,36 +401,18 @@ class PembayaranController extends Controller
 
     public function downloadPdf($id)
     {
-        $pembayaran = Pembayaran::with(['pelanggan', 'tagihan'])->findOrFail($id);
+        $pembayaran = Pembayaran::with('pelanggan')->findOrFail($id);
         
         if (!$pembayaran->pelanggan) {
             abort(404, 'Data pelanggan tidak ditemukan');
         }
 
-        // Get tagihan data
-        $biayaAbunemen = 0;
-        $meteranSebelum = 0;
-        $meteranSesudah = 0;
-        $jumlahKubik = 0;
-        $tarifPerKubik = 0;
-        
-        if ($pembayaran->tagihan) {
-            $tagihan = $pembayaran->tagihan;
-            $biayaAbunemen = $tagihan->biaya_abunemen;
-            $jumlahKubik = $tagihan->jumlah_kubik;
-            $tarifPerKubik = $tagihan->tarif_per_kubik;
-            
-            if ($tagihan->meteranSesudah && $tagihan->meteranSebelum) {
-                $meteranSesudah = $tagihan->meteranSesudah->angka ?? 0;
-                $meteranSebelum = $tagihan->meteranSebelum->angka ?? 0;
-            } else {
-                $meteranSebelum = $tagihan->meteran_sebelum;
-                $meteranSesudah = $tagihan->meteran_sesudah;
-                $tarifPerKubik = $tagihan->tarif_per_kubik;
-            }
-        } elseif ($jumlahKubik <= 0 && $meteranSebelum && $meteranSesudah) {
-            $jumlahKubik = $meteranSesudah - $meteranSebelum;
-        }
+        // Get data from pembayaran
+        $biayaAbunemen = $pembayaran->abunemen ? 3000 : 0;
+        $meteranSebelum = $pembayaran->meteran_sebelum ?? 0;
+        $meteranSesudah = $pembayaran->meteran_sesudah ?? 0;
+        $jumlahKubik = $pembayaran->jumlah_kubik ?? 0;
+        $tarifPerKubik = 2000; // Default tarif
         
         // Generate PDF
         $data = [
@@ -464,36 +446,18 @@ class PembayaranController extends Controller
 
     public function printReceipt($id)
     {
-        $pembayaran = Pembayaran::with(['pelanggan', 'tagihan'])->findOrFail($id);
+        $pembayaran = Pembayaran::with('pelanggan')->findOrFail($id);
         
         if (!$pembayaran->pelanggan) {
             abort(404, 'Data pelanggan tidak ditemukan');
         }
 
-        // Get tagihan data
-        $biayaAbunemen = 0;
-        $meteranSebelum = 0;
-        $meteranSesudah = 0;
-        $jumlahKubik = 0;
-        $tarifPerKubik = 0;
-        
-        if ($pembayaran->tagihan) {
-            $tagihan = $pembayaran->tagihan;
-            $biayaAbunemen = $tagihan->biaya_abunemen;
-            $jumlahKubik = $tagihan->jumlah_kubik;
-            $tarifPerKubik = $tagihan->tarif_per_kubik;
-            
-            if ($tagihan->meteranSesudah && $tagihan->meteranSebelum) {
-                $meteranSesudah = $tagihan->meteranSesudah->angka ?? 0;
-                $meteranSebelum = $tagihan->meteranSebelum->angka ?? 0;
-            } else {
-                $meteranSebelum = $tagihan->meteran_sebelum;
-                $meteranSesudah = $tagihan->meteran_sesudah;
-                $tarifPerKubik = $tagihan->tarif_per_kubik;
-            }
-        } elseif ($jumlahKubik <= 0 && $meteranSebelum && $meteranSesudah) {
-            $jumlahKubik = $meteranSesudah - $meteranSebelum;
-        }
+        // Get data from pembayaran
+        $biayaAbunemen = $pembayaran->abunemen ? 3000 : 0;
+        $meteranSebelum = $pembayaran->meteran_sebelum ?? 0;
+        $meteranSesudah = $pembayaran->meteran_sesudah ?? 0;
+        $jumlahKubik = $pembayaran->jumlah_kubik ?? 0;
+        $tarifPerKubik = 2000; // Default tarif
         
         $data = [
             'pembayaran' => [
