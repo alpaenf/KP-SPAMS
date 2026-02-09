@@ -329,6 +329,7 @@ class HomeController extends Controller
     public function cekPelanggan(Request $request)
     {
         $bulanIni = now()->format('Y-m');
+        $bulanFilter = $request->input('bulan', $bulanIni);
         
         // Ambil semua pelanggan dengan pembayaran dan tagihan bulanan
         // Apply filter wilayah berdasarkan user yang login
@@ -383,9 +384,54 @@ class HomeController extends Controller
             ];
         });
         
+        // Ambil data pembayaran untuk tab Riwayat Pembayaran
+        $pembayaranQuery = \App\Models\Pembayaran::query()
+            ->whereHas('pelanggan', function($q) {
+                $q->forUser();
+            })
+            ->with('pelanggan')
+            ->where('bulan_bayar', $bulanFilter)
+            ->orderBy('tanggal_bayar', 'desc');
+            
+        $pembayaranList = $pembayaranQuery->get()->map(function($p) {
+            return [
+                'id' => $p->id,
+                'pelanggan_id' => $p->pelanggan->id,
+                'id_pelanggan' => $p->pelanggan->id_pelanggan,
+                'nama_pelanggan' => $p->pelanggan->nama_pelanggan,
+                'wilayah' => $p->pelanggan->wilayah,
+                'rt' => $p->pelanggan->rt,
+                'rw' => $p->pelanggan->rw,
+                'kategori' => $p->pelanggan->kategori ?? 'umum',
+                'bulan_bayar' => $p->bulan_bayar,
+                'tanggal_bayar' => $p->tanggal_bayar->format('Y-m-d'),
+                'meteran_sebelum' => $p->meteran_sebelum,
+                'meteran_sesudah' => $p->meteran_sesudah,
+                'jumlah_kubik' => $p->jumlah_kubik,
+                'abunemen' => $p->abunemen,
+                'tunggakan' => $p->tunggakan,
+                'jumlah_bayar' => $p->jumlah_bayar,
+                'keterangan' => $p->keterangan,
+                'metode_bayar' => $p->metode_bayar ?? 'Tunai',
+                'catatan' => $p->catatan,
+            ];
+        });
+        
+        // Hitung statistik pembayaran
+        $totalPembayaran = $pembayaranList->count();
+        $totalPemasukan = $pembayaranList->sum('jumlah_bayar');
+        $rataRata = $totalPembayaran > 0 ? $totalPemasukan / $totalPembayaran : 0;
+        
         return Inertia::render('CekPelanggan', [
             'pelangganList' => $pelangganList,
+            'pembayaranList' => $pembayaranList,
             'bulanIni' => $bulanIni,
+            'bulanFilter' => $bulanFilter,
+            'stats' => [
+                'totalPembayaran' => $totalPembayaran,
+                'totalPemasukan' => $totalPemasukan,
+                'rataRata' => $rataRata,
+            ],
         ]);
     }
     
