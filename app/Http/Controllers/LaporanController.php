@@ -33,8 +33,14 @@ class LaporanController extends Controller
             $query->whereMonth('tanggal_bayar', $bulan);
         }
 
-        // Filter Wilayah
-        if ($wilayah && $wilayah !== 'semua') {
+        // Filter Wilayah untuk penarik
+        if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
+            // Penarik hanya bisa lihat wilayahnya sendiri
+            $query->whereHas('pelanggan', function ($q) {
+                $q->where('wilayah', auth()->user()->getWilayah());
+            });
+        } elseif ($wilayah && $wilayah !== 'semua') {
+            // Admin bisa filter wilayah manual
             $query->whereHas('pelanggan', function ($q) use ($wilayah) {
                 $q->where('wilayah', $wilayah)
                   ->orWhere('rw', $wilayah)
@@ -263,7 +269,14 @@ class LaporanController extends Controller
             $query->whereMonth('tanggal_bayar', $bulan);
         }
 
-        if ($wilayah && $wilayah !== 'semua') {
+        // Filter Wilayah untuk penarik
+        if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
+            // Penarik hanya bisa lihat wilayahnya sendiri
+            $query->whereHas('pelanggan', function ($q) {
+                $q->where('wilayah', auth()->user()->getWilayah());
+            });
+        } elseif ($wilayah && $wilayah !== 'semua') {
+            // Admin bisa filter wilayah manual
             $query->whereHas('pelanggan', function ($q) use ($wilayah) {
                 $q->where('wilayah', $wilayah)
                   ->orWhere('rw', $wilayah)

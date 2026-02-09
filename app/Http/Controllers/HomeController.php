@@ -509,9 +509,24 @@ class HomeController extends Controller
             ->get(['id', 'id_pelanggan', 'nama_pelanggan', 'no_whatsapp', 'rt', 'rw']);
         
         // List Transaksi Terakhir (untuk melihat siapa yang baru bayar, termasuk bayar tunggakan)
-        $recentTransactions = Pembayaran::with('pelanggan')
+        // Filter berdasarkan wilayah user penarik
+        $recentTransactionsQuery = Pembayaran::with('pelanggan')
             ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
+            ->whereYear('created_at', now()->year);
+        
+        // Jika penarik, filter berdasarkan wilayah
+        if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
+            $recentTransactionsQuery->whereHas('pelanggan', function ($q) {
+                $q->where('wilayah', auth()->user()->getWilayah());
+            });
+        } elseif ($wilayahFilter && auth()->user()->isAdmin()) {
+            // Admin dengan filter wilayah
+            $recentTransactionsQuery->whereHas('pelanggan', function ($q) use ($wilayahFilter) {
+                $q->where('wilayah', $wilayahFilter);
+            });
+        }
+        
+        $recentTransactions = $recentTransactionsQuery
             ->orderBy('created_at', 'desc')
             ->limit(20)
             ->get()
