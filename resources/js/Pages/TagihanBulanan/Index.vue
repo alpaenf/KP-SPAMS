@@ -146,6 +146,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Meteran Sebelum (m³)</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Meteran Sesudah (m³)</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Pemakaian (m³)</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Tunggakan</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Total Tagihan</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Aksi</th>
@@ -158,7 +159,15 @@
                                         <div class="text-sm font-medium text-gray-900">{{ item.id_pelanggan }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">{{ item.nama_pelanggan }}</div>
+                                        <div class="flex items-center gap-2">
+                                            <div class="text-sm font-medium text-gray-900">{{ item.nama_pelanggan }}</div>
+                                            <span v-if="item.tunggakan && item.tunggakan > 0" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800" title="Memiliki Tunggakan">
+                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                                </svg>
+                                                !
+                                            </span>
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="text-sm text-gray-600">{{ item.wilayah || '-' }}</span>
@@ -181,6 +190,12 @@
                                         <div class="text-sm font-medium text-gray-900">{{ item.tagihan?.pemakaian_kubik ?? '-' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
+                                        <div v-if="item.tunggakan && item.tunggakan > 0" class="text-sm font-bold text-red-600">
+                                            {{ formatRupiah(item.tunggakan) }}
+                                        </div>
+                                        <div v-else class="text-sm text-gray-400">-</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-bold" :class="item.tagihan ? 'text-blue-600' : 'text-gray-400'">
                                             {{ item.tagihan ? formatRupiah(item.tagihan.total_tagihan) : 'Belum ada' }}
                                         </div>
@@ -198,6 +213,12 @@
                                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                                                 </svg>
                                                 Sudah Bayar
+                                            </span>
+                                            <span v-else-if="item.tunggakan && item.tunggakan > 0" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293z" clip-rule="evenodd" />
+                                                </svg>
+                                                Nunggak
                                             </span>
                                             <span v-else-if="item.tagihan && item.tagihan.status_bayar === 'BELUM_BAYAR' && item.tagihan.status_konfirmasi === 'none'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
