@@ -62,6 +62,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('qr-scanner.scan');
     Route::get('/qr-scanner/input-meteran/{id}', [QRScannerController::class, 'inputMeteran'])->name('qr-scanner.input-meteran');
     Route::post('/api/qr-scanner/store-meteran', [QRScannerController::class, 'storeMeteran'])->name('qr-scanner.store-meteran');
+    Route::get('/api/qr-scanner/last-meteran/{pelangganId}/{bulan}', [QRScannerController::class, 'getLastMeteran'])->name('qr-scanner.last-meteran');
 
     Route::get('/qr-code/bulk-preview', [QRCodeBulkController::class, 'preview'])->name('qr-code.bulk-preview');
     Route::get('/qr-code/bulk-download-pdf', [QRCodeBulkController::class, 'downloadPDF'])->name('qr-code.bulk-download-pdf');

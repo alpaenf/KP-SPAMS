@@ -411,4 +411,30 @@ class QRScannerController extends Controller
             ->header('Content-Type', 'image/svg+xml')
             ->header('Content-Disposition', 'attachment; filename="QR-' . $pelanggan->id_pelanggan . '.svg"');
     }
+    /**
+     * Get meteran terakhir sebelum bulan tertentu
+     */
+    public function getLastMeteran($pelangganId, $bulan)
+    {
+        $pelanggan = Pelanggan::findOrFail($pelangganId);
+        
+        // VALIDASI WILAYAH untuk Penarik
+        $user = auth()->user();
+        if ($user && $user->isPenarik() && $user->hasWilayah()) {
+            if ($pelanggan->wilayah !== $user->getWilayah()) {
+               return response()->json(['meteran_terakhir' => 0], 403);
+            }
+        }
+        
+        // Cari tagihan terakhir SEBELUM bulan yang diminta
+        $tagihanTerakhir = TagihanBulanan::where('pelanggan_id', $pelangganId)
+            ->where('bulan', '<', $bulan)
+            ->orderBy('bulan', 'desc')
+            ->first();
+            
+        return response()->json([
+            'meteran_terakhir' => $tagihanTerakhir ? $tagihanTerakhir->meteran_sesudah : 0,
+            'bulan_terakhir' => $tagihanTerakhir ? $tagihanTerakhir->bulan : null,
+        ]);
+    }
 }

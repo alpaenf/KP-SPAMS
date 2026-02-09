@@ -91,9 +91,11 @@
                             <input
                                 v-model="form.bulan"
                                 type="month"
+                                :max="getCurrentMonth()"
                                 required
                                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                             />
+                            <p class="text-xs text-gray-500 mt-1">Anda dapat memilih bulan sebelumnya jika belum tercatat</p>
                         </div>
 
                         <!-- Meteran Sebelum (Read Only) -->
@@ -369,47 +371,25 @@ function scanAnother() {
     router.visit('/qr-scanner');
 }
 
-function getPreviousMonth(monthStr) {
-    if (!monthStr) return null;
-    let [year, month] = monthStr.split('-').map(Number);
-    
-    // Kurangi 1 bulan
-    month = month - 1;
-    
-    // Jika bulan menjadi 0 (sebelum Januari), mundur 1 tahun dan set bulan ke Desember (12)
-    if (month === 0) {
-        year -= 1;
-        month = 12;
-    }
-    
-    return `${year}-${String(month).padStart(2, '0')}`;
-}
-
 async function fetchMeteranSebelum(bulan) {
     if (!bulan) return;
     
-    const prevMonth = getPreviousMonth(bulan);
-    if (!prevMonth) {
-        meteranSebelumValue.value = 0;
-        return;
-    }
-    
+    // Reset nilai ke 0 dulu sebelum fetch data baru
+    // meteranSebelumValue.value = 0; // Komentari ini agar tidak ada blink/flicker jika tidak perlu
+
     try {
-        // Cek tagihan bulan sebelumnya
-        const response = await axios.get(`/api/tagihan-bulanan/${props.pelanggan.id}/${prevMonth}`);
-        if (response.data && response.data.tagihan && response.data.tagihan.meteran_sesudah > 0) {
-            meteranSebelumValue.value = response.data.tagihan.meteran_sesudah;
+        // Panggil endpoint baru untuk mendapatkan meteran terakhir sebelum bulan yang dipilih
+        const response = await axios.get(`/api/qr-scanner/last-meteran/${props.pelanggan.id}/${bulan}`);
+        
+        if (response.data && response.data.meteran_terakhir !== undefined) {
+             meteranSebelumValue.value = Number(response.data.meteran_terakhir);
         } else {
-            meteranSebelumValue.value = 0;
+             meteranSebelumValue.value = 0;
         }
     } catch (error) {
-        // Ignore 404 (Not Found) - it just means no previous bill exists
-        if (error.response && error.response.status === 404) {
-            meteranSebelumValue.value = 0;
-        } else {
-            console.error('Error fetching meteran sebelum:', error);
-            meteranSebelumValue.value = 0;
-        }
+        console.error('Error fetching meteran sebelum:', error);
+        // Jangan reset ke 0 jika error, mungkin koneksi putus, biarkan nilai lama atau set ke 0 jika perlu
+        meteranSebelumValue.value = 0;
     }
 }
 
