@@ -702,6 +702,32 @@ class HomeController extends Controller
                 ],
             ];
         
+        // Ambil bronscap dari database
+        $bronscapData = $mapSettings->where('location_type', 'bronscap');
+        $bronscapList = $bronscapData->isNotEmpty() 
+            ? $bronscapData->map(function ($item) {
+                return [
+                    'name' => $item->name,
+                    'lat' => (float) $item->latitude,
+                    'lng' => (float) $item->longitude,
+                    'description' => $item->description,
+                ];
+            })->values()->toArray()
+            : [];
+        
+        // Ambil reservoir dari database
+        $reservoirData = $mapSettings->where('location_type', 'reservoir');
+        $reservoirList = $reservoirData->isNotEmpty() 
+            ? $reservoirData->map(function ($item) {
+                return [
+                    'name' => $item->name,
+                    'lat' => (float) $item->latitude,
+                    'lng' => (float) $item->longitude,
+                    'description' => $item->description,
+                ];
+            })->values()->toArray()
+            : [];
+        
         // Ambil semua pelanggan yang memiliki koordinat valid (tidak null dan tidak 0)
         $pelangganList = Pelanggan::whereNotNull('latitude')
             ->whereNotNull('longitude')
@@ -731,6 +757,8 @@ class HomeController extends Controller
         return Inertia::render('Peta', [
             'kantor' => $kantor,
             'sumberAir' => $sumberAir,
+            'bronscapList' => $bronscapList,
+            'reservoirList' => $reservoirList,
             'pelangganList' => $pelangganList,
             'highlightPelanggan' => $highlightPelanggan,
         ]);

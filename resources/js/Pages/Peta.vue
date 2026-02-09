@@ -347,7 +347,15 @@
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm ring-2 ring-white">S</div>
-                                            <span class="text-xs font-medium text-gray-700">Sumber</span>
+                                            <span class="text-xs font-medium text-gray-700">Sumber Air</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 bg-yellow-600 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm ring-2 ring-white">B</div>
+                                            <span class="text-xs font-medium text-gray-700">Bronscap</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 bg-teal-600 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm ring-2 ring-white">R</div>
+                                            <span class="text-xs font-medium text-gray-700">Reservoir</span>
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <div class="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm ring-2 ring-white">P</div>
@@ -477,6 +485,14 @@ const props = defineProps({
             },
         ],
     },
+    bronscapList: {
+        type: Array,
+        default: () => [],
+    },
+    reservoirList: {
+        type: Array,
+        default: () => [],
+    },
     pelangganList: {
         type: Array,
         default: () => [],
@@ -600,6 +616,62 @@ const initMap = () => {
         `);
     });
 
+    // Custom icon for Bronscap
+    const bronscapIcon = L.divIcon({
+        html: '<div style="background-color: #ca8a04; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">B</div>',
+        className: 'custom-div-icon',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+    });
+
+    // Add Bronscap markers
+    props.bronscapList.forEach((bronscap) => {
+        const marker = L.marker([bronscap.lat, bronscap.lng], { icon: bronscapIcon }).addTo(map);
+        marker.bindPopup(`
+            <div style="min-width: 200px;">
+                <h3 style="font-weight: bold; margin-bottom: 8px; font-size: 16px;">${bronscap.name}</h3>
+                <p style="margin-bottom: 8px; color: #666; font-size: 14px;">Bronscap untuk sistem distribusi air</p>
+                <a href="https://www.google.com/maps?q=${bronscap.lat},${bronscap.lng}" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   style="display: inline-flex; align-items: center; color: #ca8a04; font-weight: 600; text-decoration: none; font-size: 14px;">
+                    <svg style="width: 16px; height: 16px; margin-right: 4px;" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z" clip-rule="evenodd" />
+                    </svg>
+                    Buka di Google Maps
+                </a>
+            </div>
+        `);
+    });
+
+    // Custom icon for Reservoir
+    const reservoirIcon = L.divIcon({
+        html: '<div style="background-color: #0d9488; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">R</div>',
+        className: 'custom-div-icon',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+    });
+
+    // Add Reservoir markers
+    props.reservoirList.forEach((reservoir) => {
+        const marker = L.marker([reservoir.lat, reservoir.lng], { icon: reservoirIcon }).addTo(map);
+        marker.bindPopup(`
+            <div style="min-width: 200px;">
+                <h3 style="font-weight: bold; margin-bottom: 8px; font-size: 16px;">${reservoir.name}</h3>
+                <p style="margin-bottom: 8px; color: #666; font-size: 14px;">Reservoir untuk penyimpanan air</p>
+                <a href="https://www.google.com/maps?q=${reservoir.lat},${reservoir.lng}" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   style="display: inline-flex; align-items: center; color: #0d9488; font-weight: 600; text-decoration: none; font-size: 14px;">
+                    <svg style="width: 16px; height: 16px; margin-right: 4px;" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z" clip-rule="evenodd" />
+                    </svg>
+                    Buka di Google Maps
+                </a>
+            </div>
+        `);
+    });
+
     // Layer for pelanggan markers
     pelangganLayer = L.layerGroup().addTo(map);
     renderPelangganMarkers();
@@ -609,6 +681,8 @@ const initMap = () => {
         const bounds = L.latLngBounds([
             [props.kantor.lat, props.kantor.lng],
             ...props.sumberAir.map(s => [s.lat, s.lng]),
+            ...props.bronscapList.map(b => [b.lat, b.lng]),
+            ...props.reservoirList.map(r => [r.lat, r.lng]),
             ...props.pelangganList.map(p => [p.latitude, p.longitude]),
         ]);
         map.fitBounds(bounds, { padding: [50, 50] });
@@ -699,6 +773,8 @@ const fitToBounds = () => {
     const bounds = L.latLngBounds([
         [props.kantor.lat, props.kantor.lng],
         ...props.sumberAir.map(s => [s.lat, s.lng]),
+        ...props.bronscapList.map(b => [b.lat, b.lng]),
+        ...props.reservoirList.map(r => [r.lat, r.lng]),
         ...filteredPelanggan.value.map(p => [p.latitude, p.longitude]),
     ]);
     if (bounds.isValid()) {

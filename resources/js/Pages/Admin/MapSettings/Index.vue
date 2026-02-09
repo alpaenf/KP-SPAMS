@@ -31,6 +31,14 @@ const sumberAirLocations = computed(() =>
     props.mapSettings.filter(m => m.location_type === 'sumber_air')
 );
 
+const bronscapLocations = computed(() => 
+    props.mapSettings.filter(m => m.location_type === 'bronscap')
+);
+
+const reservoirLocations = computed(() => 
+    props.mapSettings.filter(m => m.location_type === 'reservoir')
+);
+
 const displayNotification = (message, type = 'success') => {
     notificationMessage.value = message;
     notificationType.value = type;
@@ -271,6 +279,114 @@ const deleteLocation = (id) => {
                 <p v-else class="text-gray-500 text-center py-8">Belum ada lokasi sumber air</p>
             </div>
 
+            <!-- Bronscap Locations -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <div class="w-8 h-8 bg-yellow-600 rounded-full flex items-center justify-center text-white text-xs font-bold">B</div>
+                    Lokasi Bronscap
+                </h2>
+                <div v-if="bronscapLocations.length > 0" class="space-y-3">
+                    <div 
+                        v-for="location in bronscapLocations" 
+                        :key="location.id"
+                        class="border rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow"
+                    >
+                        <div class="flex flex-col sm:flex-row sm:justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-semibold text-gray-900 text-sm sm:text-base">{{ location.name }}</h3>
+                                <p class="text-xs sm:text-sm text-gray-600 mt-1 break-all">
+                                    Koordinat: {{ location.latitude }}, {{ location.longitude }}
+                                </p>
+                                <p v-if="location.description" class="text-xs sm:text-sm text-gray-500 mt-1">
+                                    {{ location.description }}
+                                </p>
+                                <span 
+                                    :class="location.is_active ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'"
+                                    class="inline-block px-2 py-1 text-xs rounded mt-2"
+                                >
+                                    {{ location.is_active ? 'Aktif' : 'Nonaktif' }}
+                                </span>
+                            </div>
+                            <div class="flex sm:flex-col gap-2 justify-end sm:justify-start">
+                                <button 
+                                    @click="openEditModal(location)"
+                                    class="text-blue-600 hover:text-blue-800 p-1.5 sm:p-2 hover:bg-blue-50 rounded"
+                                    title="Edit"
+                                >
+                                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" strokeLine-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                                <button 
+                                    @click="deleteLocation(location.id)"
+                                    class="text-red-600 hover:text-red-800 p-1.5 sm:p-2 hover:bg-red-50 rounded"
+                                    title="Hapus"
+                                >
+                                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p v-else class="text-gray-500 text-center py-8">Belum ada lokasi bronscap</p>
+            </div>
+
+            <!-- Reservoir Locations -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <div class="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white text-xs font-bold">R</div>
+                    Lokasi Reservoir
+                </h2>
+                <div v-if="reservoirLocations.length > 0" class="space-y-3">
+                    <div 
+                        v-for="location in reservoirLocations" 
+                        :key="location.id"
+                        class="border rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow"
+                    >
+                        <div class="flex flex-col sm:flex-row sm:justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-semibold text-gray-900 text-sm sm:text-base">{{ location.name }}</h3>
+                                <p class="text-xs sm:text-sm text-gray-600 mt-1 break-all">
+                                    Koordinat: {{ location.latitude }}, {{ location.longitude }}
+                                </p>
+                                <p v-if="location.description" class="text-xs sm:text-sm text-gray-500 mt-1">
+                                    {{ location.description }}
+                                </p>
+                                <span 
+                                    :class="location.is_active ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'"
+                                    class="inline-block px-2 py-1 text-xs rounded mt-2"
+                                >
+                                    {{ location.is_active ? 'Aktif' : 'Nonaktif' }}
+                                </span>
+                            </div>
+                            <div class="flex sm:flex-col gap-2 justify-end sm:justify-start">
+                                <button 
+                                    @click="openEditModal(location)"
+                                    class="text-blue-600 hover:text-blue-800 p-1.5 sm:p-2 hover:bg-blue-50 rounded"
+                                    title="Edit"
+                                >
+                                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                                <button 
+                                    @click="deleteLocation(location.id)"
+                                    class="text-red-600 hover:text-red-800 p-1.5 sm:p-2 hover:bg-red-50 rounded"
+                                    title="Hapus"
+                                >
+                                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p v-else class="text-gray-500 text-center py-8">Belum ada lokasi reservoir</p>
+            </div>
+
             <!-- Modal Form -->
             <transition
                 enter-active-class="transition ease-out duration-200"
@@ -307,6 +423,8 @@ const deleteLocation = (id) => {
                                             >
                                                 <option value="kp_spams">Kantor KP-SPAMS</option>
                                                 <option value="sumber_air">Sumber Air</option>
+                                                <option value="bronscap">Bronscap</option>
+                                                <option value="reservoir">Reservoir</option>
                                             </select>
                                             <p v-if="form.errors.location_type" class="mt-1 text-sm text-red-600">{{ form.errors.location_type }}</p>
                                         </div>

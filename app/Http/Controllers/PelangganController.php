@@ -73,6 +73,8 @@ class PelangganController extends Controller
         return Inertia::render('Peta', [
             'kantor' => $kantor,
             'sumberAir' => $sumberAir,
+            'bronscapList' => [],
+            'reservoirList' => [],
             'pelangganList' => $pelangganList,
             'highlightPelanggan' => $highlightPelanggan,
         ]);

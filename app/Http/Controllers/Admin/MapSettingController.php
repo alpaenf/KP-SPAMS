@@ -23,7 +23,7 @@ class MapSettingController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'location_type' => 'required|in:kp_spams,sumber_air',
+            'location_type' => 'required|in:kp_spams,sumber_air,bronscap,reservoir',
             'name' => 'required|string|max:255',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
@@ -40,7 +40,7 @@ class MapSettingController extends Controller
     public function update(Request $request, MapSetting $mapSetting)
     {
         $validated = $request->validate([
-            'location_type' => 'required|in:kp_spams,sumber_air',
+            'location_type' => 'required|in:kp_spams,sumber_air,bronscap,reservoir',
             'name' => 'required|string|max:255',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
