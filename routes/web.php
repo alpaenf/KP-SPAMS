@@ -87,6 +87,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pembayaran/{pembayaran}/download-pdf', [PembayaranController::class, 'downloadPdf'])->name('pembayaran.download-pdf');
     Route::get('/pembayaran/{pembayaran}/print', [PembayaranController::class, 'printReceipt'])->name('pembayaran.print');
     
+    // Riwayat Pembayaran
+    Route::get('/riwayat-pembayaran', [PembayaranController::class, 'riwayatPembayaran'])->name('riwayat-pembayaran');
+    
     // API Tagihan by Pelanggan
     Route::get('/api/tagihan-bulanan/{pelangganId}/{bulan}', [\App\Http\Controllers\TagihanBulananController::class, 'getByPelangganBulan'])->name('tagihan-bulanan.get-by-pelanggan-bulan');
     
