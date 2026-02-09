@@ -519,14 +519,17 @@ class HomeController extends Controller
         // 2. 20% Tarikan
         $tarik20Persen = $totalTarikan * 0.20;
         
-        // 3. Biaya Operasional Penarik (dari database, bisa diubah)
+        // 3. Biaya Operasional Penarik (dar database, bisa diubah)
         $biayaOperasionalPenarik = $laporanBulanan->biaya_operasional_penarik;
+        
+        // 3b. Biaya PAD Desa (dari database, bisa diubah)
+        $biayaPadDesa = $laporanBulanan->biaya_pad_desa ?? 0;
         
         // 4. Honor Penarik = 20% + Operasional
         $honorPenarik = $tarik20Persen + $biayaOperasionalPenarik;
         
-        // 5. Total Tarikan Bersih = Total - Honor Penarik
-        $totalTarikanBersih = $totalTarikan - $honorPenarik;
+        // 5. Total Tarikan Bersih = Total - Honor Penarik - PAD Desa
+        $totalTarikanBersih = $totalTarikan - $honorPenarik - $biayaPadDesa;
         
         // 6. Total SR (Sambungan Rumah) Sudah Bayar
         $totalSRSudahBayar = $sudahBayarCount;
@@ -613,6 +616,7 @@ class HomeController extends Controller
                 'totalTarikan' => $totalTarikan,
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasionalPenarik' => $biayaOperasionalPenarik,
+                'biayaPadDesa' => $biayaPadDesa,
                 'honorPenarik' => $honorPenarik,
                 'totalTarikanBersih' => $totalTarikanBersih,
                 'totalSRSudahBayar' => $totalSRSudahBayar,
@@ -815,6 +819,7 @@ class HomeController extends Controller
         $validated = $request->validate([
             'bulan' => 'required|string|size:7', // Format: YYYY-MM
             'biaya_operasional_penarik' => 'required|numeric|min:0',
+            'biaya_pad_desa' => 'nullable|numeric|min:0',
             'wilayah' => 'nullable|string|max:100',
         ]);
         
@@ -823,12 +828,20 @@ class HomeController extends Controller
             $laporanQuery['wilayah'] = $validated['wilayah'];
         }
         
+        $updateData = [
+            'biaya_operasional_penarik' => $validated['biaya_operasional_penarik'],
+        ];
+        
+        if (isset($validated['biaya_pad_desa'])) {
+            $updateData['biaya_pad_desa'] = $validated['biaya_pad_desa'];
+        }
+        
         $laporan = \App\Models\LaporanBulanan::updateOrCreate(
             $laporanQuery,
-            ['biaya_operasional_penarik' => $validated['biaya_operasional_penarik']]
+            $updateData
         );
         
-        return redirect()->back()->with('success', 'Biaya operasional berhasil diperbarui!');
+        return redirect()->back()->with('success', 'Biaya operasional dan PAD Desa berhasil diperbarui!');
     }
 
     public function exportPelangganExcel(Request $request)

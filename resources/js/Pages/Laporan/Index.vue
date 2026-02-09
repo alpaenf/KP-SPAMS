@@ -169,6 +169,13 @@
                              <p class="text-xs text-orange-600 mt-1">BBM & Maintenance (Klik untuk edit)</p>
                         </div>
 
+                        <!-- Biaya PAD Desa -->
+                        <div class="bg-yellow-50 rounded-xl p-4 sm:p-5 border border-yellow-100 cursor-pointer hover:bg-yellow-100 transition" @click="openModalOperasional" title="Klik untuk update">
+                             <h4 class="text-xs sm:text-sm font-semibold text-yellow-900 mb-2">Biaya PAD Desa</h4>
+                             <p class="text-xl sm:text-2xl font-bold text-yellow-800">{{ formatRupiah(detail.biayaPadDesa) }}</p>
+                             <p class="text-xs text-yellow-600 mt-1">Pendapatan Asli Desa (Klik untuk edit)</p>
+                        </div>
+
                          <!-- Total Honor -->
                         <div class="bg-indigo-50 rounded-xl p-4 sm:p-5 border border-indigo-100">
                              <h4 class="text-xs sm:text-sm font-semibold text-indigo-900 mb-2">Total Honor Penarik</h4>
@@ -302,6 +309,19 @@
                             <p class="text-xs text-gray-500 mt-1">BBM, maintenance, dll.</p>
                         </div>
 
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya PAD Desa (Rp)</label>
+                            <input 
+                                type="number" 
+                                v-model="formOperasional.biaya_pad_desa"
+                                step="1000"
+                                min="0"
+                                placeholder="0"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">Pendapatan Asli Desa</p>
+                        </div>
+
                         <div class="flex gap-3">
                             <button 
                                 type="submit"
@@ -352,6 +372,7 @@ const processing = ref(false);
 const formOperasional = reactive({
     bulan: '',
     biaya_operasional_penarik: 0,
+    biaya_pad_desa: 0,
     wilayah: ''
 });
 
@@ -368,6 +389,7 @@ const openModalOperasional = () => {
     
     formOperasional.bulan = `${year}-${month}`;
     formOperasional.biaya_operasional_penarik = props.detail ? props.detail.biayaOperasional : 0;
+    formOperasional.biaya_pad_desa = props.detail ? props.detail.biayaPadDesa : 0;
     formOperasional.wilayah = form.value.wilayah !== 'semua' ? form.value.wilayah : null; // Use filter wilayah if exists
     
     showModalOperasional.value = true;

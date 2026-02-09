@@ -62,6 +62,7 @@ class LaporanController extends Controller
 
         // B. Biaya Operasional
         $biayaOperasional = 0;
+        $biayaPadDesa = 0;
         
         $laporanQuery = LaporanBulanan::query();
         if ($bulan && $bulan !== 'semua') {
@@ -73,20 +74,19 @@ class LaporanController extends Controller
             $laporanQuery->where('bulan', 'like', $tahun . '-%');
         }
         
-        // Jika filter wilayah ada, mungkin LaporanBulanan juga perlu filter? 
-        // Namun biasanya operasional itu global atau per wilayah jika didesain demikian.
-        // Di code Dashboard sebelumnya, LaporanBulanan punya kolom 'wilayah' nullable.
+        // Jika filter wilayah ada
         if ($wilayah && $wilayah !== 'semua') {
              $laporanQuery->where('wilayah', $wilayah);
         }
 
         $biayaOperasional = $laporanQuery->sum('biaya_operasional_penarik');
+        $biayaPadDesa = $laporanQuery->sum('biaya_pad_desa');
 
         // C. Honor Penarik
         $honorPenarik = $tarik20Persen + $biayaOperasional;
 
-        // D. Total Tarikan Bersih
-        $totalTarikanBersih = $totalPemasukan - $honorPenarik;
+        // D. Total Tarikan Bersih (dikurangi honor penarik DAN PAD Desa)
+        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa;
 
         // === 3. Statistik SR (Sambungan Rumah) ===
         // Hitung total pelanggan aktif (SR) sesuai filter wilayah
@@ -136,6 +136,7 @@ class LaporanController extends Controller
                 'totalTarikan' => $totalPemasukan,
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasional' => $biayaOperasional,
+                'biayaPadDesa' => $biayaPadDesa,
                 'honorPenarik' => $honorPenarik, // 20% + Ops
                 'honorMurni' => $honorPenarik,   // Sama, penamaan beda konteks
                 'totalTarikanBersih' => $totalTarikanBersih,

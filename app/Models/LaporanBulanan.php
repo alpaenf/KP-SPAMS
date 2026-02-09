@@ -10,10 +10,12 @@ class LaporanBulanan extends Model
         'bulan',
         'wilayah',
         'biaya_operasional_penarik',
+        'biaya_pad_desa',
         'catatan',
     ];
     
     protected $casts = [
         'biaya_operasional_penarik' => 'decimal:2',
+        'biaya_pad_desa' => 'decimal:2',
     ];
 }

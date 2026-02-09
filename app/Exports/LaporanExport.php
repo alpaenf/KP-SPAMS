@@ -127,7 +127,7 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithTit
                 'RT ' . $pelanggan->rt . ' / RW ' . $pelanggan->rw,
                 $pelanggan->wilayah ?? '-',
                 \Carbon\Carbon::parse($pembayaran->bulan_bayar)->locale('id')->isoFormat('MMMM Y'),
-                number_format($pembayaran->jumlah_kubik ?? 0, 2, ',', '.'),
+                $pembayaran->jumlah_kubik ? number_format($pembayaran->jumlah_kubik, 2, ',', '.') : '0',
                 'Rp ' . number_format($tarifPerKubik, 0, ',', '.'),
                 'Rp ' . number_format($biayaAbunemen, 0, ',', '.'),
                 'Rp ' . number_format($pembayaran->jumlah_bayar, 0, ',', '.')

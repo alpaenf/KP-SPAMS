@@ -424,6 +424,18 @@
                             <p class="text-xs text-orange-700 mt-1">BBM, dll.</p>
                         </div>
 
+                        <!-- Biaya PAD Desa -->
+                        <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-5 border border-yellow-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-sm font-medium text-yellow-900">Biaya PAD Desa</h4>
+                                <svg class="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <p class="text-2xl font-bold text-yellow-900">Rp {{ formatRupiah(laporanKeuangan.biayaPadDesa) }}</p>
+                            <p class="text-xs text-yellow-700 mt-1">Pendapatan Asli Desa</p>
+                        </div>
+
                         <!-- Honor Penarik -->
                         <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-5 border border-indigo-200">
                             <div class="flex items-center justify-between mb-2">
@@ -562,6 +574,19 @@
                             <p class="text-xs text-gray-500 mt-1">BBM, maintenance, dll.</p>
                         </div>
 
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya PAD Desa (Rp)</label>
+                            <input 
+                                type="number" 
+                                v-model="formOperasional.biaya_pad_desa"
+                                step="1000"
+                                min="0"
+                                placeholder="0"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">Pendapatan Asli Desa</p>
+                        </div>
+
                         <div class="flex gap-3">
                             <button 
                                 type="submit"
@@ -626,6 +651,7 @@ const selectedWilayah = ref('');
 const formOperasional = ref({
     bulan: props.laporanKeuangan.bulan,
     biaya_operasional_penarik: props.laporanKeuangan.biayaOperasionalPenarik,
+    biaya_pad_desa: props.laporanKeuangan.biayaPadDesa,
     wilayah: selectedWilayah.value || null
 });
 
@@ -640,6 +666,7 @@ const reloadDashboard = () => {
             // Update form wilayah after reload
             formOperasional.value.wilayah = selectedWilayah.value || null;
             formOperasional.value.biaya_operasional_penarik = props.laporanKeuangan.biayaOperasionalPenarik;
+            formOperasional.value.biaya_pad_desa = props.laporanKeuangan.biayaPadDesa;
         }
     });
 };
