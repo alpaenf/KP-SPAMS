@@ -492,14 +492,17 @@ class HomeController extends Controller
         $totalSR = $pelangganAktifIds->count();
         
         // Pelanggan yang belum bayar bulan ini (untuk list)
-        $pelangganBelumBayarQuery = Pelanggan::where('status_aktif', true)
+        // Gunakan forUser() untuk filter otomatis berdasarkan role
+        $pelangganBelumBayarQuery = Pelanggan::forUser()
+            ->where('status_aktif', true)
             ->whereNotIn('id', function($query) use ($bulanIni) {
                 $query->select('pelanggan_id')
                     ->from('pembayarans')
                     ->where('bulan_bayar', $bulanIni);
             });
         
-        if ($wilayahFilter) {
+        // Admin bisa filter wilayah manual
+        if ($wilayahFilter && auth()->user()->isAdmin()) {
             $pelangganBelumBayarQuery->where('wilayah', $wilayahFilter);
         }
         
