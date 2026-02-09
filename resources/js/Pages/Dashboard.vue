@@ -6,7 +6,9 @@
                 <div class="mb-6 sm:mb-8">
                     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                         <div class="flex-1">
-                            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard Pengelola</h1>
+                            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">
+                                Dashboard {{ $page.props.auth.user.role === 'admin' ? 'Admin' : 'Penarik' }}
+                            </h1>
                             <p class="text-sm sm:text-base text-gray-600 mt-1">Selamat datang, {{ $page.props.auth.user.name }}</p>
                             <div class="mt-3">
                                 <InstallPWAButton />
