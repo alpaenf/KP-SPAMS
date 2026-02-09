@@ -167,7 +167,7 @@ class PembayaranController extends Controller
             'keterangan' => $validated['keterangan'] ?? null,
         ]);        
         
-        // Update status_bayar di tagihan_bulanan jika ada
+        // Update atau create tagihan_bulanan
         $tagihan = \App\Models\TagihanBulanan::where('pelanggan_id', $pelangganId)
             ->where('bulan', $validated['bulan_bayar'])
             ->first();
@@ -183,12 +183,8 @@ class PembayaranController extends Controller
                 $tagihan->ada_abunemen = $validated['abunemen'];
             }
             
-            // Update total tagihan jika berbeda
-            if (isset($validated['jumlah_bayar']) && $validated['jumlah_bayar'] > 0) {
-                 // Warning: modifying total_tagihan here might be risky if partial payment
-                 // But strictly speaking, if it's a "Tagihan", it implies full payment usually?
-                 // Let's only update Readings for now to capture the "Meteran before" logic for next month.
-            }
+            // Update total tagihan
+            $tagihan->total_tagihan = $validated['jumlah_bayar'];
             
             // Jika keterangan NUNGGAK, status tetap BELUM_BAYAR
             // Jika CICILAN, cek apakah jumlah bayar >= total tagihan
@@ -214,6 +210,28 @@ class PembayaranController extends Controller
             }
             
             $tagihan->save();
+        } else {
+            // Jika belum ada tagihan, buat baru
+            $keterangan = strtoupper($validated['keterangan'] ?? '');
+            $statusBayar = 'SUDAH_BAYAR';
+            
+            if ($keterangan === 'NUNGGAK') {
+                $statusBayar = 'BELUM_BAYAR';
+            } elseif ($keterangan === 'CICILAN') {
+                $statusBayar = 'BELUM_BAYAR'; // Cicilan dianggap belum lunas
+            }
+            
+            \App\Models\TagihanBulanan::create([
+                'pelanggan_id' => $pelangganId,
+                'bulan' => $validated['bulan_bayar'],
+                'meteran_sebelum' => $validated['meteran_sebelum'] ?? 0,
+                'meteran_sesudah' => $validated['meteran_sesudah'] ?? 0,
+                'pemakaian_kubik' => $validated['jumlah_kubik'] ?? 0,
+                'ada_abunemen' => $validated['abunemen'] ?? false,
+                'total_tagihan' => $validated['jumlah_bayar'],
+                'status_bayar' => $statusBayar,
+                'tanggal_bayar' => $validated['tanggal_bayar'],
+            ]);
         }
         
         // Jika bayar tunggakan juga, update status tunggakan yang dibayar
