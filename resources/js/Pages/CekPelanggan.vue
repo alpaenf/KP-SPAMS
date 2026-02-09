@@ -816,13 +816,7 @@ const filteredPelanggan = computed(() => {
         result = result.filter(p => p.wilayah === wilayahFilter.value);
     }
     
-    // Filter berdasarkan bulan pembayaran
-    if (bulanFilter.value !== 'all') {
-        result = result.filter(p => {
-            // Cek apakah pelanggan sudah bayar di bulan yang dipilih
-            return p.bulan_dibayar && p.bulan_dibayar.includes(bulanFilter.value);
-        });
-    }
+
     
     if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase();
