@@ -836,10 +836,44 @@ class HomeController extends Controller
             $updateData['biaya_pad_desa'] = $validated['biaya_pad_desa'];
         }
         
-        $laporan = \App\Models\LaporanBulanan::updateOrCreate(
-            $laporanQuery,
-            $updateData
-        );
+        if (isset($validated['wilayah'])) {
+             // Specific update for a region
+             \App\Models\LaporanBulanan::updateOrCreate(
+                 ['bulan' => $validated['bulan'], 'wilayah' => $validated['wilayah']], 
+                 $updateData
+             );
+        } else {
+             // General update (No wilayah filter selected - e.g. "Semua Wilayah")
+             // We need to ensure the TOTAL sum matches the user input.
+             // Strategy: Find all records for this month. 
+             // Update the first one to the value and set others to 0.
+             
+             $reports = \App\Models\LaporanBulanan::where('bulan', $validated['bulan'])->get();
+             
+             if ($reports->isEmpty()) {
+                 // No record exists, create one with default wilayah
+                 \App\Models\LaporanBulanan::create(array_merge($updateData, [
+                     'bulan' => $validated['bulan'], 
+                     'wilayah' => 'Dawuhan' // Default
+                 ]));
+             } else {
+                 $first = true;
+                 foreach($reports as $report) {
+                     if ($first) {
+                         // Set the first record to the target value
+                         $report->update($updateData);
+                         $first = false;
+                     } else {
+                         // Reset others to 0 so the SUM matches the user input
+                         $resetData = ['biaya_operasional_penarik' => 0];
+                         if (isset($updateData['biaya_pad_desa'])) {
+                             $resetData['biaya_pad_desa'] = 0;
+                         }
+                         $report->update($resetData);
+                     }
+                 }
+             }
+        }
         
         return redirect()->back()->with('success', 'Biaya operasional dan PAD Desa berhasil diperbarui!');
     }

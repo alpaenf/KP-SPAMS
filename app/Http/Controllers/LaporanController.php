@@ -23,14 +23,12 @@ class LaporanController extends Controller
         // === 1. Query Data Pembayaran (Untuk Tabel & Total Tarikan) ===
         $query = Pembayaran::with('pelanggan');
 
-        // Filter Tahun
-        if ($tahun) {
-            $query->whereYear('tanggal_bayar', $tahun);
-        }
-
-        // Filter Bulan
+        // Filter Tahun & Bulan via bulan_bayar
         if ($bulan && $bulan !== 'semua') {
-            $query->whereMonth('tanggal_bayar', $bulan);
+            $query->where('bulan_bayar', $tahun . '-' . $bulan);
+        } else {
+             // Semua bulan di tahun ini
+            $query->where('bulan_bayar', 'like', $tahun . '-%');
         }
 
         // Filter Wilayah untuk penarik
@@ -107,7 +105,7 @@ class LaporanController extends Controller
         $srBelumBayar = max(0, $totalSR - $srSudahBayar);
 
         // === 4. Opsi Filter ===
-        $tahunOpsi = Pembayaran::selectRaw('YEAR(tanggal_bayar) as tahun')
+        $tahunOpsi = Pembayaran::selectRaw('LEFT(bulan_bayar, 4) as tahun')
             ->distinct()
             ->orderBy('tahun', 'desc')
             ->pluck('tahun')
@@ -262,12 +260,10 @@ class LaporanController extends Controller
         // Query Data Pembayaran
         $query = Pembayaran::with('pelanggan');
 
-        if ($tahun) {
-            $query->whereYear('tanggal_bayar', $tahun);
-        }
-
         if ($bulan && $bulan !== 'semua') {
-            $query->whereMonth('tanggal_bayar', $bulan);
+            $query->where('bulan_bayar', $tahun . '-' . $bulan);
+        } else {
+            $query->where('bulan_bayar', 'like', $tahun . '-%');
         }
 
         // Filter Wilayah untuk penarik
