@@ -186,12 +186,12 @@ class PembayaranController extends Controller
             // Update total tagihan
             $tagihan->total_tagihan = $validated['jumlah_bayar'];
             
-            // Jika keterangan NUNGGAK, status tetap BELUM_BAYAR
+            // Jika keterangan TUNGGAKAN, status tetap BELUM_BAYAR
             // Jika CICILAN, cek apakah jumlah bayar >= total tagihan
-            // Jika TAGIHAN atau kosong, otomatis SUDAH_BAYAR
+            // Jika LUNAS atau kosong, otomatis SUDAH_BAYAR
             $keterangan = strtoupper($validated['keterangan'] ?? '');
             
-            if ($keterangan === 'NUNGGAK') {
+            if ($keterangan === 'TUNGGAKAN') {
                 // Tetap BELUM_BAYAR
                 $tagihan->status_bayar = 'BELUM_BAYAR';
             } elseif ($keterangan === 'CICILAN') {
@@ -205,7 +205,7 @@ class PembayaranController extends Controller
                     $tagihan->status_bayar = 'BELUM_BAYAR';
                 }
             } else {
-                // TAGIHAN atau kosong = otomatis lunas
+                // LUNAS atau kosong = otomatis lunas
                 $tagihan->status_bayar = 'SUDAH_BAYAR';
             }
             
@@ -215,7 +215,7 @@ class PembayaranController extends Controller
             $keterangan = strtoupper($validated['keterangan'] ?? '');
             $statusBayar = 'SUDAH_BAYAR';
             
-            if ($keterangan === 'NUNGGAK') {
+            if ($keterangan === 'TUNGGAKAN') {
                 $statusBayar = 'BELUM_BAYAR';
             } elseif ($keterangan === 'CICILAN') {
                 $statusBayar = 'BELUM_BAYAR'; // Cicilan dianggap belum lunas

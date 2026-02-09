@@ -54,7 +54,7 @@ class BackfillTagihanFromPembayaran extends Command
                 $keterangan = strtoupper($pembayaran->keterangan ?? '');
                 $statusBayar = 'SUDAH_BAYAR';
                 
-                if ($keterangan === 'NUNGGAK') {
+                if ($keterangan === 'TUNGGAKAN') {
                     $statusBayar = 'BELUM_BAYAR';
                 } elseif ($keterangan === 'CICILAN') {
                     $statusBayar = 'BELUM_BAYAR';

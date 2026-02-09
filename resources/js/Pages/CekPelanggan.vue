@@ -602,13 +602,13 @@
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
                                     >
                                         <option value="">Pilih Keterangan</option>
-                                        <option value="Lunas bulan ini">Lunas bulan ini</option>
-                                        <option value="Lunas">Lunas</option>
-                                        <option value="Kurang bayar">Kurang bayar</option>
-                                        <option value="Terlambat">Terlambat</option>
-                                        <option value="Cicilan">Cicilan</option>
-                                        <option value="Nunggak">Nunggak (Akan masuk bulan depan)</option>
+                                        <option value="LUNAS">Lunas - Bayar penuh tagihan bulan ini</option>
+                                        <option value="TUNGGAKAN">Tunggakan - Belum bayar, masuk bulan depan</option>
+                                        <option value="CICILAN">Cicilan - Bayar sebagian</option>
                                     </select>
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        Pilih sesuai kondisi pembayaran pelanggan
+                                    </p>
                                 </div>
                             </div>
                             <button
@@ -973,8 +973,9 @@ const showPembayaranModal = async (pelanggan) => {
         // Logic ini tetap di sini karena spesifik untuk inisialisasi form
         const tunggakanBulanSebelumnya = pembayaranList.value
             .filter(p => {
+                const keterangan = p.keterangan ? p.keterangan.toUpperCase() : '';
                 return p.bulan_bayar < bulanTujuan && 
-                       (p.keterangan === 'Nunggak' || p.keterangan === 'Kurang bayar' || p.keterangan === 'Terlambat');
+                       (keterangan === 'TUNGGAKAN' || keterangan === 'CICILAN');
             })
             .reduce((total, p) => total + parseFloat(p.jumlah_bayar || 0), 0);
         

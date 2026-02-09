@@ -768,12 +768,12 @@
                                 v-model="pembayaranForm.keterangan"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800"
                             >
-                                <option value="TAGIHAN">Pembayaran Tagihan</option>
-                                <option value="CICILAN">Cicilan</option>
-                                <option value="NUNGGAK">Nunggak (Akan masuk bulan depan)</option>
+                                <option value="LUNAS">Lunas - Bayar penuh tagihan bulan ini</option>
+                                <option value="TUNGGAKAN">Tunggakan - Belum bayar, masuk bulan depan</option>
+                                <option value="CICILAN">Cicilan - Bayar sebagian</option>
                             </select>
                             <p class="text-xs text-gray-500 mt-1">
-                                TAGIHAN = Lunas penuh, CICILAN = Bayar sebagian, NUNGGAK = Tidak bayar (otomatis masuk bulan depan)
+                                Lunas = Bayar penuh | Tunggakan = Belum bayar | Cicilan = Bayar sebagian
                             </p>
                         </div>
                         
