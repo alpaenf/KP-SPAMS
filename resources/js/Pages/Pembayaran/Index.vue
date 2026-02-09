@@ -370,6 +370,10 @@ const props = defineProps({
 
 const searchPembayaran = ref('');
 const wilayahFilterPembayaran = ref('all');
+const bulanFilterPembayaran = ref('');
+const keteranganFilterPembayaran = ref('all');
+const showDetailModal = ref(false);
+const selectedPembayaran = ref(null);
 
 // Filter pembayaran
 const filteredPembayaranList = computed(() => {
@@ -387,6 +391,16 @@ const filteredPembayaranList = computed(() => {
     // Filter by wilayah
     if (wilayahFilterPembayaran.value !== 'all') {
         filtered = filtered.filter(item => item.wilayah === wilayahFilterPembayaran.value);
+    }
+    
+    // Filter by bulan
+    if (bulanFilterPembayaran.value) {
+        filtered = filtered.filter(item => item.bulan_bayar === bulanFilterPembayaran.value);
+    }
+    
+    // Filter by keterangan
+    if (keteranganFilterPembayaran.value !== 'all') {
+        filtered = filtered.filter(item => item.keterangan === keteranganFilterPembayaran.value);
     }
     
     return filtered;
@@ -412,5 +426,25 @@ const formatTanggalPembayaran = (tanggal) => {
     const date = new Date(tanggal);
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return date.toLocaleDateString('id-ID', options);
+};
+
+// Format bulan bayar
+const formatBulan = (bulan) => {
+    if (!bulan) return '-';
+    const [year, month] = bulan.split('-');
+    const date = new Date(year, parseInt(month) - 1);
+    const options = { year: 'numeric', month: 'long' };
+    return date.toLocaleDateString('id-ID', options);
+};
+
+// Modal functions
+const openDetailModal = (pembayaran) => {
+    selectedPembayaran.value = pembayaran;
+    showDetailModal.value = true;
+};
+
+const closeDetailModal = () => {
+    showDetailModal.value = false;
+    selectedPembayaran.value = null;
 };
 </script>

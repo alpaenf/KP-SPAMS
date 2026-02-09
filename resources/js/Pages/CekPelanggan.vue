@@ -171,8 +171,7 @@
                                 class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
                             >
                                 <option value="all">Semua Wilayah</option>
-                                <option value="Dawuhan">Dawuhan</option>
-                                <option value="Kubangsari Kulon">Kubangsari Kulon</option>
+                                <option value="Dawuhan">Dawuhan</option>                                <option value="Kubangsari Kulon">Kubangsari Kulon</option>
                                 <option value="Kubangsari Wetan">Kubangsari Wetan</option>
                                 <option value="Sokarame">Sokarame</option>
                                 <option value="Tiparjaya">Tiparjaya</option>
