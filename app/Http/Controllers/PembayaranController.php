@@ -11,6 +11,50 @@ use Inertia\Inertia;
 class PembayaranController extends Controller
 {
     /**
+     * Halaman riwayat pembayaran semua pelanggan
+     */
+    public function riwayat(Request $request)
+    {
+        $user = $request->user();
+        
+        // Base query
+        $query = Pembayaran::with('pelanggan');
+        
+        // Filter by penarik wilayah if role is penarik
+        if ($user && $user->role === 'penarik' && $user->wilayah) {
+            $query->whereHas('pelanggan', function ($q) use ($user) {
+                $q->where('wilayah', $user->wilayah);
+            });
+        }
+        
+        // Get all pembayaran with pelanggan data
+        $pembayaranList = $query->orderBy('tanggal_bayar', 'desc')
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'id_pelanggan' => $p->pelanggan->id_pelanggan,
+                    'nama_pelanggan' => $p->pelanggan->nama_pelanggan,
+                    'wilayah' => $p->pelanggan->wilayah,
+                    'kategori' => $p->pelanggan->kategori,
+                    'bulan_bayar' => $p->bulan_bayar,
+                    'tanggal_bayar' => $p->tanggal_bayar->format('Y-m-d'),
+                    'meteran_sebelum' => $p->meteran_sebelum,
+                    'meteran_sesudah' => $p->meteran_sesudah,
+                    'jumlah_kubik' => $p->jumlah_kubik,
+                    'abunemen' => $p->abunemen,
+                    'tunggakan' => $p->tunggakan,
+                    'jumlah_bayar' => $p->jumlah_bayar,
+                    'keterangan' => $p->keterangan,
+                ];
+            });
+        
+        return Inertia::render('Pembayaran/Index', [
+            'pembayaranList' => $pembayaranList,
+        ]);
+    }
+    
+    /**
      * Halaman pembayaran untuk admin
      */
     public function adminIndex(Request $request)

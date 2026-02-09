@@ -77,6 +77,9 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/pelanggan/{pelanggan}', [HomeController::class, 'updatePelanggan'])->name('pelanggan.update');
     Route::delete('/pelanggan/{pelanggan}', [HomeController::class, 'deletePelanggan'])->name('pelanggan.delete');
     
+    // Riwayat Pembayaran
+    Route::get('/pembayaran', [PembayaranController::class, 'riwayat'])->name('pembayaran.riwayat');
+    
     // API Pembayaran
     Route::get('/pelanggan/{pelanggan}/pembayaran', [PembayaranController::class, 'index'])->name('pembayaran.index');
     Route::post('/pelanggan/{pelanggan}/pembayaran', [PembayaranController::class, 'store'])->name('pembayaran.store');
