@@ -49,6 +49,63 @@ class PembayaranController extends Controller
         ]);
     }
     
+    /**
+     * Halaman riwayat pembayaran lengkap semua pelanggan
+     */
+    public function riwayatPembayaran(Request $request)
+    {
+        $bulan = $request->input('bulan', now()->format('Y-m'));
+        
+        // Query pembayaran dengan filter wilayah user
+        $query = Pembayaran::with(['pelanggan' => function($q) {
+            $q->forUser(); // Apply wilayah filter
+        }])
+        ->where('bulan_bayar', $bulan)
+        ->whereHas('pelanggan', function($q) {
+            $q->forUser(); // Ensure only show pembayaran from allowed pelanggan
+        })
+        ->orderBy('tanggal_bayar', 'desc');
+        
+        $pembayaranList = $query->get()->map(function ($p) {
+            return [
+                'id' => $p->id,
+                'pelanggan_id' => $p->pelanggan->id,
+                'id_pelanggan' => $p->pelanggan->id_pelanggan,
+                'nama_pelanggan' => $p->pelanggan->nama_pelanggan,
+                'wilayah' => $p->pelanggan->wilayah,
+                'rt' => $p->pelanggan->rt,
+                'rw' => $p->pelanggan->rw,
+                'kategori' => $p->pelanggan->kategori ?? 'umum',
+                'bulan_bayar' => $p->bulan_bayar,
+                'tanggal_bayar' => $p->tanggal_bayar->format('Y-m-d'),
+                'meteran_sebelum' => $p->meteran_sebelum,
+                'meteran_sesudah' => $p->meteran_sesudah,
+                'jumlah_kubik' => $p->jumlah_kubik,
+                'abunemen' => $p->abunemen,
+                'tunggakan' => $p->tunggakan,
+                'jumlah_bayar' => $p->jumlah_bayar,
+                'keterangan' => $p->keterangan,
+                'metode_bayar' => $p->metode_bayar ?? 'Tunai',
+                'catatan' => $p->catatan,
+            ];
+        });
+        
+        // Hitung statistik
+        $totalPembayaran = $pembayaranList->count();
+        $totalPemasukan = $pembayaranList->sum('jumlah_bayar');
+        $rataRata = $totalPembayaran > 0 ? $totalPemasukan / $totalPembayaran : 0;
+        
+        return Inertia::render('RiwayatPembayaran', [
+            'pembayaranList' => $pembayaranList,
+            'bulan' => $bulan,
+            'stats' => [
+                'totalPembayaran' => $totalPembayaran,
+                'totalPemasukan' => $totalPemasukan,
+                'rataRata' => $rataRata,
+            ],
+        ]);
+    }
+    
     public function index($pelangganId)
     {
         $pelanggan = Pelanggan::findOrFail($pelangganId);
