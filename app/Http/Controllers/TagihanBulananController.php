@@ -24,11 +24,23 @@ class TagihanBulananController extends Controller
             ->with(['tagihanBulanan' => function ($query) use ($bulan) {
                 $query->where('bulan', $bulan);
             }])
+            ->with(['pembayarans' => function ($query) use ($bulan) {
+                $query->where('bulan_bayar', $bulan);
+            }])
             ->orderBy('id_pelanggan')
             ->get()
             ->map(function ($p) use ($bulan) {
                 // Cek apakah sudah ada tagihan bulan ini
                 $tagihan = $p->tagihanBulanan->firstWhere('bulan', $bulan);
+                
+                // Cek pembayaran bulan ini
+                $pembayaran = $p->pembayarans->firstWhere('bulan_bayar', $bulan);
+                
+                // Auto-fix: Jika ada pembayaran lunas tapi tagihan masih BELUM_BAYAR
+                if ($pembayaran && $tagihan && $tagihan->status_bayar !== 'SUDAH_BAYAR') {
+                    $tagihan->update(['status_bayar' => 'SUDAH_BAYAR']);
+                    $tagihan->status_bayar = 'SUDAH_BAYAR';
+                }
                 
                 // Cek tunggakan bulan sebelumnya
                 $tunggakan = $this->getTunggakanSebelumnya($p->id, $bulan);
