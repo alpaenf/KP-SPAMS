@@ -301,12 +301,12 @@
                             <img 
                                 src="/images/tentangprogram1.jpeg" 
                                 alt="Masyarakat KP-SPAMS 1" 
-                                class="rounded-2xl shadow-lg w-full h-[280px] object-cover hover:scale-105 transition-transform duration-500"
+                                class="rounded-2xl shadow-lg w-full h-auto object-contain hover:scale-105 transition-transform duration-500"
                             />
                             <img 
                                 src="/images/tentangprogram2.jpeg" 
                                 alt="Masyarakat KP-SPAMS 2" 
-                                class="rounded-2xl shadow-lg w-full h-[280px] object-cover hover:scale-105 transition-transform duration-500"
+                                class="rounded-2xl shadow-lg w-full h-auto object-contain hover:scale-105 transition-transform duration-500"
                             />
                         </div>
                          <!-- Decorative Badge -->
