@@ -296,14 +296,21 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-col md:flex-row items-center gap-16">
                     <div class="w-full md:w-1/2 relative group animate-on-scroll">
-                        <div class="absolute -inset-4 bg-blue-100 rounded-3xl transform rotate-3 group-hover:rotate-2 transition-transform duration-500"></div>
-                        <img 
-                            src="/images/tentangprogramm.png" 
-                            alt="Masyarakat KP-SPAMS" 
-                            class="relative rounded-2xl shadow-2xl w-full h-[400px] object-cover transform group-hover:-translate-y-2 transition-transform duration-500"
-                        />
+                        <div class="absolute -inset-4 bg-blue-100 rounded-3xl transform rotate-3 transition-transform duration-500"></div>
+                        <div class="relative grid grid-cols-2 gap-4 p-2">
+                            <img 
+                                src="/images/tentangprogram1.jpeg" 
+                                alt="Masyarakat KP-SPAMS 1" 
+                                class="rounded-2xl shadow-lg w-full h-[300px] object-cover hover:scale-105 transition-transform duration-500"
+                            />
+                            <img 
+                                src="/images/tentangprogram2.jpeg" 
+                                alt="Masyarakat KP-SPAMS 2" 
+                                class="rounded-2xl shadow-lg w-full h-[300px] object-cover mt-8 hover:scale-105 transition-transform duration-500"
+                            />
+                        </div>
                          <!-- Decorative Badge -->
-                         <div class="absolute -bottom-6 -right-6 bg-white p-4 rounded-xl shadow-lg border-l-4 border-blue-600 hidden md:block">
+                         <div class="absolute bottom-4 right-0 transform translate-x-1/4 bg-white p-4 rounded-xl shadow-xl border-l-4 border-blue-600 hidden md:block z-10">
                              <div class="text-blue-800 font-bold text-3xl">100%</div>
                              <div class="text-gray-600 text-sm font-medium">Berbasis Masyarakat</div>
                          </div>
@@ -856,7 +863,7 @@
                             </div>
                             <div class="flex justify-between">
                                 <span>Minggu</span>
-                                <span class="text-red-400 font-medium">Tutup</span>
+                                <span class="text-blue-400 font-medium">08.00 - 12.00</span>
                             </div>
                         </div>
                         <div class="mt-4 p-3 bg-gray-800 rounded-lg text-xs">
