@@ -549,6 +549,9 @@ class HomeController extends Controller
         // 7. Total SR Belum Bayar  
         $totalSRBelumBayar = $belumBayarCount;
         
+        // 8. Total SR (Pelanggan Aktif)
+        $totalSR = $pelangganAktifIds->count();
+
         // === Hitung Saldo Awal (Akumulasi Bulan Sebelumnya) ===
         // Logic: Accrual / Billing Period Basis (bulan_bayar)
         // This calculates the "Retained Earnings" from previous billing periods
