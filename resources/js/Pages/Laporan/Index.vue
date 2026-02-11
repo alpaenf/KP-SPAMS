@@ -176,6 +176,20 @@
                              <p class="text-xs text-yellow-600 mt-1">Pendapatan Asli Desa (Klik untuk edit)</p>
                         </div>
 
+                        <!-- Biaya Operasional Lapangan -->
+                        <div class="bg-teal-50 rounded-xl p-4 sm:p-5 border border-teal-100 cursor-pointer hover:bg-teal-100 transition" @click="openModalOperasional" title="Klik untuk update">
+                             <h4 class="text-xs sm:text-sm font-semibold text-teal-900 mb-2">Biaya Ops. Lapangan</h4>
+                             <p class="text-xl sm:text-2xl font-bold text-teal-800">{{ formatRupiah(detail.biayaOperasionalLapangan) }}</p>
+                             <p class="text-xs text-teal-600 mt-1">Perbaikan & Lapangan (Klik untuk edit)</p>
+                        </div>
+
+                        <!-- Biaya Lain-lain -->
+                        <div class="bg-pink-50 rounded-xl p-4 sm:p-5 border border-pink-100 cursor-pointer hover:bg-pink-100 transition" @click="openModalOperasional" title="Klik untuk update">
+                             <h4 class="text-xs sm:text-sm font-semibold text-pink-900 mb-2">Biaya Lain-lain</h4>
+                             <p class="text-xl sm:text-2xl font-bold text-pink-800">{{ formatRupiah(detail.biayaLainLain) }}</p>
+                             <p class="text-xs text-pink-600 mt-1">Keperluan lainnya (Klik untuk edit)</p>
+                        </div>
+
                          <!-- Total Honor -->
                         <div class="bg-indigo-50 rounded-xl p-4 sm:p-5 border border-indigo-100">
                              <h4 class="text-xs sm:text-sm font-semibold text-indigo-900 mb-2">Total Honor Penarik</h4>
@@ -322,6 +336,32 @@
                             <p class="text-xs text-gray-500 mt-1">Pendapatan Asli Desa</p>
                         </div>
 
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Operasional Lapangan (Rp)</label>
+                            <input 
+                                type="number" 
+                                v-model="formOperasional.biaya_operasional_lapangan"
+                                step="1000"
+                                min="0"
+                                placeholder="0"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">Perbaikan, bahan baku, dll.</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Lain-lain (Rp)</label>
+                            <input 
+                                type="number" 
+                                v-model="formOperasional.biaya_lain_lain"
+                                step="1000"
+                                min="0"
+                                placeholder="0"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">Keperluan lainnya</p>
+                        </div>
+
                         <div class="flex gap-3">
                             <button 
                                 type="submit"
@@ -373,6 +413,8 @@ const formOperasional = reactive({
     bulan: '',
     biaya_operasional_penarik: 0,
     biaya_pad_desa: 0,
+    biaya_operasional_lapangan: 0,
+    biaya_lain_lain: 0,
     wilayah: ''
 });
 
@@ -390,6 +432,8 @@ const openModalOperasional = () => {
     formOperasional.bulan = `${year}-${month}`;
     formOperasional.biaya_operasional_penarik = props.detail ? props.detail.biayaOperasional : 0;
     formOperasional.biaya_pad_desa = props.detail ? props.detail.biayaPadDesa : 0;
+    formOperasional.biaya_operasional_lapangan = props.detail ? props.detail.biayaOperasionalLapangan : 0;
+    formOperasional.biaya_lain_lain = props.detail ? props.detail.biayaLainLain : 0;
     formOperasional.wilayah = form.value.wilayah !== 'semua' ? form.value.wilayah : null; // Use filter wilayah if exists
     
     showModalOperasional.value = true;

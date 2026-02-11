@@ -79,12 +79,14 @@ class LaporanController extends Controller
 
         $biayaOperasional = $laporanQuery->sum('biaya_operasional_penarik');
         $biayaPadDesa = $laporanQuery->sum('biaya_pad_desa');
+        $biayaOperasionalLapangan = $laporanQuery->sum('biaya_operasional_lapangan');
+        $biayaLainLain = $laporanQuery->sum('biaya_lain_lain');
 
         // C. Honor Penarik
         $honorPenarik = $tarik20Persen + $biayaOperasional;
 
-        // D. Total Tarikan Bersih (dikurangi honor penarik DAN PAD Desa)
-        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa;
+        // D. Total Tarikan Bersih (dikurangi honor penarik DAN PAD Desa DAN Lainnya)
+        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa - $biayaOperasionalLapangan - $biayaLainLain;
 
         // === 3. Statistik SR (Sambungan Rumah) ===
         // Hitung total pelanggan aktif (SR) sesuai filter wilayah
@@ -135,6 +137,8 @@ class LaporanController extends Controller
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasional' => $biayaOperasional,
                 'biayaPadDesa' => $biayaPadDesa,
+                'biayaOperasionalLapangan' => $biayaOperasionalLapangan,
+                'biayaLainLain' => $biayaLainLain,
                 'honorPenarik' => $honorPenarik, // 20% + Ops
                 'honorMurni' => $honorPenarik,   // Sama, penamaan beda konteks
                 'totalTarikanBersih' => $totalTarikanBersih,
@@ -204,8 +208,37 @@ class LaporanController extends Controller
         
         // Calculate totals
         $totalPengeluaran = $laporanBulanan->sum(function($laporan) {
-            return ($laporan->biaya_operasional_penarik ?? 0) + ($laporan->biaya_operasional_lainnya ?? 0);
+            return ($laporan->biaya_operasional_penarik ?? 0) 
+                + ($laporan->biaya_pad_desa ?? 0)
+                + ($laporan->biaya_operasional_lapangan ?? 0) 
+                + ($laporan->biaya_lain_lain ?? 0);
         });
+        
+        // Note: Logic above might double count because honor penarik includes operasional penarik? 
+        // Wait, honorPenarik = 20% + Ops.
+        // Usually Laporan Keuangan PDF shows Income vs Expenses.
+        // Expenses = Honor Penarik (incl Ops Penarik) + PAD Desa + Ops Lapangan + Lain-lain.
+        // But the previous code was: ($laporan->biaya_operasional_penarik ?? 0) + ($laporan->biaya_operasional_lainnya ?? 0);
+        // "biaya_operasional_lainnya" didn't exist in my model view, maybe it was a typo or old field.
+        // Let's assume Total Pengeluaran = Honor Penarik + PAD Desa + Ops Lapangan + Lain-lain
+        // But Honor Penarik is calculated from Income (20%) + Ops Penarik.
+        // So Total Pengeluaran = (TotalIncome * 0.2) + Ops Penarik + PAD Desa + Ops Lapangan + Lain-lain.
+        
+        // Let's recalculate based on logic from Dashboard/Index:
+        // Total Bersih = Pemasukan - HonorPenarik - PADDesa - OpsLapangan - LainLain
+        // So Pengeluaran = HonorPenarik + PADDesa + OpsLapangan + LainLain.
+        
+        $tarik20Persen = $data['detail']['tarik20Persen']; // Calculated in getFilteredData
+        // The $laporanBulanan->sum() approach only sums DB columns. It misses the 20%.
+        
+        $totalBiayaOpsPenarik = $laporanBulanan->sum('biaya_operasional_penarik');
+        $totalBiayaPadDesa = $laporanBulanan->sum('biaya_pad_desa');
+        $totalBiayaOpsLapangan = $laporanBulanan->sum('biaya_operasional_lapangan');
+        $totalBiayaLain = $laporanBulanan->sum('biaya_lain_lain');
+        
+        $totalHonorPenarik = $tarik20Persen + $totalBiayaOpsPenarik;
+        
+        $totalPengeluaran = $totalHonorPenarik + $totalBiayaPadDesa + $totalBiayaOpsLapangan + $totalBiayaLain;
         
         $totalPemasukan = $data['summary']['pemasukan'];
         $saldoAkhir = $totalPemasukan - $totalPengeluaran;
@@ -303,8 +336,12 @@ class LaporanController extends Controller
         }
 
         $biayaOperasional = $laporanQuery->sum('biaya_operasional_penarik');
+        $biayaPadDesa = $laporanQuery->sum('biaya_pad_desa');
+        $biayaOperasionalLapangan = $laporanQuery->sum('biaya_operasional_lapangan');
+        $biayaLainLain = $laporanQuery->sum('biaya_lain_lain');
+
         $honorPenarik = $tarik20Persen + $biayaOperasional;
-        $totalTarikanBersih = $totalPemasukan - $honorPenarik;
+        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa - $biayaOperasionalLapangan - $biayaLainLain;
 
         // Statistik SR
         // Apply filter wilayah berdasarkan user yang login
@@ -332,6 +369,9 @@ class LaporanController extends Controller
                 'totalTarikan' => $totalPemasukan,
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasional' => $biayaOperasional,
+                'biayaPadDesa' => $biayaPadDesa,
+                'biayaOperasionalLapangan' => $biayaOperasionalLapangan,
+                'biayaLainLain' => $biayaLainLain,
                 'honorPenarik' => $honorPenarik,
                 'honorMurni' => $honorPenarik,
                 'totalTarikanBersih' => $totalTarikanBersih,
