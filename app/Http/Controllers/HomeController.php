@@ -481,23 +481,28 @@ class HomeController extends Controller
         $bulanIni = now()->format('Y-m');
         $pelangganAktifIds = (clone $pelangganQuery)->where('status_aktif', true)->pluck('id');
         
-        // Pisahkan pembayaran bulan ini dan tunggakan (Cash Flow Basis)
-        $startOfMonth = now()->startOfMonth();
-        $endOfMonth = now()->endOfMonth();
-
-        $paymentsThisMonth = Pembayaran::whereBetween('tanggal_bayar', [$startOfMonth, $endOfMonth])
+        // === PEMBAYARAN BULAN INI (Accrual Basis - berdasarkan bulan_bayar) ===
+        // Menggunakan logika yang sama dengan halaman Laporan untuk konsistensi
+        
+        // Pembayaran untuk tagihan bulan ini
+        $pembayaranBulanIniSaja = Pembayaran::where('bulan_bayar', $bulanIni)
             ->whereIn('pelanggan_id', $pelangganAktifIds)
-            ->get();
-
-        $totalPembayaran = $paymentsThisMonth->sum('jumlah_bayar');
+            ->sum('jumlah_bayar');
         
-        // Pembayaran untuk tagihan bulan ini (tepat waktu)
-        $pembayaranBulanIniSaja = $paymentsThisMonth->where('bulan_bayar', $bulanIni)->sum('jumlah_bayar');
+        // Pembayaran tunggakan (tagihan bulan lalu yang dibayar bulan ini)
+        // Untuk dashboard, kita hitung tunggakan yang dibayar di bulan ini
+        $pembayaranTunggakan = Pembayaran::where('bulan_bayar', '<', $bulanIni)
+            ->whereYear('tanggal_bayar', now()->year)
+            ->whereMonth('tanggal_bayar', now()->month)
+            ->whereIn('pelanggan_id', $pelangganAktifIds)
+            ->sum('jumlah_bayar');
         
-        // Pembayaran untuk tagihan bulan lalu (tunggakan)
-        $pembayaranTunggakan = $paymentsThisMonth->where('bulan_bayar', '<', $bulanIni)->sum('jumlah_bayar');
+        $totalPembayaran = $pembayaranBulanIniSaja + $pembayaranTunggakan;
         
-        $sudahBayarCount = $paymentsThisMonth->where('bulan_bayar', $bulanIni)->unique('pelanggan_id')->count();
+        $sudahBayarCount = Pembayaran::where('bulan_bayar', $bulanIni)
+            ->whereIn('pelanggan_id', $pelangganAktifIds)
+            ->distinct('pelanggan_id')
+            ->count('pelanggan_id');
         
         $belumBayarCount = $pelangganAktifIds->count() - $sudahBayarCount;
         

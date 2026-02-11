@@ -523,6 +523,7 @@
                                         @click="showAccumulation = !showAccumulation"
                                         class="text-xs px-2 py-1 rounded border transition"
                                         :class="showAccumulation ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'"
+                                        title="Toggle untuk melihat akumulasi saldo dari bulan sebelumnya"
                                     >
                                         {{ showAccumulation ? 'Akumulasi ON' : 'Akumulasi OFF' }}
                                     </button>
@@ -534,9 +535,14 @@
                             <p class="text-3xl font-bold text-blue-900">Rp {{ formatRupiah(totalBersihDisplay) }}</p>
                             <div class="text-xs sm:text-sm text-blue-700 mt-1">
                                 <p>Sisa untuk kas & operasional KP-SPAMS</p>
-                                <p v-if="showAccumulation" class="mt-1 font-medium bg-blue-200 bg-opacity-50 p-1 rounded inline-block">
-                                    Termasuk Saldo Awal: {{ formatRupiah(laporanKeuangan.saldoAwal || 0) }}
-                                </p>
+                                <div v-if="showAccumulation" class="mt-2 bg-blue-200 bg-opacity-50 p-2 rounded">
+                                    <p class="font-medium">
+                                        Saldo Awal (Bulan Lalu): Rp {{ formatRupiah(laporanKeuangan.saldoAwal || 0) }}
+                                    </p>
+                                    <p v-if="(laporanKeuangan.saldoAwal || 0) === 0" class="text-xs mt-1 text-blue-600">
+                                        Belum ada saldo dari bulan sebelumnya
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
@@ -769,6 +775,7 @@ const totalBersihDisplay = computed(() => {
     
     if (showAccumulation.value) {
         let saldoAwal = Number(props.laporanKeuangan.saldoAwal) || 0;
+        console.log('Saldo Awal from backend:', props.laporanKeuangan.saldoAwal, 'Converted:', saldoAwal);
         total += saldoAwal;
     }
     
