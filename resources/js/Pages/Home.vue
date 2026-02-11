@@ -297,20 +297,20 @@
                 <div class="flex flex-col md:flex-row items-center gap-16">
                     <div class="w-full md:w-1/2 relative group animate-on-scroll">
                         <div class="absolute -inset-4 bg-blue-100 rounded-3xl transform rotate-3 transition-transform duration-500"></div>
-                        <div class="relative grid grid-cols-2 gap-4 p-2">
+                        <div class="relative grid grid-cols-1 gap-6 p-2">
                             <img 
                                 src="/images/tentangprogram1.jpeg" 
                                 alt="Masyarakat KP-SPAMS 1" 
-                                class="rounded-2xl shadow-lg w-full h-[300px] object-cover hover:scale-105 transition-transform duration-500"
+                                class="rounded-2xl shadow-lg w-full h-[280px] object-cover hover:scale-105 transition-transform duration-500"
                             />
                             <img 
                                 src="/images/tentangprogram2.jpeg" 
                                 alt="Masyarakat KP-SPAMS 2" 
-                                class="rounded-2xl shadow-lg w-full h-[300px] object-cover mt-8 hover:scale-105 transition-transform duration-500"
+                                class="rounded-2xl shadow-lg w-full h-[280px] object-cover hover:scale-105 transition-transform duration-500"
                             />
                         </div>
                          <!-- Decorative Badge -->
-                         <div class="absolute bottom-4 right-0 transform translate-x-1/4 bg-white p-4 rounded-xl shadow-xl border-l-4 border-blue-600 hidden md:block z-10">
+                         <div class="absolute top-1/2 -right-6 transform -translate-y-1/2 bg-white p-4 rounded-xl shadow-xl border-l-4 border-blue-600 hidden md:block z-20">
                              <div class="text-blue-800 font-bold text-3xl">100%</div>
                              <div class="text-gray-600 text-sm font-medium">Berbasis Masyarakat</div>
                          </div>
