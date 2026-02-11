@@ -246,6 +246,24 @@
                     </div>
                 </div>
 
+                <!-- Grafik Pendapatan vs Pengeluaran -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Grafik Keuangan Bulanan</h3>
+                    <div class="relative h-64 sm:h-80">
+                        <canvas ref="chartCanvas"></canvas>
+                    </div>
+                    <div class="mt-4 flex justify-center gap-6">
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-blue-600 rounded mr-2"></div>
+                            <span class="text-sm text-gray-600">Pendapatan</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-red-600 rounded mr-2"></div>
+                            <span class="text-sm text-gray-600">Pengeluaran</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Recent Transactions (New Section for Detail Payments) -->
                 <div class="bg-white rounded-lg shadow-md p-6 mb-8">
                     <div class="flex justify-between items-center mb-4">
@@ -649,10 +667,14 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import InstallPWAButton from '@/Components/InstallPWAButton.vue';
+import { Chart, registerables } from 'chart.js';
+
+// Register Chart.js components
+Chart.register(...registerables);
 
 const props = defineProps({
     stats: {
@@ -678,12 +700,18 @@ const props = defineProps({
     recentTransactions: {
         type: Array,
         default: () => []
+    },
+    monthlyData: {
+        type: Array,
+        default: () => []
     }
 });
 
 const showModalOperasional = ref(false);
 const processing = ref(false);
 const selectedWilayah = ref('');
+const chartCanvas = ref(null);
+let chartInstance = null;
 
 const formOperasional = ref({
     bulan: props.laporanKeuangan.bulan,
@@ -765,4 +793,105 @@ const formatBulan = (bulan) => {
                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     return `${namaBulan[parseInt(month) - 1]} ${year}`;
 };
+
+// Initialize Chart
+onMounted(() => {
+    if (chartCanvas.value && props.monthlyData && props.monthlyData.length > 0) {
+        const ctx = chartCanvas.value.getContext('2d');
+        
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: props.monthlyData.map(item => item.bulan),
+                datasets: [
+                    {
+                        label: 'Pendapatan',
+                        data: props.monthlyData.map(item => item.pendapatan),
+                        borderColor: 'rgb(37, 99, 235)',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: 'rgb(37, 99, 235)',
+                    },
+                    {
+                        label: 'Pengeluaran',
+                        data: props.monthlyData.map(item => item.pengeluaran),
+                        borderColor: 'rgb(220, 38, 38)',
+                        backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: 'rgb(220, 38, 38)',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += 'Rp ' + new Intl.NumberFormat('id-ID').format(context.parsed.y);
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'Rp ' + new Intl.NumberFormat('id-ID', {
+                                    notation: 'compact',
+                                    compactDisplay: 'short'
+                                }).format(value);
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+
+onBeforeUnmount(() => {
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+});
 </script>

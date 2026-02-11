@@ -605,6 +605,53 @@ class HomeController extends Controller
                 ];
             });
 
+        // === Data Grafik Bulanan (6 bulan terakhir) ===
+        $monthlyData = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $targetMonth = now()->subMonths($i)->format('Y-m');
+            $monthName = \Carbon\Carbon::createFromFormat('Y-m', $targetMonth)->locale('id')->isoFormat('MMM Y');
+            
+            // Query pembayaran untuk bulan tersebut
+            $pembayaranQuery = Pembayaran::where('bulan_bayar', $targetMonth);
+            
+            // Filter berdasarkan role dan wilayah
+            if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
+                $pembayaranQuery->whereHas('pelanggan', function ($q) {
+                    $q->where('wilayah', auth()->user()->getWilayah());
+                });
+            } elseif ($wilayahFilter && auth()->user()->isAdmin()) {
+                $pembayaranQuery->whereHas('pelanggan', function ($q) use ($wilayahFilter) {
+                    $q->where('wilayah', $wilayahFilter);
+                });
+            }
+            
+            $pendapatan = $pembayaranQuery->sum('jumlah_bayar');
+            
+            // Query biaya operasional untuk bulan tersebut
+            $laporanQuery = \App\Models\LaporanBulanan::where('bulan', $targetMonth);
+            
+            if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
+                $laporanQuery->where('wilayah', auth()->user()->getWilayah());
+            } elseif ($wilayahFilter && auth()->user()->isAdmin()) {
+                $laporanQuery->where('wilayah', $wilayahFilter);
+            }
+            
+            $laporan = $laporanQuery->first();
+            $biayaOps = ($laporan->biaya_operasional_penarik ?? 0);
+            $biayaPad = ($laporan->biaya_pad_desa ?? 0);
+            $biayaOpsLapangan = ($laporan->biaya_operasional_lapangan ?? 0);
+            $biayaLainLain = ($laporan->biaya_lain_lain ?? 0);
+            $tarik20 = $pendapatan * 0.20;
+            
+            $totalPengeluaran = $tarik20 + $biayaOps + $biayaPad + $biayaOpsLapangan + $biayaLainLain;
+            
+            $monthlyData[] = [
+                'bulan' => $monthName,
+                'pendapatan' => $pendapatan,
+                'pengeluaran' => $totalPengeluaran,
+            ];
+        }
+
         return Inertia::render('Dashboard', [
             'stats' => [
                 'totalPelanggan' => $totalPelanggan,
@@ -639,6 +686,7 @@ class HomeController extends Controller
             'recentTransactions' => $recentTransactions,
             'pelangganBelumBayar' => $pelangganBelumBayar,
             'distribusiRtRw' => $distribusiRtRw,
+            'monthlyData' => $monthlyData,
         ]);
     }
     
