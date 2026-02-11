@@ -297,16 +297,16 @@
                 <div class="flex flex-col md:flex-row items-center gap-16">
                     <div class="w-full md:w-1/2 relative group animate-on-scroll">
                         <div class="absolute -inset-4 bg-blue-100 rounded-3xl transform rotate-3 transition-transform duration-500"></div>
-                        <div class="relative grid grid-cols-1 gap-6 p-2">
+                        <div class="relative grid grid-cols-1 gap-4 p-2 justify-items-center">
                             <img 
                                 src="/images/tentangprogram1.jpeg" 
                                 alt="Masyarakat KP-SPAMS 1" 
-                                class="rounded-2xl shadow-lg w-full h-auto object-contain hover:scale-105 transition-transform duration-500"
+                                class="rounded-2xl shadow-lg h-64 w-auto object-contain hover:scale-105 transition-transform duration-500"
                             />
                             <img 
                                 src="/images/tentangprogram2.jpeg" 
                                 alt="Masyarakat KP-SPAMS 2" 
-                                class="rounded-2xl shadow-lg w-full h-auto object-contain hover:scale-105 transition-transform duration-500"
+                                class="rounded-2xl shadow-lg h-64 w-auto object-contain hover:scale-105 transition-transform duration-500"
                             />
                         </div>
                          <!-- Decorative Badge -->
