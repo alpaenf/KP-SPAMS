@@ -200,10 +200,26 @@
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-6">
                         <!-- Total Tarikan Bersih -->
+                        <!-- Total Tarikan Bersih -->
                         <div class="bg-blue-50 rounded-xl p-4 sm:p-6 border border-blue-200 flex flex-col justify-center">
-                            <h4 class="text-sm sm:text-base font-bold text-blue-900 mb-1">Total Tarikan Bersih (Kas KP-SPAMS)</h4>
-                            <p class="text-2xl sm:text-3xl font-bold text-blue-700">{{ formatRupiah(detail.totalTarikanBersih) }}</p>
-                            <p class="text-xs sm:text-sm text-blue-600 mt-2">Dana bersih untuk kas desa/KP-SPAMS setelah dikurangi honor.</p>
+                            <div class="flex justify-between items-start mb-1">
+                                <h4 class="text-sm sm:text-base font-bold text-blue-900">Total Tarikan Bersih (Kas KP-SPAMS)</h4>
+                                <button 
+                                    @click="showAccumulation = !showAccumulation"
+                                    class="text-xs px-2 py-1 rounded border transition flex-shrink-0 ml-2"
+                                    :class="showAccumulation ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'"
+                                    title="Klik untuk melihat akumulasi dari bulan sebelumnya"
+                                >
+                                    {{ showAccumulation ? 'Akumulasi ON' : 'Akumulasi OFF' }}
+                                </button>
+                            </div>
+                            <p class="text-2xl sm:text-3xl font-bold text-blue-700">{{ formatRupiah(totalBersihDisplay) }}</p>
+                            <div class="text-xs sm:text-sm text-blue-600 mt-2">
+                                <p>Dana bersih untuk kas desa/KP-SPAMS setelah dikurangi honor.</p>
+                                <p v-if="showAccumulation" class="mt-1 font-medium bg-blue-100 p-1 rounded inline-block">
+                                    Termasuk Saldo Awal: {{ formatRupiah(detail.saldoAwal || 0) }}
+                                </p>
+                            </div>
                         </div>
 
                         <!-- SR Status -->
@@ -392,7 +408,7 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
-import { ref, watch, reactive } from 'vue';
+import { ref, watch, reactive, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import debounce from 'lodash/debounce';
 
@@ -402,6 +418,24 @@ const props = defineProps({
     detail: Object,
     filters: Object,
     options: Object,
+});
+
+const showAccumulation = ref(false);
+
+const totalBersihDisplay = computed(() => {
+    if (!props.detail) return 0;
+    
+    let total = props.detail.totalTarikanBersih;
+    
+    // Convert to number just in case
+    total = Number(total) || 0;
+    
+    if (showAccumulation.value) {
+        let saldoAwal = Number(props.detail.saldoAwal) || 0;
+        total += saldoAwal;
+    }
+    
+    return total;
 });
 
 const form = ref({

@@ -108,7 +108,47 @@ class LaporanController extends Controller
         // $srSudahBayar sudah dihitung di atas
         $srBelumBayar = max(0, $totalSR - $srSudahBayar);
 
-        // === 4. Opsi Filter ===
+        // === 4. Hitung Saldo Awal (Akumulasi Bulan Sebelumnya) ===
+        $previousLimit = ($bulan && $bulan !== 'semua') ? $tahun . '-' . $bulan : $tahun . '-01';
+
+        // A. Pemasukan Lalu
+        $queryLalu = Pembayaran::query();
+        $queryLalu->where('bulan_bayar', '<', $previousLimit);
+        
+        // Filter Wilayah (Copy logic dari atas)
+        if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
+            $queryLalu->whereHas('pelanggan', function ($q) {
+                $q->where('wilayah', auth()->user()->getWilayah());
+            });
+        } elseif ($wilayah && $wilayah !== 'semua') {
+            $queryLalu->whereHas('pelanggan', function ($q) use ($wilayah) {
+                $q->where('wilayah', $wilayah)
+                  ->orWhere('rw', $wilayah)
+                  ->orWhere('rt', $wilayah);
+            });
+        }
+        $pemasukanLalu = $queryLalu->sum('jumlah_bayar');
+
+        // B. Pengeluaran Lalu (Biaya Operasional)
+        $laporanLaluQuery = LaporanBulanan::query();
+        $laporanLaluQuery->where('bulan', '<', $previousLimit);
+
+        if ($wilayah && $wilayah !== 'semua') {
+             $laporanLaluQuery->where('wilayah', $wilayah);
+        }
+
+        $biayaOpsPenarikLalu = $laporanLaluQuery->sum('biaya_operasional_penarik');
+        $biayaPadDesaLalu = $laporanLaluQuery->sum('biaya_pad_desa');
+        $biayaOpsLapanganLalu = $laporanLaluQuery->sum('biaya_operasional_lapangan');
+        $biayaLainLainLalu = $laporanLaluQuery->sum('biaya_lain_lain');
+        
+        $totalBiayaLalu = $biayaOpsPenarikLalu + $biayaPadDesaLalu + $biayaOpsLapanganLalu + $biayaLainLainLalu;
+
+        // C. Hitung Saldo Awal Bersih
+        // Net Profit = (0.8 * Revenue) - Expenses (excluding 20% honor because it's already deducted from Revenue)
+        $saldoAwal = ($pemasukanLalu * 0.80) - $totalBiayaLalu;
+
+        // === 5. Opsi Filter ===
         $tahunOpsi = Pembayaran::selectRaw('LEFT(bulan_bayar, 4) as tahun')
             ->distinct()
             ->orderBy('tahun', 'desc')
@@ -147,6 +187,7 @@ class LaporanController extends Controller
                 'totalSR' => $totalSR,
                 'srSudahBayar' => $srSudahBayar,
                 'srBelumBayar' => $srBelumBayar,
+                'saldoAwal' => $saldoAwal,
             ],
             'filters' => [
                 'tahun' => (int)$tahun,

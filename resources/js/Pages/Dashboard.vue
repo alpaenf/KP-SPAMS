@@ -518,12 +518,26 @@
                         <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-5 border-2 border-blue-300 md:col-span-2">
                             <div class="flex items-center justify-between mb-2">
                                 <h4 class="text-base font-semibold text-blue-900">Total Tarikan Bersih</h4>
-                                <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                                </svg>
+                                <div class="flex items-center gap-2">
+                                    <button 
+                                        @click="showAccumulation = !showAccumulation"
+                                        class="text-xs px-2 py-1 rounded border transition"
+                                        :class="showAccumulation ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'"
+                                    >
+                                        {{ showAccumulation ? 'Akumulasi ON' : 'Akumulasi OFF' }}
+                                    </button>
+                                    <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
                             </div>
-                            <p class="text-3xl font-bold text-blue-900">Rp {{ formatRupiah(laporanKeuangan.totalTarikanBersih) }}</p>
-                            <p class="text-sm text-blue-700 mt-1">Sisa untuk kas & operasional KP-SPAMS</p>
+                            <p class="text-3xl font-bold text-blue-900">Rp {{ formatRupiah(totalBersihDisplay) }}</p>
+                            <div class="text-xs sm:text-sm text-blue-700 mt-1">
+                                <p>Sisa untuk kas & operasional KP-SPAMS</p>
+                                <p v-if="showAccumulation" class="mt-1 font-medium bg-blue-200 bg-opacity-50 p-1 rounded inline-block">
+                                    Termasuk Saldo Awal: {{ formatRupiah(laporanKeuangan.saldoAwal || 0) }}
+                                </p>
+                            </div>
                         </div>
 
                         <!-- SR Stats -->
@@ -741,8 +755,25 @@ const props = defineProps({
 });
 
 const showModalOperasional = ref(false);
+const showAccumulation = ref(false);
 const processing = ref(false);
 const selectedWilayah = ref('');
+
+const totalBersihDisplay = computed(() => {
+    if (!props.laporanKeuangan) return 0;
+    
+    let total = props.laporanKeuangan.totalTarikanBersih;
+    
+    // Convert to number just in case
+    total = Number(total) || 0;
+    
+    if (showAccumulation.value) {
+        let saldoAwal = Number(props.laporanKeuangan.saldoAwal) || 0;
+        total += saldoAwal;
+    }
+    
+    return total;
+});
 
 const formOperasional = ref({
     bulan: props.laporanKeuangan.bulan,

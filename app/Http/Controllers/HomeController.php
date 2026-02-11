@@ -544,6 +544,39 @@ class HomeController extends Controller
         // 8. Total SR (Pelanggan Aktif)
         $totalSR = $pelangganAktifIds->count();
         
+        // === Hitung Saldo Awal (Akumulasi Bulan Sebelumnya) ===
+        $previousLimit = $bulanIni; // e.g. "2024-02"
+        $tahun = substr($bulanIni, 0, 4);
+
+        // A. Pemasukan Lalu
+        $queryLalu = Pembayaran::query();
+        $queryLalu->where('bulan_bayar', '<', $previousLimit);
+        // Admin bisa filter wilayah manual
+        if ($wilayahFilter && auth()->user()->isAdmin()) {
+            $queryLalu->whereHas('pelanggan', function ($q) use ($wilayahFilter) {
+                $q->where('wilayah', $wilayahFilter);
+            });
+        }
+        $pemasukanLalu = $queryLalu->sum('jumlah_bayar');
+
+        // B. Pengeluaran Lalu (Biaya Operasional)
+        $laporanLaluQuery = \App\Models\LaporanBulanan::query();
+        $laporanLaluQuery->where('bulan', '<', $previousLimit);
+        if ($wilayahFilter) {
+             $laporanLaluQuery->where('wilayah', $wilayahFilter);
+        }
+
+        $biayaOpsPenarikLalu = $laporanLaluQuery->sum('biaya_operasional_penarik');
+        $biayaPadDesaLalu = $laporanLaluQuery->sum('biaya_pad_desa');
+        $biayaOpsLapanganLalu = $laporanLaluQuery->sum('biaya_operasional_lapangan');
+        $biayaLainLainLalu = $laporanLaluQuery->sum('biaya_lain_lain');
+        
+        $totalBiayaLalu = $biayaOpsPenarikLalu + $biayaPadDesaLalu + $biayaOpsLapanganLalu + $biayaLainLainLalu;
+
+        // C. Hitung Saldo Awal Bersih
+        // Net Profit = (0.8 * Revenue) - Expenses (excluding 20% honor because it's already deducted from Revenue)
+        $saldoAwal = ($pemasukanLalu * 0.80) - $totalBiayaLalu;
+        
         // Pelanggan yang belum bayar bulan ini (untuk list)
         // Gunakan forUser() untuk filter otomatis berdasarkan role
         $pelangganBelumBayarQuery = Pelanggan::forUser()
@@ -663,6 +696,7 @@ class HomeController extends Controller
                 'totalSRBelumBayar' => $totalSRBelumBayar,
                 'totalSR' => $totalSR,
                 'laporanId' => $laporanBulanan->id,
+                'saldoAwal' => $saldoAwal,
             ],
             'recentTransactions' => $recentTransactions,
             'pelangganBelumBayar' => $pelangganBelumBayar,
