@@ -79,12 +79,14 @@ class LaporanController extends Controller
 
         $biayaOperasional = $laporanQuery->sum('biaya_operasional_penarik');
         $biayaPadDesa = $laporanQuery->sum('biaya_pad_desa');
+        $biayaOperasionalLapangan = $laporanQuery->sum('biaya_operasional_lapangan');
+        $biayaLainLain = $laporanQuery->sum('biaya_lain_lain');
 
         // C. Honor Penarik
         $honorPenarik = $tarik20Persen + $biayaOperasional;
 
-        // D. Total Tarikan Bersih (dikurangi honor penarik DAN PAD Desa)
-        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa;
+        // D. Total Tarikan Bersih (dikurangi honor penarik DAN PAD Desa DAN Lainnya)
+        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa - $biayaOperasionalLapangan - $biayaLainLain;
 
         // === 3. Statistik SR (Sambungan Rumah) ===
         // Hitung total pelanggan aktif (SR) sesuai filter wilayah
@@ -104,7 +106,48 @@ class LaporanController extends Controller
         $srSudahBayar = $pembayarans->unique('pelanggan_id')->count();
         $srBelumBayar = max(0, $totalSR - $srSudahBayar);
 
-        // === 4. Opsi Filter ===
+        // === 4. Hitung Saldo Awal (Akumulasi Bulan Sebelumnya) ===
+        // Logic: Accrual / Billing Period Basis (bulan_bayar)
+        
+        $previousLimit = ($bulan && $bulan !== 'semua') ? $tahun . '-' . $bulan : $tahun . '-01';
+        
+        // A. Pemasukan Lalu (Saldo Masuk sebelum periode laporan ini)
+        $queryLalu = Pembayaran::query();
+        $queryLalu->where('bulan_bayar', '<', $previousLimit);
+        
+        // Filter Wilayah
+        if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
+            $queryLalu->whereHas('pelanggan', function ($q) {
+                $q->where('wilayah', auth()->user()->getWilayah());
+            });
+        } elseif ($wilayah && $wilayah !== 'semua') {
+            $queryLalu->whereHas('pelanggan', function ($q) use ($wilayah) {
+                $q->where('wilayah', $wilayah)
+                  ->orWhere('rw', $wilayah)
+                  ->orWhere('rt', $wilayah);
+            });
+        }
+        $pemasukanLalu = $queryLalu->sum('jumlah_bayar');
+
+        // B. Pengeluaran Lalu (Biaya Operasional)
+        $laporanLaluQuery = LaporanBulanan::query();
+        $laporanLaluQuery->where('bulan', '<', $previousLimit);
+
+        if ($wilayah && $wilayah !== 'semua') {
+             $laporanLaluQuery->where('wilayah', $wilayah);
+        }
+
+        $biayaOpsPenarikLalu = $laporanLaluQuery->sum('biaya_operasional_penarik');
+        $biayaPadDesaLalu = $laporanLaluQuery->sum('biaya_pad_desa');
+        $biayaOpsLapanganLalu = $laporanLaluQuery->sum('biaya_operasional_lapangan');
+        $biayaLainLainLalu = $laporanLaluQuery->sum('biaya_lain_lain');
+        
+        $totalBiayaLalu = $biayaOpsPenarikLalu + $biayaPadDesaLalu + $biayaOpsLapanganLalu + $biayaLainLainLalu;
+        
+        // C. Hitung Saldo Awal Bersih
+        $saldoAwal = ($pemasukanLalu * 0.80) - $totalBiayaLalu;
+
+        // === 5. Opsi Filter ===
         $tahunOpsi = Pembayaran::selectRaw('LEFT(bulan_bayar, 4) as tahun')
             ->distinct()
             ->orderBy('tahun', 'desc')
@@ -135,12 +178,15 @@ class LaporanController extends Controller
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasional' => $biayaOperasional,
                 'biayaPadDesa' => $biayaPadDesa,
-                'honorPenarik' => $honorPenarik, // 20% + Ops
-                'honorMurni' => $honorPenarik,   // Sama, penamaan beda konteks
+                'biayaOperasionalLapangan' => $biayaOperasionalLapangan,
+                'biayaLainLain' => $biayaLainLain,
+                'honorPenarik' => $honorPenarik,
+                'honorMurni' => $honorPenarik,
                 'totalTarikanBersih' => $totalTarikanBersih,
                 'totalSR' => $totalSR,
                 'srSudahBayar' => $srSudahBayar,
                 'srBelumBayar' => $srBelumBayar,
+                'saldoAwal' => $saldoAwal,
             ],
             'filters' => [
                 'tahun' => (int)$tahun,

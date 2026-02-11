@@ -436,6 +436,30 @@
                             <p class="text-xs text-yellow-700 mt-1">Pendapatan Asli Desa</p>
                         </div>
 
+                        <!-- Biaya Ops. Lapangan -->
+                        <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg p-5 border border-teal-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-sm font-medium text-teal-900">Biaya Ops. Lapangan</h4>
+                                <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </div>
+                            <p class="text-2xl font-bold text-teal-900">Rp {{ formatRupiah(laporanKeuangan.biayaOperasionalLapangan) }}</p>
+                            <p class="text-xs text-teal-700 mt-1">Perbaikan & Lapangan</p>
+                        </div>
+
+                        <!-- Biaya Lain-lain -->
+                        <div class="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-5 border border-pink-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-sm font-medium text-pink-900">Biaya Lain-lain</h4>
+                                <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+                                </svg>
+                            </div>
+                            <p class="text-2xl font-bold text-pink-900">Rp {{ formatRupiah(laporanKeuangan.biayaLainLain) }}</p>
+                            <p class="text-xs text-pink-700 mt-1">Keperluan lainnya</p>
+                        </div>
+
                         <!-- Honor Penarik -->
                         <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-5 border border-indigo-200">
                             <div class="flex items-center justify-between mb-2">
@@ -587,6 +611,32 @@
                             <p class="text-xs text-gray-500 mt-1">Pendapatan Asli Desa</p>
                         </div>
 
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Operasional Lapangan (Rp)</label>
+                            <input 
+                                type="number" 
+                                v-model="formOperasional.biaya_operasional_lapangan"
+                                step="1000"
+                                min="0"
+                                placeholder="0"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">Perbaikan, bahan baku, dll.</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Lain-lain (Rp)</label>
+                            <input 
+                                type="number" 
+                                v-model="formOperasional.biaya_lain_lain"
+                                step="1000"
+                                min="0"
+                                placeholder="0"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">Keperluan lainnya</p>
+                        </div>
+
                         <div class="flex gap-3">
                             <button 
                                 type="submit"
@@ -652,6 +702,8 @@ const formOperasional = ref({
     bulan: props.laporanKeuangan.bulan,
     biaya_operasional_penarik: props.laporanKeuangan.biayaOperasionalPenarik,
     biaya_pad_desa: props.laporanKeuangan.biayaPadDesa,
+    biaya_operasional_lapangan: props.laporanKeuangan.biayaOperasionalLapangan,
+    biaya_lain_lain: props.laporanKeuangan.biayaLainLain,
     wilayah: selectedWilayah.value || null
 });
 
@@ -667,6 +719,8 @@ const reloadDashboard = () => {
             formOperasional.value.wilayah = selectedWilayah.value || null;
             formOperasional.value.biaya_operasional_penarik = props.laporanKeuangan.biayaOperasionalPenarik;
             formOperasional.value.biaya_pad_desa = props.laporanKeuangan.biayaPadDesa;
+            formOperasional.value.biaya_operasional_lapangan = props.laporanKeuangan.biayaOperasionalLapangan;
+            formOperasional.value.biaya_lain_lain = props.laporanKeuangan.biayaLainLain;
         }
     });
 };

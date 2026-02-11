@@ -525,11 +525,15 @@ class HomeController extends Controller
         // 3b. Biaya PAD Desa (dari database, bisa diubah)
         $biayaPadDesa = $laporanBulanan->biaya_pad_desa ?? 0;
         
+        // 3c. Biaya Tambahan Baru
+        $biayaOperasionalLapangan = $laporanBulanan->biaya_operasional_lapangan ?? 0;
+        $biayaLainLain = $laporanBulanan->biaya_lain_lain ?? 0;
+        
         // 4. Honor Penarik = 20% + Operasional
         $honorPenarik = $tarik20Persen + $biayaOperasionalPenarik;
         
-        // 5. Total Tarikan Bersih = Total - Honor Penarik - PAD Desa
-        $totalTarikanBersih = $totalTarikan - $honorPenarik - $biayaPadDesa;
+        // 5. Total Tarikan Bersih = Total - Honor Penarik - PAD Desa - Operasional Lapangan - Lain-lain
+        $totalTarikanBersih = $totalTarikan - $honorPenarik - $biayaPadDesa - $biayaOperasionalLapangan - $biayaLainLain;
         
         // --- DEBUG FORCE CHECK ---
         // Kita log ke file laravel.log untuk melihat apa yang sebenarnya terjadi di server
@@ -625,6 +629,8 @@ class HomeController extends Controller
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasionalPenarik' => $biayaOperasionalPenarik,
                 'biayaPadDesa' => $biayaPadDesa,
+                'biayaOperasionalLapangan' => $biayaOperasionalLapangan,
+                'biayaLainLain' => $biayaLainLain,
                 'honorPenarik' => $honorPenarik,
                 'totalTarikanBersih' => $totalTarikanBersih,
                 'totalSRSudahBayar' => $totalSRSudahBayar,
@@ -828,6 +834,8 @@ class HomeController extends Controller
             'bulan' => 'required|string|size:7', // Format: YYYY-MM
             'biaya_operasional_penarik' => 'required|numeric|min:0',
             'biaya_pad_desa' => 'nullable|numeric|min:0',
+            'biaya_operasional_lapangan' => 'nullable|numeric|min:0',
+            'biaya_lain_lain' => 'nullable|numeric|min:0',
             'wilayah' => 'nullable|string|max:100',
         ]);
         
@@ -842,6 +850,14 @@ class HomeController extends Controller
         
         if (isset($validated['biaya_pad_desa'])) {
             $updateData['biaya_pad_desa'] = $validated['biaya_pad_desa'];
+        }
+
+        if (isset($validated['biaya_operasional_lapangan'])) {
+            $updateData['biaya_operasional_lapangan'] = $validated['biaya_operasional_lapangan'];
+        }
+
+        if (isset($validated['biaya_lain_lain'])) {
+            $updateData['biaya_lain_lain'] = $validated['biaya_lain_lain'];
         }
         
         if (isset($validated['wilayah'])) {
@@ -876,6 +892,12 @@ class HomeController extends Controller
                          $resetData = ['biaya_operasional_penarik' => 0];
                          if (isset($updateData['biaya_pad_desa'])) {
                              $resetData['biaya_pad_desa'] = 0;
+                         }
+                         if (isset($updateData['biaya_operasional_lapangan'])) {
+                             $resetData['biaya_operasional_lapangan'] = 0;
+                         }
+                         if (isset($updateData['biaya_lain_lain'])) {
+                             $resetData['biaya_lain_lain'] = 0;
                          }
                          $report->update($resetData);
                      }
