@@ -200,7 +200,7 @@
                         <!-- Total Semua Biaya -->
                         <div class="bg-red-50 rounded-xl p-4 sm:p-5 border border-red-100">
                              <h4 class="text-xs sm:text-sm font-semibold text-red-900 mb-2">Total Semua Biaya</h4>
-                             <p class="text-xl sm:text-2xl font-bold text-red-800">{{ formatRupiah((detail.honorPenarik || 0) + (detail.biayaOpsLapangan || 0) + (detail.biayaPadDesa || 0) + (detail.biayaLainLain || 0)) }}</p>
+                             <p class="text-xl sm:text-2xl font-bold text-red-800">{{ formatRupiah((Number(detail?.honorPenarik) || 0) + (Number(detail?.biayaOpsLapangan) || 0) + (Number(detail?.biayaPadDesa) || 0) + (Number(detail?.biayaLainLain) || 0)) }}</p>
                              <p class="text-xs text-red-600 mt-1">Honor + Ops + PAD + Lain-lain</p>
                         </div>
                     </div>
@@ -499,11 +499,16 @@ const submitOperasional = () => {
 };
 
 const formatRupiah = (value) => {
+    // Handle NaN, null, undefined
+    const numValue = Number(value);
+    if (isNaN(numValue) || !isFinite(numValue)) {
+        return 'Rp 0';
+    }
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
         minimumFractionDigits: 0
-    }).format(value);
+    }).format(numValue);
 };
 
 const formatDate = (dateString) => {
