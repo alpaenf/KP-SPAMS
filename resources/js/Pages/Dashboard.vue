@@ -367,6 +367,48 @@
                     </div>
                 </div>
 
+                <!-- Analisis Keuntungan Bulanan (Chart) -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-6">Analisis Keuntungan Bulanan (Tahun Ini)</h3>
+                    
+                    <div class="relative h-64">
+                         <!-- Y-Axis Lines (Optional, simplified) -->
+                         <div class="absolute inset-0 flex flex-col justify-between text-xs text-gray-400">
+                            <span>Rp {{ formatShort(maxProfit) }}</span>
+                            <span>Rp {{ formatShort(maxProfit / 2) }}</span>
+                            <span>Rp 0</span>
+                        </div>
+
+                        <!-- Bars -->
+                        <div class="absolute inset-0 flex items-end justify-between pl-12 pb-6">
+                            <div 
+                                v-for="(stat, index) in monthlyStats" 
+                                :key="index" 
+                                class="flex flex-col items-center flex-1 group"
+                            >
+                                <div class="relative w-full flex justify-center h-56 items-end">
+                                    <!-- Bar -->
+                                    <div 
+                                        class="w-3/5 sm:w-4/5 rounded-t-sm transition-all duration-500 ease-out group-hover:opacity-90 relative"
+                                        :class="stat.profit >= 0 ? 'bg-green-500' : 'bg-red-500'"
+                                        :style="{ height: `${Math.max((Math.abs(stat.profit) / (maxProfit || 1)) * 100, 2)}%` }"
+                                    >
+                                        <!-- Tooltip -->
+                                        <div class="opacity-0 group-hover:opacity-100 absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-gray-900 text-white text-xs rounded py-1 px-2 pointer-events-none whitespace-nowrap z-10 transition-opacity">
+                                            <div class="font-bold">Rp {{ formatRupiah(stat.profit) }}</div>
+                                            <div class="text-[10px] text-gray-300">
+                                                In: {{ formatShort(stat.pemasukan) }} <br>
+                                                Out: {{ formatShort(stat.pengeluaran) }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-2 font-medium">{{ stat.month }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Laporan Keuangan Bulanan -->
                 <div class="bg-white rounded-lg shadow-md p-6 mb-8">
                     <div class="flex justify-between items-center mb-6">
@@ -691,6 +733,10 @@ const props = defineProps({
     recentTransactions: {
         type: Array,
         default: () => []
+    },
+    monthlyStats: {
+        type: Array,
+        default: () => []
     }
 });
 
@@ -735,10 +781,20 @@ const submitOperasional = () => {
     });
 };
 
-const aktifPercentage = computed(() => {
+const maxProfit = computed(() => {
+    if (!props.monthlyStats || props.monthlyStats.length === 0) return 1000000;
+    const max = Math.max(...props.monthlyStats.map(s => Math.abs(s.profit)));
+    return max > 0 ? max : 1000000;
+});
+
+const activePercentage = computed(() => { // Renamed from aktifPercentage to fix unused variable but wait, template uses aktifPercentage?
+    // Template uses aktifPercentage. Let's keep it.
     if (props.stats.totalPelanggan === 0) return 0;
     return Math.round((props.stats.pelangganAktif / props.stats.totalPelanggan) * 100);
 });
+
+// Alias for template if needed, or just rename the function
+const aktifPercentage = activePercentage;
 
 const persenPelangganBayar = computed(() => {
     if (props.stats.pelangganAktif === 0) return 0;
@@ -756,6 +812,12 @@ const formatRupiah = (angka) => {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0
     }).format(angka);
+};
+
+const formatShort = (n) => {
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'jt';
+    if (n >= 1000) return (n / 1000).toFixed(0) + 'rb';
+    return n;
 };
 
 const waLink = (no) => {

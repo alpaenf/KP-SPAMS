@@ -600,6 +600,39 @@ class HomeController extends Controller
                 ];
             });
 
+        // Hitung Statistik Bulanan untuk Grafik
+        $monthlyStats = [];
+        $currentYear = now()->year;
+        
+        for ($m = 1; $m <= 12; $m++) {
+            $monthStr = $currentYear . '-' . str_pad($m, 2, '0', STR_PAD_LEFT);
+            $monthName = \Carbon\Carbon::createFromDate($currentYear, $m, 1)->locale('id')->isoFormat('MMM');
+            
+            // Pemasukan (Total Bayar pada bulan laporan tersebut)
+            // Note: Menggunakan 'bulan_bayar' sebagai acuan periode laporan
+            $pemasukan = Pembayaran::where('bulan_bayar', $monthStr)->sum('jumlah_bayar');
+            
+            // Pengeluaran
+            $laporan = \App\Models\LaporanBulanan::where('bulan', $monthStr)->first();
+            
+            $biayaOpsPenarik = $laporan ? $laporan->biaya_operasional_penarik : 0;
+            $biayaPad = $laporan ? $laporan->biaya_pad_desa : 0;
+            $biayaOpsLapangan = $laporan ? $laporan->biaya_operasional_lapangan : 0;
+            $biayaLain = $laporan ? $laporan->biaya_lain_lain : 0;
+            
+            $honorPenarik = ($pemasukan * 0.20) + $biayaOpsPenarik;
+            $totalPengeluaran = $honorPenarik + $biayaPad + $biayaOpsLapangan + $biayaLain;
+            
+            $profit = $pemasukan - $totalPengeluaran;
+            
+            $monthlyStats[] = [
+                'month' => $monthName,
+                'pemasukan' => $pemasukan,
+                'pengeluaran' => $totalPengeluaran,
+                'profit' => $profit
+            ];
+        }
+
         return Inertia::render('Dashboard', [
             'stats' => [
                 'totalPelanggan' => $totalPelanggan,
@@ -607,6 +640,7 @@ class HomeController extends Controller
                 'pelangganNonaktif' => $pelangganNonaktif,
                 'cakupanArea' => $cakupanArea,
             ],
+            'monthlyStats' => $monthlyStats,
             'pembayaran' => [
                 'bulanIni' => $bulanIni,
                 'pembayaranBulanIni' => $pembayaranBulanIniSaja,
