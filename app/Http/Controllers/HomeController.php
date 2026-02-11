@@ -548,6 +548,17 @@ class HomeController extends Controller
             'totalPembayaran' => $totalPembayaran,
         ]);
         
+        // TEMPORARY DEBUG - REMOVE AFTER TESTING
+        if ($honorPenarik == 0 && $totalTarikan > 0) {
+            dd([
+                'totalTarikan' => $totalTarikan,
+                'tarik20Persen' => $tarik20Persen,
+                'biayaOperasionalPenarik' => $biayaOperasionalPenarik,
+                'honorPenarik' => $honorPenarik,
+                'laporanBulanan' => $laporanBulanan->toArray(),
+            ]);
+        }
+        
         // 5. Total Tarikan Bersih = Total - Honor Penarik - PAD Desa - Operasional Lapangan - Lain-lain
         $totalTarikanBersih = $totalTarikan - $honorPenarik - $biayaPadDesa - $biayaOperasionalLapangan - $biayaLainLain;
         
