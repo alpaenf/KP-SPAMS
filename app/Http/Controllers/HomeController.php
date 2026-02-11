@@ -525,23 +525,11 @@ class HomeController extends Controller
         // 3b. Biaya PAD Desa (dari database, bisa diubah)
         $biayaPadDesa = $laporanBulanan->biaya_pad_desa ?? 0;
         
-        // 3c. Biaya Tambahan Baru
-        $biayaOperasionalLapangan = $laporanBulanan->biaya_operasional_lapangan ?? 0;
-        $biayaLainLain = $laporanBulanan->biaya_lain_lain ?? 0;
-        
         // 4. Honor Penarik = 20% + Operasional
         $honorPenarik = $tarik20Persen + $biayaOperasionalPenarik;
         
-        // 5. Total Tarikan Bersih = Total - Honor Penarik - PAD Desa - Operasional Lapangan - Lain-lain
-        $totalTarikanBersih = $totalTarikan - $honorPenarik - $biayaPadDesa - $biayaOperasionalLapangan - $biayaLainLain;
-        
-        // --- DEBUG FORCE CHECK ---
-        // Kita log ke file laravel.log untuk melihat apa yang sebenarnya terjadi di server
-        \Log::info('DEBUG HONOR PENARIK:', [
-            'tarik20Persen' => $tarik20Persen, 
-            'biayaOps' => $biayaOperasionalPenarik, 
-            'hasil_penjumlahan' => $honorPenarik
-        ]);
+        // 5. Total Tarikan Bersih = Total - Honor Penarik - PAD Desa
+        $totalTarikanBersih = $totalTarikan - $honorPenarik - $biayaPadDesa;
         
         // 6. Total SR (Sambungan Rumah) Sudah Bayar
         $totalSRSudahBayar = $sudahBayarCount;
@@ -551,45 +539,7 @@ class HomeController extends Controller
         
         // 8. Total SR (Pelanggan Aktif)
         $totalSR = $pelangganAktifIds->count();
-
-        // === Hitung Saldo Awal (Akumulasi Bulan Sebelumnya) ===
-        // Logic: Accrual / Billing Period Basis (bulan_bayar)
-        // This calculates the "Retained Earnings" from previous billing periods
         
-        $previousLimit = $bulanIni; // e.g., "2024-02"
-        
-        // A. Pemasukan Lalu (Based on Billing Month)
-        $queryLalu = Pembayaran::query();
-        $queryLalu->where('bulan_bayar', '<', $previousLimit);
-        
-        // Admin bisa filter wilayah manual
-        if ($wilayahFilter && auth()->user()->isAdmin()) {
-            $queryLalu->whereHas('pelanggan', function ($q) use ($wilayahFilter) {
-                $q->where('wilayah', $wilayahFilter);
-            });
-        }
-        $pemasukanLalu = $queryLalu->sum('jumlah_bayar');
-
-        // B. Pengeluaran Lalu (Biaya Operasional)
-        // Filter laporan bulanan sebelum bulan ini
-        $laporanLaluQuery = \App\Models\LaporanBulanan::query();
-        $laporanLaluQuery->where('bulan', '<', $previousLimit);
-        if ($wilayahFilter) {
-             $laporanLaluQuery->where('wilayah', $wilayahFilter);
-        }
-
-        $biayaOpsPenarikLalu = $laporanLaluQuery->sum('biaya_operasional_penarik');
-        $biayaPadDesaLalu = $laporanLaluQuery->sum('biaya_pad_desa');
-        $biayaOpsLapanganLalu = $laporanLaluQuery->sum('biaya_operasional_lapangan');
-        $biayaLainLainLalu = $laporanLaluQuery->sum('biaya_lain_lain');
-        
-        $totalBiayaLalu = $biayaOpsPenarikLalu + $biayaPadDesaLalu + $biayaOpsLapanganLalu + $biayaLainLainLalu;
-
-        // C. Hitung Saldo Awal Bersih
-        // Net Profit = (0.8 * Revenue) - Expenses
-        // Note: 20% Jasa Penarik is deducted from Revenue first
-        $saldoAwal = ($pemasukanLalu * 0.80) - $totalBiayaLalu;
-
         // Pelanggan yang belum bayar bulan ini (untuk list)
         // Gunakan forUser() untuk filter otomatis berdasarkan role
         $pelangganBelumBayarQuery = Pelanggan::forUser()
@@ -667,15 +617,12 @@ class HomeController extends Controller
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasionalPenarik' => $biayaOperasionalPenarik,
                 'biayaPadDesa' => $biayaPadDesa,
-                'biayaOperasionalLapangan' => $biayaOperasionalLapangan,
-                'biayaLainLain' => $biayaLainLain,
                 'honorPenarik' => $honorPenarik,
                 'totalTarikanBersih' => $totalTarikanBersih,
                 'totalSRSudahBayar' => $totalSRSudahBayar,
                 'totalSRBelumBayar' => $totalSRBelumBayar,
                 'totalSR' => $totalSR,
                 'laporanId' => $laporanBulanan->id,
-                'saldoAwal' => $saldoAwal,
             ],
             'recentTransactions' => $recentTransactions,
             'pelangganBelumBayar' => $pelangganBelumBayar,
@@ -873,8 +820,6 @@ class HomeController extends Controller
             'bulan' => 'required|string|size:7', // Format: YYYY-MM
             'biaya_operasional_penarik' => 'required|numeric|min:0',
             'biaya_pad_desa' => 'nullable|numeric|min:0',
-            'biaya_operasional_lapangan' => 'nullable|numeric|min:0',
-            'biaya_lain_lain' => 'nullable|numeric|min:0',
             'wilayah' => 'nullable|string|max:100',
         ]);
         
@@ -889,14 +834,6 @@ class HomeController extends Controller
         
         if (isset($validated['biaya_pad_desa'])) {
             $updateData['biaya_pad_desa'] = $validated['biaya_pad_desa'];
-        }
-
-        if (isset($validated['biaya_operasional_lapangan'])) {
-            $updateData['biaya_operasional_lapangan'] = $validated['biaya_operasional_lapangan'];
-        }
-
-        if (isset($validated['biaya_lain_lain'])) {
-            $updateData['biaya_lain_lain'] = $validated['biaya_lain_lain'];
         }
         
         if (isset($validated['wilayah'])) {
@@ -931,12 +868,6 @@ class HomeController extends Controller
                          $resetData = ['biaya_operasional_penarik' => 0];
                          if (isset($updateData['biaya_pad_desa'])) {
                              $resetData['biaya_pad_desa'] = 0;
-                         }
-                         if (isset($updateData['biaya_operasional_lapangan'])) {
-                             $resetData['biaya_operasional_lapangan'] = 0;
-                         }
-                         if (isset($updateData['biaya_lain_lain'])) {
-                             $resetData['biaya_lain_lain'] = 0;
                          }
                          $report->update($resetData);
                      }

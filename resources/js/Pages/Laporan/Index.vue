@@ -176,20 +176,6 @@
                              <p class="text-xs text-yellow-600 mt-1">Pendapatan Asli Desa (Klik untuk edit)</p>
                         </div>
 
-                        <!-- Biaya Operasional Lapangan -->
-                        <div class="bg-teal-50 rounded-xl p-4 sm:p-5 border border-teal-100 cursor-pointer hover:bg-teal-100 transition" @click="openModalOperasional" title="Klik untuk update">
-                             <h4 class="text-xs sm:text-sm font-semibold text-teal-900 mb-2">Biaya Ops. Lapangan</h4>
-                             <p class="text-xl sm:text-2xl font-bold text-teal-800">{{ formatRupiah(detail.biayaOperasionalLapangan) }}</p>
-                             <p class="text-xs text-teal-600 mt-1">Perbaikan & Lapangan (Klik untuk edit)</p>
-                        </div>
-
-                        <!-- Biaya Lain-lain -->
-                        <div class="bg-pink-50 rounded-xl p-4 sm:p-5 border border-pink-100 cursor-pointer hover:bg-pink-100 transition" @click="openModalOperasional" title="Klik untuk update">
-                             <h4 class="text-xs sm:text-sm font-semibold text-pink-900 mb-2">Biaya Lain-lain</h4>
-                             <p class="text-xl sm:text-2xl font-bold text-pink-800">{{ formatRupiah(detail.biayaLainLain) }}</p>
-                             <p class="text-xs text-pink-600 mt-1">Keperluan lainnya (Klik untuk edit)</p>
-                        </div>
-
                          <!-- Total Honor -->
                         <div class="bg-indigo-50 rounded-xl p-4 sm:p-5 border border-indigo-100">
                              <h4 class="text-xs sm:text-sm font-semibold text-indigo-900 mb-2">Total Honor Penarik</h4>
@@ -201,24 +187,9 @@
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-6">
                         <!-- Total Tarikan Bersih -->
                         <div class="bg-blue-50 rounded-xl p-4 sm:p-6 border border-blue-200 flex flex-col justify-center">
-                            <div class="flex justify-between items-start mb-1">
-                                <h4 class="text-sm sm:text-base font-bold text-blue-900">Total Tarikan Bersih (Kas KP-SPAMS)</h4>
-                                <button 
-                                    @click="showAccumulation = !showAccumulation"
-                                    class="text-xs px-2 py-1 rounded border transition flex-shrink-0 ml-2"
-                                    :class="showAccumulation ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'"
-                                    title="Klik untuk melihat akumulasi dari bulan sebelumnya"
-                                >
-                                    {{ showAccumulation ? 'Akumulasi ON' : 'Akumulasi OFF' }}
-                                </button>
-                            </div>
-                            <p class="text-2xl sm:text-3xl font-bold text-blue-700">{{ formatRupiah(totalBersihDisplay) }}</p>
-                            <div class="text-xs sm:text-sm text-blue-600 mt-2">
-                                <p>Dana bersih untuk kas desa/KP-SPAMS setelah dikurangi honor.</p>
-                                <p v-if="showAccumulation" class="mt-1 font-medium bg-blue-100 p-1 rounded inline-block">
-                                    Termasuk Saldo Awal: {{ formatRupiah(detail.saldoAwal || 0) }}
-                                </p>
-                            </div>
+                            <h4 class="text-sm sm:text-base font-bold text-blue-900 mb-1">Total Tarikan Bersih (Kas KP-SPAMS)</h4>
+                            <p class="text-2xl sm:text-3xl font-bold text-blue-700">{{ formatRupiah(detail.totalTarikanBersih) }}</p>
+                            <p class="text-xs sm:text-sm text-blue-600 mt-2">Dana bersih untuk kas desa/KP-SPAMS setelah dikurangi honor.</p>
                         </div>
 
                         <!-- SR Status -->
@@ -351,32 +322,6 @@
                             <p class="text-xs text-gray-500 mt-1">Pendapatan Asli Desa</p>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Operasional Lapangan (Rp)</label>
-                            <input 
-                                type="number" 
-                                v-model="formOperasional.biaya_operasional_lapangan"
-                                step="1000"
-                                min="0"
-                                placeholder="0"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
-                            />
-                            <p class="text-xs text-gray-500 mt-1">Perbaikan, bahan baku, dll.</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Lain-lain (Rp)</label>
-                            <input 
-                                type="number" 
-                                v-model="formOperasional.biaya_lain_lain"
-                                step="1000"
-                                min="0"
-                                placeholder="0"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
-                            />
-                            <p class="text-xs text-gray-500 mt-1">Keperluan lainnya</p>
-                        </div>
-
                         <div class="flex gap-3">
                             <button 
                                 type="submit"
@@ -403,7 +348,7 @@
 
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref, watch, reactive, computed } from 'vue';
+import { ref, watch, reactive } from 'vue'; // Added reactive
 import { router } from '@inertiajs/vue3';
 import debounce from 'lodash/debounce';
 
@@ -413,21 +358,6 @@ const props = defineProps({
     detail: Object,
     filters: Object,
     options: Object,
-});
-
-const showAccumulation = ref(false);
-
-const totalBersihDisplay = computed(() => {
-    if (!props.detail) return 0;
-    
-    let total = Number(props.detail.totalTarikanBersih) || 0;
-    
-    if (showAccumulation.value) {
-        let saldoAwal = Number(props.detail.saldoAwal) || 0;
-        total += saldoAwal;
-    }
-    
-    return total;
 });
 
 const form = ref({
@@ -443,8 +373,6 @@ const formOperasional = reactive({
     bulan: '',
     biaya_operasional_penarik: 0,
     biaya_pad_desa: 0,
-    biaya_operasional_lapangan: 0,
-    biaya_lain_lain: 0,
     wilayah: ''
 });
 
@@ -462,8 +390,6 @@ const openModalOperasional = () => {
     formOperasional.bulan = `${year}-${month}`;
     formOperasional.biaya_operasional_penarik = props.detail ? props.detail.biayaOperasional : 0;
     formOperasional.biaya_pad_desa = props.detail ? props.detail.biayaPadDesa : 0;
-    formOperasional.biaya_operasional_lapangan = props.detail ? props.detail.biayaOperasionalLapangan : 0;
-    formOperasional.biaya_lain_lain = props.detail ? props.detail.biayaLainLain : 0;
     formOperasional.wilayah = form.value.wilayah !== 'semua' ? form.value.wilayah : null; // Use filter wilayah if exists
     
     showModalOperasional.value = true;

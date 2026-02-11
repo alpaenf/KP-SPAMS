@@ -21,35 +21,57 @@ class LaporanController extends Controller
         $wilayah = $request->input('wilayah', 'semua');
 
         // === 1. Query Data Pembayaran (Untuk Tabel & Total Tarikan) ===
-        $query = Pembayaran::with('pelanggan');
-
-        // Filter Tahun & Bulan via bulan_bayar
-        if ($bulan && $bulan !== 'semua') {
-            $query->where('bulan_bayar', $tahun . '-' . $bulan);
-        } else {
-             // Semua bulan di tahun ini
-            $query->where('bulan_bayar', 'like', $tahun . '-%');
-        }
-
+        // Get active pelanggan IDs based on user role and filters
+        $pelangganQuery = Pelanggan::forUser()->where('status_aktif', true);
+        
         // Filter Wilayah untuk penarik
         if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
-            // Penarik hanya bisa lihat wilayahnya sendiri
-            $query->whereHas('pelanggan', function ($q) {
-                $q->where('wilayah', auth()->user()->getWilayah());
-            });
+            // Penarik hanya bisa lihat wilayahnya sendiri (already handled by forUser)
         } elseif ($wilayah && $wilayah !== 'semua') {
             // Admin bisa filter wilayah manual
-            $query->whereHas('pelanggan', function ($q) use ($wilayah) {
+            $pelangganQuery->where(function ($q) use ($wilayah) {
                 $q->where('wilayah', $wilayah)
                   ->orWhere('rw', $wilayah)
                   ->orWhere('rt', $wilayah);
             });
         }
+        
+        $pelangganAktifIds = $pelangganQuery->pluck('id');
+
+        $query = Pembayaran::with('pelanggan');
+
+        // Filter Tahun & Bulan via bulan_bayar
+        if ($bulan && $bulan !== 'semua') {
+            $bulanFormat = $tahun . '-' . $bulan;
+            $query->where('bulan_bayar', $bulanFormat);
+        } else {
+             // Semua bulan di tahun ini
+            $query->where('bulan_bayar', 'like', $tahun . '-%');
+        }
+
+        // Filter by active pelanggan
+        $query->whereIn('pelanggan_id', $pelangganAktifIds);
 
         $pembayarans = $query->latest('tanggal_bayar')->get();
         
-        // Total Pemasukan / Total Tarikan
-        $totalPemasukan = $pembayarans->sum('jumlah_bayar');
+        // Calculate total based on billing month PLUS tunggakan (like Dashboard)
+        $pembayaranBulanIni = $pembayarans->sum('jumlah_bayar');
+        
+        // Add tunggakan (pembayaran bulan lalu yang dibayar di periode ini)
+        $pembayaranTunggakan = 0;
+        if ($bulan && $bulan !== 'semua') {
+            $bulanFormat = $tahun . '-' . $bulan;
+            $startOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->startOfMonth();
+            $endOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->endOfMonth();
+            
+            $pembayaranTunggakan = Pembayaran::where('bulan_bayar', '<', $bulanFormat)
+                ->whereBetween('tanggal_bayar', [$startOfMonth, $endOfMonth])
+                ->whereIn('pelanggan_id', $pelangganAktifIds)
+                ->sum('jumlah_bayar');
+        }
+        
+        // Total Pemasukan / Total Tarikan (including tunggakan)
+        $totalPemasukan = $pembayaranBulanIni + $pembayaranTunggakan;
         $totalKubik = $pembayarans->sum('jumlah_kubik');
         $totalTransaksi = $pembayarans->count();
 
@@ -72,82 +94,31 @@ class LaporanController extends Controller
             $laporanQuery->where('bulan', 'like', $tahun . '-%');
         }
         
-        // Jika filter wilayah ada
-        if ($wilayah && $wilayah !== 'semua') {
-             $laporanQuery->where('wilayah', $wilayah);
+        // Jika filter wilayah ada (penarik otomatis, admin manual)
+        if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
+            $laporanQuery->where('wilayah', auth()->user()->getWilayah());
+        } elseif ($wilayah && $wilayah !== 'semua') {
+            $laporanQuery->where('wilayah', $wilayah);
         }
 
         $biayaOperasional = $laporanQuery->sum('biaya_operasional_penarik');
         $biayaPadDesa = $laporanQuery->sum('biaya_pad_desa');
-        $biayaOperasionalLapangan = $laporanQuery->sum('biaya_operasional_lapangan');
-        $biayaLainLain = $laporanQuery->sum('biaya_lain_lain');
 
         // C. Honor Penarik
         $honorPenarik = $tarik20Persen + $biayaOperasional;
 
-        // D. Total Tarikan Bersih (dikurangi honor penarik DAN PAD Desa DAN Lainnya)
-        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa - $biayaOperasionalLapangan - $biayaLainLain;
+        // D. Total Tarikan Bersih (dikurangi honor penarik DAN PAD Desa)
+        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa;
 
         // === 3. Statistik SR (Sambungan Rumah) ===
-        // Hitung total pelanggan aktif (SR) sesuai filter wilayah
-        // Apply filter wilayah berdasarkan user yang login
-        $pelangganQuery = Pelanggan::forUser()->where('status_aktif', true);
-        if ($wilayah && $wilayah !== 'semua' && auth()->user()->isAdmin()) {
-            // Admin bisa filter wilayah manual, penarik sudah auto-filtered
-            $pelangganQuery->where(function ($q) use ($wilayah) {
-                $q->where('wilayah', $wilayah)
-                  ->orWhere('rw', $wilayah)
-                  ->orWhere('rt', $wilayah);
-            });
-        }
-        $totalSR = $pelangganQuery->count();
+        // Use pelanggan IDs already calculated earlier
+        $totalSR = $pelangganAktifIds->count();
 
         // Hitung SR yang sudah bayar (unique pelanggan_id di pembayaran yang difilter)
         $srSudahBayar = $pembayarans->unique('pelanggan_id')->count();
         $srBelumBayar = max(0, $totalSR - $srSudahBayar);
 
-        // === 4. Hitung Saldo Awal (Akumulasi Bulan Sebelumnya) ===
-        // Logic: Accrual / Billing Period Basis (bulan_bayar)
-        
-        $previousLimit = ($bulan && $bulan !== 'semua') ? $tahun . '-' . $bulan : $tahun . '-01';
-        
-        // A. Pemasukan Lalu (Saldo Masuk sebelum periode laporan ini)
-        $queryLalu = Pembayaran::query();
-        $queryLalu->where('bulan_bayar', '<', $previousLimit);
-        
-        // Filter Wilayah
-        if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
-            $queryLalu->whereHas('pelanggan', function ($q) {
-                $q->where('wilayah', auth()->user()->getWilayah());
-            });
-        } elseif ($wilayah && $wilayah !== 'semua') {
-            $queryLalu->whereHas('pelanggan', function ($q) use ($wilayah) {
-                $q->where('wilayah', $wilayah)
-                  ->orWhere('rw', $wilayah)
-                  ->orWhere('rt', $wilayah);
-            });
-        }
-        $pemasukanLalu = $queryLalu->sum('jumlah_bayar');
-
-        // B. Pengeluaran Lalu (Biaya Operasional)
-        $laporanLaluQuery = LaporanBulanan::query();
-        $laporanLaluQuery->where('bulan', '<', $previousLimit);
-
-        if ($wilayah && $wilayah !== 'semua') {
-             $laporanLaluQuery->where('wilayah', $wilayah);
-        }
-
-        $biayaOpsPenarikLalu = $laporanLaluQuery->sum('biaya_operasional_penarik');
-        $biayaPadDesaLalu = $laporanLaluQuery->sum('biaya_pad_desa');
-        $biayaOpsLapanganLalu = $laporanLaluQuery->sum('biaya_operasional_lapangan');
-        $biayaLainLainLalu = $laporanLaluQuery->sum('biaya_lain_lain');
-        
-        $totalBiayaLalu = $biayaOpsPenarikLalu + $biayaPadDesaLalu + $biayaOpsLapanganLalu + $biayaLainLainLalu;
-        
-        // C. Hitung Saldo Awal Bersih
-        $saldoAwal = ($pemasukanLalu * 0.80) - $totalBiayaLalu;
-
-        // === 5. Opsi Filter ===
+        // === 4. Opsi Filter ===
         $tahunOpsi = Pembayaran::selectRaw('LEFT(bulan_bayar, 4) as tahun')
             ->distinct()
             ->orderBy('tahun', 'desc')
@@ -178,15 +149,12 @@ class LaporanController extends Controller
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasional' => $biayaOperasional,
                 'biayaPadDesa' => $biayaPadDesa,
-                'biayaOperasionalLapangan' => $biayaOperasionalLapangan,
-                'biayaLainLain' => $biayaLainLain,
-                'honorPenarik' => $honorPenarik,
-                'honorMurni' => $honorPenarik,
+                'honorPenarik' => $honorPenarik, // 20% + Ops
+                'honorMurni' => $honorPenarik,   // Sama, penamaan beda konteks
                 'totalTarikanBersih' => $totalTarikanBersih,
                 'totalSR' => $totalSR,
                 'srSudahBayar' => $srSudahBayar,
                 'srBelumBayar' => $srBelumBayar,
-                'saldoAwal' => $saldoAwal,
             ],
             'filters' => [
                 'tahun' => (int)$tahun,
@@ -303,33 +271,55 @@ class LaporanController extends Controller
         $bulan = $request->input('bulan', Carbon::now()->format('m'));
         $wilayah = $request->input('wilayah', 'semua');
 
-        // Query Data Pembayaran
-        $query = Pembayaran::with('pelanggan');
-
-        if ($bulan && $bulan !== 'semua') {
-            $query->where('bulan_bayar', $tahun . '-' . $bulan);
-        } else {
-            $query->where('bulan_bayar', 'like', $tahun . '-%');
-        }
-
+        // Get active pelanggan IDs based on user role and filters
+        $pelangganQuery = Pelanggan::forUser()->where('status_aktif', true);
+        
         // Filter Wilayah untuk penarik
         if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
-            // Penarik hanya bisa lihat wilayahnya sendiri
-            $query->whereHas('pelanggan', function ($q) {
-                $q->where('wilayah', auth()->user()->getWilayah());
-            });
+            // Penarik hanya bisa lihat wilayahnya sendiri (already handled by forUser)
         } elseif ($wilayah && $wilayah !== 'semua') {
             // Admin bisa filter wilayah manual
-            $query->whereHas('pelanggan', function ($q) use ($wilayah) {
+            $pelangganQuery->where(function ($q) use ($wilayah) {
                 $q->where('wilayah', $wilayah)
                   ->orWhere('rw', $wilayah)
                   ->orWhere('rt', $wilayah);
             });
         }
+        
+        $pelangganAktifIds = $pelangganQuery->pluck('id');
+
+        // Query Data Pembayaran
+        $query = Pembayaran::with('pelanggan');
+
+        if ($bulan && $bulan !== 'semua') {
+            $bulanFormat = $tahun . '-' . $bulan;
+            $query->where('bulan_bayar', $bulanFormat);
+        } else {
+            $query->where('bulan_bayar', 'like', $tahun . '-%');
+        }
+
+        // Filter by active pelanggan
+        $query->whereIn('pelanggan_id', $pelangganAktifIds);
 
         $pembayarans = $query->latest('tanggal_bayar')->get();
         
-        $totalPemasukan = $pembayarans->sum('jumlah_bayar');
+        // Calculate total based on billing month PLUS tunggakan (like Dashboard)
+        $pembayaranBulanIni = $pembayarans->sum('jumlah_bayar');
+        
+        // Add tunggakan (pembayaran bulan lalu yang dibayar di periode ini)
+        $pembayaranTunggakan = 0;
+        if ($bulan && $bulan !== 'semua') {
+            $bulanFormat = $tahun . '-' . $bulan;
+            $startOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->startOfMonth();
+            $endOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->endOfMonth();
+            
+            $pembayaranTunggakan = Pembayaran::where('bulan_bayar', '<', $bulanFormat)
+                ->whereBetween('tanggal_bayar', [$startOfMonth, $endOfMonth])
+                ->whereIn('pelanggan_id', $pelangganAktifIds)
+                ->sum('jumlah_bayar');
+        }
+        
+        $totalPemasukan = $pembayaranBulanIni + $pembayaranTunggakan;
         $totalKubik = $pembayarans->sum('jumlah_kubik');
         $totalTransaksi = $pembayarans->count();
 
@@ -344,29 +334,20 @@ class LaporanController extends Controller
             $laporanQuery->where('bulan', 'like', $tahun . '-%');
         }
         
-        if ($wilayah && $wilayah !== 'semua') {
-             $laporanQuery->where('wilayah', $wilayah);
+        // Jika filter wilayah ada (penarik otomatis, admin manual)
+        if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
+            $laporanQuery->where('wilayah', auth()->user()->getWilayah());
+        } elseif ($wilayah && $wilayah !== 'semua') {
+            $laporanQuery->where('wilayah', $wilayah);
         }
 
         $biayaOperasional = $laporanQuery->sum('biaya_operasional_penarik');
         $biayaPadDesa = $laporanQuery->sum('biaya_pad_desa');
-        $biayaOperasionalLapangan = $laporanQuery->sum('biaya_operasional_lapangan');
-        $biayaLainLain = $laporanQuery->sum('biaya_lain_lain');
         $honorPenarik = $tarik20Persen + $biayaOperasional;
-        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa - $biayaOperasionalLapangan - $biayaLainLain;
+        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa;
 
-        // Statistik SR
-        // Apply filter wilayah berdasarkan user yang login
-        $pelangganQuery = Pelanggan::forUser()->where('status_aktif', true);
-        if ($wilayah && $wilayah !== 'semua' && auth()->user()->isAdmin()) {
-            // Admin bisa filter wilayah manual
-            $pelangganQuery->where(function ($q) use ($wilayah) {
-                $q->where('wilayah', $wilayah)
-                  ->orWhere('rw', $wilayah)
-                  ->orWhere('rt', $wilayah);
-            });
-        }
-        $totalSR = $pelangganQuery->count();
+        // Statistik SR - use pelanggan IDs already calculated
+        $totalSR = $pelangganAktifIds->count();
         $srSudahBayar = $pembayarans->unique('pelanggan_id')->count();
         $srBelumBayar = max(0, $totalSR - $srSudahBayar);
 
@@ -382,8 +363,6 @@ class LaporanController extends Controller
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasional' => $biayaOperasional,
                 'biayaPadDesa' => $biayaPadDesa,
-                'biayaOperasionalLapangan' => $biayaOperasionalLapangan,
-                'biayaLainLain' => $biayaLainLain,
                 'honorPenarik' => $honorPenarik,
                 'honorMurni' => $honorPenarik,
                 'totalTarikanBersih' => $totalTarikanBersih,
