@@ -537,6 +537,17 @@ class HomeController extends Controller
         // 4. Honor Penarik = 20% + Operasional
         $honorPenarik = $tarik20Persen + $biayaOperasionalPenarik;
         
+        // DEBUG: Log nilai-nilai penting
+        \Log::info('Dashboard Calculation', [
+            'totalTarikan' => $totalTarikan,
+            'tarik20Persen' => $tarik20Persen,
+            'biayaOperasionalPenarik' => $biayaOperasionalPenarik,
+            'honorPenarik' => $honorPenarik,
+            'pembayaranBulanIniSaja' => $pembayaranBulanIniSaja,
+            'pembayaranTunggakan' => $pembayaranTunggakan,
+            'totalPembayaran' => $totalPembayaran,
+        ]);
+        
         // 5. Total Tarikan Bersih = Total - Honor Penarik - PAD Desa - Operasional Lapangan - Lain-lain
         $totalTarikanBersih = $totalTarikan - $honorPenarik - $biayaPadDesa - $biayaOperasionalLapangan - $biayaLainLain;
         
