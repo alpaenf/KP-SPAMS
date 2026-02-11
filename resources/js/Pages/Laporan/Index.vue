@@ -162,11 +162,25 @@
                              <p class="text-xs text-purple-600 mt-1">Hak Petugas</p>
                         </div>
 
-                        <!-- Biaya Operasional -->
+                        <!-- Biaya Operasional Penarik -->
                         <div class="bg-orange-50 rounded-xl p-4 sm:p-5 border border-orange-100 cursor-pointer hover:bg-orange-100 transition" @click="openModalOperasional" title="Klik untuk update">
-                             <h4 class="text-xs sm:text-sm font-semibold text-orange-900 mb-2">Biaya Operasional</h4>
+                             <h4 class="text-xs sm:text-sm font-semibold text-orange-900 mb-2">Biaya Ops. Penarik</h4>
                              <p class="text-xl sm:text-2xl font-bold text-orange-800">{{ formatRupiah(detail.biayaOperasional) }}</p>
                              <p class="text-xs text-orange-600 mt-1">BBM & Maintenance (Klik untuk edit)</p>
+                        </div>
+
+                        <!-- Total Honor Penarik -->
+                        <div class="bg-indigo-50 rounded-xl p-4 sm:p-5 border border-indigo-100">
+                             <h4 class="text-xs sm:text-sm font-semibold text-indigo-900 mb-2">Total Honor Penarik</h4>
+                             <p class="text-xl sm:text-2xl font-bold text-indigo-800">{{ formatRupiah(detail.honorPenarik) }}</p>
+                             <p class="text-xs text-indigo-600 mt-1">20% + Ops Penarik</p>
+                        </div>
+
+                        <!-- Biaya Ops. Lapangan -->
+                        <div class="bg-teal-50 rounded-xl p-4 sm:p-5 border border-teal-100 cursor-pointer hover:bg-teal-100 transition" @click="openModalOperasional" title="Klik untuk update">
+                             <h4 class="text-xs sm:text-sm font-semibold text-teal-900 mb-2">Biaya Ops. Lapangan</h4>
+                             <p class="text-xl sm:text-2xl font-bold text-teal-800">{{ formatRupiah(detail.biayaOpsLapangan) }}</p>
+                             <p class="text-xs text-teal-600 mt-1">Operasional lapangan (Klik untuk edit)</p>
                         </div>
 
                         <!-- Biaya PAD Desa -->
@@ -176,20 +190,67 @@
                              <p class="text-xs text-yellow-600 mt-1">Pendapatan Asli Desa (Klik untuk edit)</p>
                         </div>
 
-                         <!-- Total Honor -->
-                        <div class="bg-indigo-50 rounded-xl p-4 sm:p-5 border border-indigo-100">
-                             <h4 class="text-xs sm:text-sm font-semibold text-indigo-900 mb-2">Total Honor Penarik</h4>
-                             <p class="text-xl sm:text-2xl font-bold text-indigo-800">{{ formatRupiah(detail.honorPenarik) }}</p>
-                             <p class="text-xs text-indigo-600 mt-1">20% + Operasional</p>
+                        <!-- Biaya Lain-lain -->
+                        <div class="bg-pink-50 rounded-xl p-4 sm:p-5 border border-pink-100 cursor-pointer hover:bg-pink-100 transition" @click="openModalOperasional" title="Klik untuk update">
+                             <h4 class="text-xs sm:text-sm font-semibold text-pink-900 mb-2">Biaya Lain-lain</h4>
+                             <p class="text-xl sm:text-2xl font-bold text-pink-800">{{ formatRupiah(detail.biayaLainLain) }}</p>
+                             <p class="text-xs text-pink-600 mt-1">Biaya lain-lain (Klik untuk edit)</p>
+                        </div>
+
+                        <!-- Total Semua Biaya -->
+                        <div class="bg-red-50 rounded-xl p-4 sm:p-5 border border-red-100">
+                             <h4 class="text-xs sm:text-sm font-semibold text-red-900 mb-2">Total Semua Biaya</h4>
+                             <p class="text-xl sm:text-2xl font-bold text-red-800">{{ formatRupiah(detail.honorPenarik + (detail.biayaOpsLapangan || 0) + (detail.biayaPadDesa || 0) + (detail.biayaLainLain || 0)) }}</p>
+                             <p class="text-xs text-red-600 mt-1">Honor + Ops + PAD + Lain-lain</p>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-6">
                         <!-- Total Tarikan Bersih -->
-                        <div class="bg-blue-50 rounded-xl p-4 sm:p-6 border border-blue-200 flex flex-col justify-center">
-                            <h4 class="text-sm sm:text-base font-bold text-blue-900 mb-1">Total Tarikan Bersih (Kas KP-SPAMS)</h4>
+                        <div class="bg-blue-50 rounded-xl p-4 sm:p-6 border border-blue-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-sm sm:text-base font-bold text-blue-900">Total Tarikan Bersih (Kas KP-SPAMS)</h4>
+                                <button 
+                                    v-if="form.bulan !== 'semua'"
+                                    @click="toggleAkumulasi"
+                                    :class="[
+                                        'px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200',
+                                        showAkumulasi 
+                                            ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                    ]"
+                                    title="Toggle akumulasi bulan sebelumnya"
+                                >
+                                    {{ showAkumulasi ? 'Akumulasi ON' : 'Akumulasi OFF' }}
+                                </button>
+                            </div>
                             <p class="text-2xl sm:text-3xl font-bold text-blue-700">{{ formatRupiah(detail.totalTarikanBersih) }}</p>
-                            <p class="text-xs sm:text-sm text-blue-600 mt-2">Dana bersih untuk kas desa/KP-SPAMS setelah dikurangi honor.</p>
+                            <p class="text-xs sm:text-sm text-blue-600 mt-2">
+                                {{ showAkumulasi && form.bulan !== 'semua' ? 'Dana bersih sampai bulan ini (akumulasi)' : 'Dana bersih untuk kas desa/KP-SPAMS setelah dikurangi honor dan biaya lain.' }}
+                            </p>
+                            
+                            <!-- Detail Biaya - Always visible -->
+                            <div class="mt-4 pt-4 border-t border-blue-200">
+                                <p class="text-xs text-blue-900 font-semibold mb-3">Rincian Biaya:</p>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between text-xs items-center bg-white/50 rounded px-3 py-2">
+                                        <span class="text-blue-700">Biaya Ops. Lapangan</span>
+                                        <span class="font-semibold text-blue-900">{{ formatRupiah(detail.biayaOpsLapangan || 0) }}</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs items-center bg-white/50 rounded px-3 py-2">
+                                        <span class="text-blue-700">Biaya PAD Desa</span>
+                                        <span class="font-semibold text-blue-900">{{ formatRupiah(detail.biayaPadDesa || 0) }}</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs items-center bg-white/50 rounded px-3 py-2">
+                                        <span class="text-blue-700">Biaya Lain-lain</span>
+                                        <span class="font-semibold text-blue-900">{{ formatRupiah(detail.biayaLainLain || 0) }}</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs pt-2 border-t border-blue-300">
+                                        <span class="text-blue-800 font-bold">Total Semua Biaya</span>
+                                        <span class="font-bold text-blue-900">{{ formatRupiah((detail.biayaOpsLapangan || 0) + (detail.biayaPadDesa || 0) + (detail.biayaLainLain || 0)) }}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- SR Status -->
@@ -322,6 +383,32 @@
                             <p class="text-xs text-gray-500 mt-1">Pendapatan Asli Desa</p>
                         </div>
 
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Ops. Lapangan (Rp)</label>
+                            <input 
+                                type="number" 
+                                v-model="formOperasional.biaya_operasional_lapangan"
+                                step="1000"
+                                min="0"
+                                placeholder="0"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">Biaya operasional lapangan</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Lain-lain (Rp)</label>
+                            <input 
+                                type="number" 
+                                v-model="formOperasional.biaya_lain_lain"
+                                step="1000"
+                                min="0"
+                                placeholder="0"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">Biaya lain-lain</p>
+                        </div>
+
                         <div class="flex gap-3">
                             <button 
                                 type="submit"
@@ -366,6 +453,28 @@ const form = ref({
     wilayah: props.filters.wilayah,
 });
 
+// Toggle Akumulasi (untuk menampilkan data bulan sebelumnya juga)
+const showAkumulasi = ref(false);
+
+const toggleAkumulasi = () => {
+    showAkumulasi.value = !showAkumulasi.value;
+    // Reload data dengan parameter akumulasi
+    reloadData();
+};
+
+const reloadData = () => {
+    const params = {
+        ...form.value,
+        akumulasi: showAkumulasi.value ? '1' : '0'
+    };
+    
+    router.get('/laporan', params, {
+        preserveState: true,
+        preserveScroll: true,
+        only: ['data', 'summary', 'detail', 'filters'],
+    });
+};
+
 // Modal Logic
 const showModalOperasional = ref(false);
 const processing = ref(false);
@@ -373,6 +482,8 @@ const formOperasional = reactive({
     bulan: '',
     biaya_operasional_penarik: 0,
     biaya_pad_desa: 0,
+    biaya_operasional_lapangan: 0,
+    biaya_lain_lain: 0,
     wilayah: ''
 });
 
@@ -390,6 +501,8 @@ const openModalOperasional = () => {
     formOperasional.bulan = `${year}-${month}`;
     formOperasional.biaya_operasional_penarik = props.detail ? props.detail.biayaOperasional : 0;
     formOperasional.biaya_pad_desa = props.detail ? props.detail.biayaPadDesa : 0;
+    formOperasional.biaya_operasional_lapangan = props.detail ? props.detail.biayaOpsLapangan : 0;
+    formOperasional.biaya_lain_lain = props.detail ? props.detail.biayaLainLain : 0;
     formOperasional.wilayah = form.value.wilayah !== 'semua' ? form.value.wilayah : null; // Use filter wilayah if exists
     
     showModalOperasional.value = true;
@@ -445,11 +558,7 @@ const exportPdf = () => {
 
 // Watch for changes and reload data
 watch(form, debounce(() => {
-    router.get('/laporan', form.value, {
-        preserveState: true,
-        preserveScroll: true,
-        only: ['data', 'summary', 'detail', 'filters'],
-    });
+    reloadData();
 }, 300), { deep: true });
 
 </script>

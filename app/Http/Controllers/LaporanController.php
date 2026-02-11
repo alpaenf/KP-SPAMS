@@ -19,6 +19,7 @@ class LaporanController extends Controller
         $tahun = $request->input('tahun', Carbon::now()->year);
         $bulan = $request->input('bulan', Carbon::now()->format('m')); // 01-12 or 'semua'
         $wilayah = $request->input('wilayah', 'semua');
+        $akumulasi = $request->input('akumulasi', '0'); // 0 = bulan ini saja, 1 = dari Januari s/d bulan ini
 
         // === 1. Query Data Pembayaran (Untuk Tabel & Total Tarikan) ===
         // Get active pelanggan IDs based on user role and filters
@@ -43,7 +44,15 @@ class LaporanController extends Controller
         // Filter Tahun & Bulan via bulan_bayar
         if ($bulan && $bulan !== 'semua') {
             $bulanFormat = $tahun . '-' . $bulan;
-            $query->where('bulan_bayar', $bulanFormat);
+            
+            // Jika akumulasi ON, ambil dari Januari sampai bulan yang dipilih
+            if ($akumulasi == '1') {
+                $query->where('bulan_bayar', '>=', $tahun . '-01')
+                      ->where('bulan_bayar', '<=', $bulanFormat);
+            } else {
+                // Hanya bulan yang dipilih
+                $query->where('bulan_bayar', $bulanFormat);
+            }
         } else {
              // Semua bulan di tahun ini
             $query->where('bulan_bayar', 'like', $tahun . '-%');
@@ -59,7 +68,8 @@ class LaporanController extends Controller
         
         // Add tunggakan (pembayaran bulan lalu yang dibayar di periode ini)
         $pembayaranTunggakan = 0;
-        if ($bulan && $bulan !== 'semua') {
+        if ($bulan && $bulan !== 'semua' && $akumulasi != '1') {
+            // Hanya hitung tunggakan jika bukan mode akumulasi
             $bulanFormat = $tahun . '-' . $bulan;
             $startOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->startOfMonth();
             $endOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->endOfMonth();
@@ -88,7 +98,14 @@ class LaporanController extends Controller
         if ($bulan && $bulan !== 'semua') {
             // Format di DB LaporanBulanan biasanya Y-m, misal "2024-01"
             $bulanFormat = $tahun . '-' . $bulan;
-            $laporanQuery->where('bulan', $bulanFormat);
+            
+            // Jika akumulasi ON, ambil dari Januari sampai bulan yang dipilih
+            if ($akumulasi == '1') {
+                $laporanQuery->where('bulan', '>=', $tahun . '-01')
+                             ->where('bulan', '<=', $bulanFormat);
+            } else {
+                $laporanQuery->where('bulan', $bulanFormat);
+            }
         } else {
             // Jika semua bulan, ambil semua operasional di tahun tersebut
             $laporanQuery->where('bulan', 'like', $tahun . '-%');
@@ -103,12 +120,14 @@ class LaporanController extends Controller
 
         $biayaOperasional = $laporanQuery->sum('biaya_operasional_penarik');
         $biayaPadDesa = $laporanQuery->sum('biaya_pad_desa');
+        $biayaOpsLapangan = $laporanQuery->sum('biaya_operasional_lapangan');
+        $biayaLainLain = $laporanQuery->sum('biaya_lain_lain');
 
         // C. Honor Penarik
         $honorPenarik = $tarik20Persen + $biayaOperasional;
 
-        // D. Total Tarikan Bersih (dikurangi honor penarik DAN PAD Desa)
-        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa;
+        // D. Total Tarikan Bersih (dikurangi honor penarik, PAD Desa, Ops Lapangan, dan Lain-lain)
+        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa - $biayaOpsLapangan - $biayaLainLain;
 
         // === 3. Statistik SR (Sambungan Rumah) ===
         // Use pelanggan IDs already calculated earlier
@@ -149,6 +168,8 @@ class LaporanController extends Controller
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasional' => $biayaOperasional,
                 'biayaPadDesa' => $biayaPadDesa,
+                'biayaOpsLapangan' => $biayaOpsLapangan,
+                'biayaLainLain' => $biayaLainLain,
                 'honorPenarik' => $honorPenarik, // 20% + Ops
                 'honorMurni' => $honorPenarik,   // Sama, penamaan beda konteks
                 'totalTarikanBersih' => $totalTarikanBersih,
@@ -343,8 +364,10 @@ class LaporanController extends Controller
 
         $biayaOperasional = $laporanQuery->sum('biaya_operasional_penarik');
         $biayaPadDesa = $laporanQuery->sum('biaya_pad_desa');
+        $biayaOpsLapangan = $laporanQuery->sum('biaya_operasional_lapangan');
+        $biayaLainLain = $laporanQuery->sum('biaya_lain_lain');
         $honorPenarik = $tarik20Persen + $biayaOperasional;
-        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa;
+        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa - $biayaOpsLapangan - $biayaLainLain;
 
         // Statistik SR - use pelanggan IDs already calculated
         $totalSR = $pelangganAktifIds->count();
@@ -363,6 +386,8 @@ class LaporanController extends Controller
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasional' => $biayaOperasional,
                 'biayaPadDesa' => $biayaPadDesa,
+                'biayaOpsLapangan' => $biayaOpsLapangan,
+                'biayaLainLain' => $biayaLainLain,
                 'honorPenarik' => $honorPenarik,
                 'honorMurni' => $honorPenarik,
                 'totalTarikanBersih' => $totalTarikanBersih,

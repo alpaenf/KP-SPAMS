@@ -820,6 +820,8 @@ class HomeController extends Controller
             'bulan' => 'required|string|size:7', // Format: YYYY-MM
             'biaya_operasional_penarik' => 'required|numeric|min:0',
             'biaya_pad_desa' => 'nullable|numeric|min:0',
+            'biaya_operasional_lapangan' => 'nullable|numeric|min:0',
+            'biaya_lain_lain' => 'nullable|numeric|min:0',
             'wilayah' => 'nullable|string|max:100',
         ]);
         
@@ -834,6 +836,14 @@ class HomeController extends Controller
         
         if (isset($validated['biaya_pad_desa'])) {
             $updateData['biaya_pad_desa'] = $validated['biaya_pad_desa'];
+        }
+        
+        if (isset($validated['biaya_operasional_lapangan'])) {
+            $updateData['biaya_operasional_lapangan'] = $validated['biaya_operasional_lapangan'];
+        }
+        
+        if (isset($validated['biaya_lain_lain'])) {
+            $updateData['biaya_lain_lain'] = $validated['biaya_lain_lain'];
         }
         
         if (isset($validated['wilayah'])) {
