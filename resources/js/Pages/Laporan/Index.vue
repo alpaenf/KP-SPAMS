@@ -229,7 +229,7 @@
                 <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                         <h3 class="font-bold text-gray-700">Rincian Transaksi</h3>
-                        <span class="text-xs font-medium text-gray-500 bg-white border border-gray-200 rounded-full px-3 py-1">Menampilkan {{ data.length }} data</span>
+                        <span class="text-xs font-medium text-gray-500 bg-white border border-gray-200 rounded-full px-3 py-1">Menampilkan {{ data.from }}-{{ data.to }} dari {{ data.total }} data</span>
                     </div>
                     
                     <div class="overflow-x-auto">
@@ -245,13 +245,13 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-if="data.length === 0">
+                                <tr v-if="data.data.length === 0">
                                     <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                                         <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                         <p>Tidak ada data pembayaran ditemukan untuk periode ini.</p>
                                     </td>
                                 </tr>
-                                <tr v-for="item in data" :key="item.id" class="hover:bg-gray-50 transition-colors">
+                                <tr v-for="item in data.data" :key="item.id" class="hover:bg-gray-50 transition-colors">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                         {{ formatDate(item.tanggal_bayar) }}
                                     </td>
@@ -275,6 +275,9 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                        <Pagination :links="data.links" />
                     </div>
                 </div>
             </div>
@@ -388,12 +391,13 @@
 
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref, watch, reactive } from 'vue'; // Added reactive
+import Pagination from '@/Components/Pagination.vue';
+import { ref, watch, reactive } from 'vue';
 import { router } from '@inertiajs/vue3';
 import debounce from 'lodash/debounce';
 
 const props = defineProps({
-    data: Array,
+    data: Object,
     summary: Object,
     detail: Object,
     filters: Object,

@@ -46,13 +46,15 @@ class LaporanController extends Controller
             });
         }
 
-        $pembayarans = $query->latest('tanggal_bayar')->get();
-        
-        // Total Pemasukan / Total Tarikan
-        $totalPemasukan = $pembayarans->sum('jumlah_bayar');
-        $totalKubik = $pembayarans->sum('jumlah_kubik');
-        $totalTransaksi = $pembayarans->count();
+        // Hitung total sebelum pagination
+        $totalPemasukan = $query->sum('jumlah_bayar');
+        $totalKubik = $query->sum('jumlah_kubik');
+        $totalTransaksi = $query->count();
+        $srSudahBayar = $query->distinct('pelanggan_id')->count('pelanggan_id');
 
+        // Pagination data untuk tabel
+        $pembayarans = $query->latest('tanggal_bayar')->paginate(20)->withQueryString();
+        
         // === 2. Hitung Detail Keuangan (Mirip Dashboard) ===
         
         // A. 20% Tarikan
@@ -103,7 +105,7 @@ class LaporanController extends Controller
         $totalSR = $pelangganQuery->count();
 
         // Hitung SR yang sudah bayar (unique pelanggan_id di pembayaran yang difilter)
-        $srSudahBayar = $pembayarans->unique('pelanggan_id')->count();
+        // $srSudahBayar sudah dihitung di atas
         $srBelumBayar = max(0, $totalSR - $srSudahBayar);
 
         // === 4. Opsi Filter ===
@@ -126,7 +128,7 @@ class LaporanController extends Controller
             ->toArray();
 
         return Inertia::render('Laporan/Index', [
-            'data' => $pembayarans,
+            'data' => $pembayarans, // Paginator instance
             'summary' => [
                 'pemasukan' => $totalPemasukan,
                 'kubikasi' => $totalKubik,

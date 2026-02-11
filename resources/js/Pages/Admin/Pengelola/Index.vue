@@ -77,7 +77,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="user in users" :key="user.id" class="hover:bg-gray-50">
+                                    <tr v-for="user in paginatedUsers" :key="user.id" class="hover:bg-gray-50">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center">
                                                 <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-lg border border-blue-200">
@@ -116,6 +116,22 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                    <div class="bg-white px-4 py-3 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between sm:px-6 gap-3 rounded-b-xl border-x-0">
+                        <div class="text-sm text-gray-700 text-center sm:text-left">
+                            Menampilkan 
+                            <span class="font-semibold">{{ users.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0 }}</span> 
+                            sampai 
+                            <span class="font-semibold">{{ Math.min(currentPage * itemsPerPage, users.length) }}</span> 
+                            dari 
+                            <span class="font-semibold">{{ users.length }}</span> 
+                            data
+                        </div>
+                        <ClientPagination 
+                            :current-page="currentPage" 
+                            :total-pages="totalPages" 
+                            @page-change="onPageChange" 
+                        />
                     </div>
                 </div>
 
@@ -223,7 +239,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
@@ -304,5 +320,25 @@ const deleteUser = (user) => {
     if (confirm(`Yakin ingin menghapus akun ${user.name}?`)) {
         router.delete(route('admin.pengelola.destroy', user.id));
     }
+};
+
+// --- Pagination Logic ---
+import ClientPagination from '@/Components/ClientPagination.vue';
+
+const currentPage = ref(1);
+const itemsPerPage = 20;
+
+const paginatedUsers = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return props.users.slice(start, end);
+});
+
+const totalPages = computed(() => {
+    return Math.ceil(props.users.length / itemsPerPage);
+});
+
+const onPageChange = (page) => {
+    currentPage.value = page;
 };
 </script>
