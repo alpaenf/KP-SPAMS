@@ -525,11 +525,20 @@ class HomeController extends Controller
         // 3b. Biaya PAD Desa (dari database, bisa diubah)
         $biayaPadDesa = $laporanBulanan->biaya_pad_desa ?? 0;
         
+        // 3c. Biaya Operasional Lapangan (dari database, bisa diubah)
+        $biayaOpsLapangan = $laporanBulanan->biaya_operasional_lapangan ?? 0;
+        
+        // 3d. Biaya Lain-lain (dari database, bisa diubah)
+        $biayaLainLain = $laporanBulanan->biaya_lain_lain ?? 0;
+        
         // 4. Honor Penarik = 20% + Operasional
         $honorPenarik = $tarik20Persen + $biayaOperasionalPenarik;
         
-        // 5. Total Tarikan Bersih = Total - Honor Penarik - PAD Desa
-        $totalTarikanBersih = $totalTarikan - $honorPenarik - $biayaPadDesa;
+        // 4b. Total Semua Biaya = Honor Penarik + PAD Desa + Ops Lapangan + Lain-lain
+        $totalSemuaBiaya = $honorPenarik + $biayaPadDesa + $biayaOpsLapangan + $biayaLainLain;
+        
+        // 5. Total Tarikan Bersih = Total - Total Semua Biaya
+        $totalTarikanBersih = $totalTarikan - $totalSemuaBiaya;
         
         // 6. Total SR (Sambungan Rumah) Sudah Bayar
         $totalSRSudahBayar = $sudahBayarCount;
@@ -617,7 +626,10 @@ class HomeController extends Controller
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasionalPenarik' => $biayaOperasionalPenarik,
                 'biayaPadDesa' => $biayaPadDesa,
+                'biayaOpsLapangan' => $biayaOpsLapangan,
+                'biayaLainLain' => $biayaLainLain,
                 'honorPenarik' => $honorPenarik,
+                'totalSemuaBiaya' => $totalSemuaBiaya,
                 'totalTarikanBersih' => $totalTarikanBersih,
                 'totalSRSudahBayar' => $totalSRSudahBayar,
                 'totalSRBelumBayar' => $totalSRBelumBayar,

@@ -200,7 +200,7 @@
                         <!-- Total Semua Biaya -->
                         <div class="bg-red-50 rounded-xl p-4 sm:p-5 border border-red-100">
                              <h4 class="text-xs sm:text-sm font-semibold text-red-900 mb-2">Total Semua Biaya</h4>
-                             <p class="text-xl sm:text-2xl font-bold text-red-800">{{ formatRupiah(detail.honorPenarik + (detail.biayaOpsLapangan || 0) + (detail.biayaPadDesa || 0) + (detail.biayaLainLain || 0)) }}</p>
+                             <p class="text-xl sm:text-2xl font-bold text-red-800">{{ formatRupiah((detail.honorPenarik || 0) + (detail.biayaOpsLapangan || 0) + (detail.biayaPadDesa || 0) + (detail.biayaLainLain || 0)) }}</p>
                              <p class="text-xs text-red-600 mt-1">Honor + Ops + PAD + Lain-lain</p>
                         </div>
                     </div>
@@ -228,29 +228,6 @@
                             <p class="text-xs sm:text-sm text-blue-600 mt-2">
                                 {{ showAkumulasi && form.bulan !== 'semua' ? 'Dana bersih sampai bulan ini (akumulasi)' : 'Dana bersih untuk kas desa/KP-SPAMS setelah dikurangi honor dan biaya lain.' }}
                             </p>
-                            
-                            <!-- Detail Biaya - Always visible -->
-                            <div class="mt-4 pt-4 border-t border-blue-200">
-                                <p class="text-xs text-blue-900 font-semibold mb-3">Rincian Biaya:</p>
-                                <div class="space-y-2">
-                                    <div class="flex justify-between text-xs items-center bg-white/50 rounded px-3 py-2">
-                                        <span class="text-blue-700">Biaya Ops. Lapangan</span>
-                                        <span class="font-semibold text-blue-900">{{ formatRupiah(detail.biayaOpsLapangan || 0) }}</span>
-                                    </div>
-                                    <div class="flex justify-between text-xs items-center bg-white/50 rounded px-3 py-2">
-                                        <span class="text-blue-700">Biaya PAD Desa</span>
-                                        <span class="font-semibold text-blue-900">{{ formatRupiah(detail.biayaPadDesa || 0) }}</span>
-                                    </div>
-                                    <div class="flex justify-between text-xs items-center bg-white/50 rounded px-3 py-2">
-                                        <span class="text-blue-700">Biaya Lain-lain</span>
-                                        <span class="font-semibold text-blue-900">{{ formatRupiah(detail.biayaLainLain || 0) }}</span>
-                                    </div>
-                                    <div class="flex justify-between text-xs pt-2 border-t border-blue-300">
-                                        <span class="text-blue-800 font-bold">Total Semua Biaya</span>
-                                        <span class="font-bold text-blue-900">{{ formatRupiah((detail.biayaOpsLapangan || 0) + (detail.biayaPadDesa || 0) + (detail.biayaLainLain || 0)) }}</span>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
                         <!-- SR Status -->

@@ -448,6 +448,43 @@
                             <p class="text-xs text-indigo-700 mt-1">20% + Operasional</p>
                         </div>
 
+                        <!-- Biaya Ops Lapangan -->
+                        <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg p-5 border border-teal-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-sm font-medium text-teal-900">Biaya Ops Lapangan</h4>
+                                <svg class="w-5 h-5 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <p class="text-2xl font-bold text-teal-900">Rp {{ formatRupiah(laporanKeuangan.biayaOpsLapangan) }}</p>
+                            <p class="text-xs text-teal-700 mt-1">Biaya operasional lapangan</p>
+                        </div>
+
+                        <!-- Biaya Lain-lain -->
+                        <div class="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-5 border border-pink-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-sm font-medium text-pink-900">Biaya Lain-lain</h4>
+                                <svg class="w-5 h-5 text-pink-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                                    <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <p class="text-2xl font-bold text-pink-900">Rp {{ formatRupiah(laporanKeuangan.biayaLainLain) }}</p>
+                            <p class="text-xs text-pink-700 mt-1">Biaya lain-lain</p>
+                        </div>
+
+                        <!-- Total Semua Biaya -->
+                        <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-5 border border-red-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-sm font-medium text-red-900">Total Semua Biaya</h4>
+                                <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <p class="text-2xl font-bold text-red-900">Rp {{ formatRupiah(laporanKeuangan.totalSemuaBiaya) }}</p>
+                            <p class="text-xs text-red-700 mt-1">Total semua pengeluaran</p>
+                        </div>
+
                         <!-- Total Tarikan Bersih -->
                         <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-5 border-2 border-blue-300 md:col-span-2">
                             <div class="flex items-center justify-between mb-2">
