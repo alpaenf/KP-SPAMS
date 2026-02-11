@@ -23,7 +23,7 @@ class LaporanController extends Controller
         // === 1. Query Data Pembayaran (Untuk Tabel & Total Tarikan) ===
         $query = Pembayaran::with('pelanggan');
 
-        // Filter Tahun & Bulan via bulan_bayar (Accrual Basis)
+        // Filter Tahun & Bulan via bulan_bayar
         if ($bulan && $bulan !== 'semua') {
             $query->where('bulan_bayar', $tahun . '-' . $bulan);
         } else {
@@ -46,15 +46,13 @@ class LaporanController extends Controller
             });
         }
 
-        // Hitung total sebelum pagination
-        $totalPemasukan = $query->sum('jumlah_bayar');
-        $totalKubik = $query->sum('jumlah_kubik');
-        $totalTransaksi = $query->count();
-        $srSudahBayar = $query->distinct('pelanggan_id')->count('pelanggan_id');
-
-        // Pagination data untuk tabel
-        $pembayarans = $query->latest('tanggal_bayar')->paginate(20)->withQueryString();
+        $pembayarans = $query->latest('tanggal_bayar')->get();
         
+        // Total Pemasukan / Total Tarikan
+        $totalPemasukan = $pembayarans->sum('jumlah_bayar');
+        $totalKubik = $pembayarans->sum('jumlah_kubik');
+        $totalTransaksi = $pembayarans->count();
+
         // === 2. Hitung Detail Keuangan (Mirip Dashboard) ===
         
         // A. 20% Tarikan
@@ -81,14 +79,12 @@ class LaporanController extends Controller
 
         $biayaOperasional = $laporanQuery->sum('biaya_operasional_penarik');
         $biayaPadDesa = $laporanQuery->sum('biaya_pad_desa');
-        $biayaOperasionalLapangan = $laporanQuery->sum('biaya_operasional_lapangan');
-        $biayaLainLain = $laporanQuery->sum('biaya_lain_lain');
 
         // C. Honor Penarik
         $honorPenarik = $tarik20Persen + $biayaOperasional;
 
-        // D. Total Tarikan Bersih (dikurangi honor penarik DAN PAD Desa DAN Lainnya)
-        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa - $biayaOperasionalLapangan - $biayaLainLain;
+        // D. Total Tarikan Bersih (dikurangi honor penarik DAN PAD Desa)
+        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa;
 
         // === 3. Statistik SR (Sambungan Rumah) ===
         // Hitung total pelanggan aktif (SR) sesuai filter wilayah
@@ -105,54 +101,10 @@ class LaporanController extends Controller
         $totalSR = $pelangganQuery->count();
 
         // Hitung SR yang sudah bayar (unique pelanggan_id di pembayaran yang difilter)
-        // $srSudahBayar sudah dihitung di atas
+        $srSudahBayar = $pembayarans->unique('pelanggan_id')->count();
         $srBelumBayar = max(0, $totalSR - $srSudahBayar);
 
-        // === 4. Hitung Saldo Awal (Akumulasi Bulan Sebelumnya) ===
-        // Logic: Accrual / Billing Period Basis (bulan_bayar)
-        // This ensures back-filled data for previous months counts as "Saldo Awal"
-        
-        $previousLimit = ($bulan && $bulan !== 'semua') ? $tahun . '-' . $bulan : $tahun . '-01';
-        
-        // A. Pemasukan Lalu (Saldo Masuk sebelum periode laporan ini)
-        $queryLalu = Pembayaran::query();
-        $queryLalu->where('bulan_bayar', '<', $previousLimit);
-        
-        // Filter Wilayah (Copy logic dari atas)
-        if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
-            $queryLalu->whereHas('pelanggan', function ($q) {
-                $q->where('wilayah', auth()->user()->getWilayah());
-            });
-        } elseif ($wilayah && $wilayah !== 'semua') {
-            $queryLalu->whereHas('pelanggan', function ($q) use ($wilayah) {
-                $q->where('wilayah', $wilayah)
-                  ->orWhere('rw', $wilayah)
-                  ->orWhere('rt', $wilayah);
-            });
-        }
-        $pemasukanLalu = $queryLalu->sum('jumlah_bayar');
-
-        // B. Pengeluaran Lalu (Biaya Operasional)
-        $laporanLaluQuery = LaporanBulanan::query();
-        $laporanLaluQuery->where('bulan', '<', $previousLimit);
-
-        if ($wilayah && $wilayah !== 'semua') {
-             $laporanLaluQuery->where('wilayah', $wilayah);
-        }
-
-        $biayaOpsPenarikLalu = $laporanLaluQuery->sum('biaya_operasional_penarik');
-        $biayaPadDesaLalu = $laporanLaluQuery->sum('biaya_pad_desa');
-        $biayaOpsLapanganLalu = $laporanLaluQuery->sum('biaya_operasional_lapangan');
-        $biayaLainLainLalu = $laporanLaluQuery->sum('biaya_lain_lain');
-        
-        $totalBiayaLalu = $biayaOpsPenarikLalu + $biayaPadDesaLalu + $biayaOpsLapanganLalu + $biayaLainLainLalu;
-
-        // C. Hitung Saldo Awal Bersih
-        // Net Profit = (Revenue) - (20% Revenue) - Expenses
-        // Note: 20% Jasa Penarik is deducted from Revenue
-        $saldoAwal = ($pemasukanLalu * 0.80) - $totalBiayaLalu;
-
-        // === 5. Opsi Filter ===
+        // === 4. Opsi Filter ===
         $tahunOpsi = Pembayaran::selectRaw('LEFT(bulan_bayar, 4) as tahun')
             ->distinct()
             ->orderBy('tahun', 'desc')
@@ -172,7 +124,7 @@ class LaporanController extends Controller
             ->toArray();
 
         return Inertia::render('Laporan/Index', [
-            'data' => $pembayarans, // Paginator instance
+            'data' => $pembayarans,
             'summary' => [
                 'pemasukan' => $totalPemasukan,
                 'kubikasi' => $totalKubik,
@@ -183,15 +135,12 @@ class LaporanController extends Controller
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasional' => $biayaOperasional,
                 'biayaPadDesa' => $biayaPadDesa,
-                'biayaOperasionalLapangan' => $biayaOperasionalLapangan,
-                'biayaLainLain' => $biayaLainLain,
                 'honorPenarik' => $honorPenarik, // 20% + Ops
                 'honorMurni' => $honorPenarik,   // Sama, penamaan beda konteks
                 'totalTarikanBersih' => $totalTarikanBersih,
                 'totalSR' => $totalSR,
                 'srSudahBayar' => $srSudahBayar,
                 'srBelumBayar' => $srBelumBayar,
-                'saldoAwal' => $saldoAwal,
             ],
             'filters' => [
                 'tahun' => (int)$tahun,
@@ -255,37 +204,8 @@ class LaporanController extends Controller
         
         // Calculate totals
         $totalPengeluaran = $laporanBulanan->sum(function($laporan) {
-            return ($laporan->biaya_operasional_penarik ?? 0) 
-                + ($laporan->biaya_pad_desa ?? 0)
-                + ($laporan->biaya_operasional_lapangan ?? 0) 
-                + ($laporan->biaya_lain_lain ?? 0);
+            return ($laporan->biaya_operasional_penarik ?? 0) + ($laporan->biaya_operasional_lainnya ?? 0);
         });
-        
-        // Note: Logic above might double count because honor penarik includes operasional penarik? 
-        // Wait, honorPenarik = 20% + Ops.
-        // Usually Laporan Keuangan PDF shows Income vs Expenses.
-        // Expenses = Honor Penarik (incl Ops Penarik) + PAD Desa + Ops Lapangan + Lain-lain.
-        // But the previous code was: ($laporan->biaya_operasional_penarik ?? 0) + ($laporan->biaya_operasional_lainnya ?? 0);
-        // "biaya_operasional_lainnya" didn't exist in my model view, maybe it was a typo or old field.
-        // Let's assume Total Pengeluaran = Honor Penarik + PAD Desa + Ops Lapangan + Lain-lain
-        // But Honor Penarik is calculated from Income (20%) + Ops Penarik.
-        // So Total Pengeluaran = (TotalIncome * 0.2) + Ops Penarik + PAD Desa + Ops Lapangan + Lain-lain.
-        
-        // Let's recalculate based on logic from Dashboard/Index:
-        // Total Bersih = Pemasukan - HonorPenarik - PADDesa - OpsLapangan - LainLain
-        // So Pengeluaran = HonorPenarik + PADDesa + OpsLapangan + LainLain.
-        
-        $tarik20Persen = $data['detail']['tarik20Persen']; // Calculated in getFilteredData
-        // The $laporanBulanan->sum() approach only sums DB columns. It misses the 20%.
-        
-        $totalBiayaOpsPenarik = $laporanBulanan->sum('biaya_operasional_penarik');
-        $totalBiayaPadDesa = $laporanBulanan->sum('biaya_pad_desa');
-        $totalBiayaOpsLapangan = $laporanBulanan->sum('biaya_operasional_lapangan');
-        $totalBiayaLain = $laporanBulanan->sum('biaya_lain_lain');
-        
-        $totalHonorPenarik = $tarik20Persen + $totalBiayaOpsPenarik;
-        
-        $totalPengeluaran = $totalHonorPenarik + $totalBiayaPadDesa + $totalBiayaOpsLapangan + $totalBiayaLain;
         
         $totalPemasukan = $data['summary']['pemasukan'];
         $saldoAkhir = $totalPemasukan - $totalPengeluaran;
@@ -383,12 +303,8 @@ class LaporanController extends Controller
         }
 
         $biayaOperasional = $laporanQuery->sum('biaya_operasional_penarik');
-        $biayaPadDesa = $laporanQuery->sum('biaya_pad_desa');
-        $biayaOperasionalLapangan = $laporanQuery->sum('biaya_operasional_lapangan');
-        $biayaLainLain = $laporanQuery->sum('biaya_lain_lain');
-
         $honorPenarik = $tarik20Persen + $biayaOperasional;
-        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa - $biayaOperasionalLapangan - $biayaLainLain;
+        $totalTarikanBersih = $totalPemasukan - $honorPenarik;
 
         // Statistik SR
         // Apply filter wilayah berdasarkan user yang login
@@ -416,9 +332,6 @@ class LaporanController extends Controller
                 'totalTarikan' => $totalPemasukan,
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasional' => $biayaOperasional,
-                'biayaPadDesa' => $biayaPadDesa,
-                'biayaOperasionalLapangan' => $biayaOperasionalLapangan,
-                'biayaLainLain' => $biayaLainLain,
                 'honorPenarik' => $honorPenarik,
                 'honorMurni' => $honorPenarik,
                 'totalTarikanBersih' => $totalTarikanBersih,

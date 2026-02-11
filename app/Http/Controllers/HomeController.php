@@ -481,19 +481,14 @@ class HomeController extends Controller
         $bulanIni = now()->format('Y-m');
         $pelangganAktifIds = (clone $pelangganQuery)->where('status_aktif', true)->pluck('id');
         
-        // === PEMBAYARAN BULAN INI (Accrual Basis - berdasarkan bulan_bayar) ===
-        // Menggunakan logika yang sama dengan halaman Laporan untuk konsistensi
-        
-        // Pembayaran untuk tagihan bulan ini
+        // Pisahkan pembayaran bulan ini dan tunggakan
         $pembayaranBulanIniSaja = Pembayaran::where('bulan_bayar', $bulanIni)
             ->whereIn('pelanggan_id', $pelangganAktifIds)
             ->sum('jumlah_bayar');
         
-        // Pembayaran tunggakan (tagihan bulan lalu yang dibayar bulan ini)
-        // Untuk dashboard, kita hitung tunggakan yang dibayar di bulan ini
+        // Pembayaran tunggakan (dibayar bulan ini tapi untuk bulan sebelumnya)
         $pembayaranTunggakan = Pembayaran::where('bulan_bayar', '<', $bulanIni)
-            ->whereYear('tanggal_bayar', now()->year)
-            ->whereMonth('tanggal_bayar', now()->month)
+            ->where('tanggal_bayar', '>=', now()->startOfMonth())
             ->whereIn('pelanggan_id', $pelangganAktifIds)
             ->sum('jumlah_bayar');
         
@@ -518,7 +513,7 @@ class HomeController extends Controller
             ['biaya_operasional_penarik' => 0]
         );
         
-        // 1. Total Tarikan (semua pembayaran RECEIVED bulan ini)
+        // 1. Total Tarikan (semua pembayaran bulan ini, termasuk tunggakan)
         $totalTarikan = $totalPembayaran;
         
         // 2. 20% Tarikan
@@ -529,38 +524,20 @@ class HomeController extends Controller
         
         // 3b. Biaya PAD Desa (dari database, bisa diubah)
         $biayaPadDesa = $laporanBulanan->biaya_pad_desa ?? 0;
-
-        // 3c. Biaya Tambahan Baru
-        $biayaOperasionalLapangan = $laporanBulanan->biaya_operasional_lapangan ?? 0;
-        $biayaLainLain = $laporanBulanan->biaya_lain_lain ?? 0;
         
         // 4. Honor Penarik = 20% + Operasional
         $honorPenarik = $tarik20Persen + $biayaOperasionalPenarik;
         
-        // DEBUG: Log nilai-nilai penting
-        \Log::info('Dashboard Calculation', [
-            'totalTarikan' => $totalTarikan,
-            'tarik20Persen' => $tarik20Persen,
-            'biayaOperasionalPenarik' => $biayaOperasionalPenarik,
-            'honorPenarik' => $honorPenarik,
-            'pembayaranBulanIniSaja' => $pembayaranBulanIniSaja,
-            'pembayaranTunggakan' => $pembayaranTunggakan,
-            'totalPembayaran' => $totalPembayaran,
+        // 5. Total Tarikan Bersih = Total - Honor Penarik - PAD Desa
+        $totalTarikanBersih = $totalTarikan - $honorPenarik - $biayaPadDesa;
+        
+        // --- DEBUG FORCE CHECK ---
+        // Kita log ke file laravel.log untuk melihat apa yang sebenarnya terjadi di server
+        \Log::info('DEBUG HONOR PENARIK:', [
+            'tarik20Persen' => $tarik20Persen, 
+            'biayaOps' => $biayaOperasionalPenarik, 
+            'hasil_penjumlahan' => $honorPenarik
         ]);
-        
-        // TEMPORARY DEBUG - REMOVE AFTER TESTING
-        if ($honorPenarik == 0 && $totalTarikan > 0) {
-            dd([
-                'totalTarikan' => $totalTarikan,
-                'tarik20Persen' => $tarik20Persen,
-                'biayaOperasionalPenarik' => $biayaOperasionalPenarik,
-                'honorPenarik' => $honorPenarik,
-                'laporanBulanan' => $laporanBulanan->toArray(),
-            ]);
-        }
-        
-        // 5. Total Tarikan Bersih = Total - Honor Penarik - PAD Desa - Operasional Lapangan - Lain-lain
-        $totalTarikanBersih = $totalTarikan - $honorPenarik - $biayaPadDesa - $biayaOperasionalLapangan - $biayaLainLain;
         
         // 6. Total SR (Sambungan Rumah) Sudah Bayar
         $totalSRSudahBayar = $sudahBayarCount;
@@ -571,49 +548,11 @@ class HomeController extends Controller
         // 8. Total SR (Pelanggan Aktif)
         $totalSR = $pelangganAktifIds->count();
         
-        // === Hitung Saldo Awal (Akumulasi Bulan Sebelumnya) ===
-        // Logic: Accrual / Billing Period Basis (bulan_bayar)
-        // This calculates the "Retained Earnings" from previous billing periods
-        
-        $previousLimit = $bulanIni; // e.g., "2024-02"
-        
-        // A. Pemasukan Lalu (Based on Billing Month)
-        $queryLalu = Pembayaran::query();
-        $queryLalu->where('bulan_bayar', '<', $previousLimit);
-        
-        // Admin bisa filter wilayah manual
-        if ($wilayahFilter && auth()->user()->isAdmin()) {
-            $queryLalu->whereHas('pelanggan', function ($q) use ($wilayahFilter) {
-                $q->where('wilayah', $wilayahFilter);
-            });
-        }
-        $pemasukanLalu = $queryLalu->sum('jumlah_bayar');
-
-        // B. Pengeluaran Lalu (Biaya Operasional)
-        // Filter laporan bulanan sebelum bulan ini
-        $laporanLaluQuery = \App\Models\LaporanBulanan::query();
-        $laporanLaluQuery->where('bulan', '<', $previousLimit);
-        if ($wilayahFilter) {
-             $laporanLaluQuery->where('wilayah', $wilayahFilter);
-        }
-
-        $biayaOpsPenarikLalu = $laporanLaluQuery->sum('biaya_operasional_penarik');
-        $biayaPadDesaLalu = $laporanLaluQuery->sum('biaya_pad_desa');
-        $biayaOpsLapanganLalu = $laporanLaluQuery->sum('biaya_operasional_lapangan');
-        $biayaLainLainLalu = $laporanLaluQuery->sum('biaya_lain_lain');
-        
-        $totalBiayaLalu = $biayaOpsPenarikLalu + $biayaPadDesaLalu + $biayaOpsLapanganLalu + $biayaLainLainLalu;
-
-        // C. Hitung Saldo Awal Bersih
-        // Net Profit = (0.8 * Revenue) - Expenses
-        $saldoAwal = ($pemasukanLalu * 0.80) - $totalBiayaLalu;
-        
         // Pelanggan yang belum bayar bulan ini (untuk list)
         // Gunakan forUser() untuk filter otomatis berdasarkan role
         $pelangganBelumBayarQuery = Pelanggan::forUser()
             ->where('status_aktif', true)
             ->whereNotIn('id', function($query) use ($bulanIni) {
-                // Yang sudah bayar TAGIHAN bulan ini
                 $query->select('pelanggan_id')
                     ->from('pembayarans')
                     ->where('bulan_bayar', $bulanIni);
@@ -665,38 +604,6 @@ class HomeController extends Controller
                 ];
             });
 
-        // Hitung Statistik Bulanan untuk Grafik (Accrual Based to match Laporan)
-        $monthlyStats = [];
-        $currentYear = now()->year;
-        
-        for ($m = 1; $m <= 12; $m++) {
-            $monthStr = $currentYear . '-' . str_pad($m, 2, '0', STR_PAD_LEFT);
-            $monthName = \Carbon\Carbon::createFromDate($currentYear, $m, 1)->locale('id')->isoFormat('MMM');
-            
-            // Pemasukan (Total Billed & Paid for Month m)
-            $pemasukan = Pembayaran::where('bulan_bayar', $monthStr)->sum('jumlah_bayar');
-            
-            // Pengeluaran (Based on Report Month)
-            $laporan = \App\Models\LaporanBulanan::where('bulan', $monthStr)->first();
-            
-            $biayaOpsPenarik = $laporan ? $laporan->biaya_operasional_penarik : 0;
-            $biayaPad = $laporan ? $laporan->biaya_pad_desa : 0;
-            $biayaOpsLapangan = $laporan ? $laporan->biaya_operasional_lapangan : 0;
-            $biayaLain = $laporan ? $laporan->biaya_lain_lain : 0;
-            
-            $honorPenarik = ($pemasukan * 0.20) + $biayaOpsPenarik;
-            $totalPengeluaran = $honorPenarik + $biayaPad + $biayaOpsLapangan + $biayaLain;
-            
-            $profit = $pemasukan - $totalPengeluaran;
-            
-            $monthlyStats[] = [
-                'month' => $monthName,
-                'pemasukan' => $pemasukan,
-                'pengeluaran' => $totalPengeluaran,
-                'profit' => $profit
-            ];
-        }
-
         return Inertia::render('Dashboard', [
             'stats' => [
                 'totalPelanggan' => $totalPelanggan,
@@ -704,7 +611,6 @@ class HomeController extends Controller
                 'pelangganNonaktif' => $pelangganNonaktif,
                 'cakupanArea' => $cakupanArea,
             ],
-            'monthlyStats' => $monthlyStats,
             'pembayaran' => [
                 'bulanIni' => $bulanIni,
                 'pembayaranBulanIni' => $pembayaranBulanIniSaja,
@@ -719,15 +625,12 @@ class HomeController extends Controller
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasionalPenarik' => $biayaOperasionalPenarik,
                 'biayaPadDesa' => $biayaPadDesa,
-                'biayaOperasionalLapangan' => $biayaOperasionalLapangan,
-                'biayaLainLain' => $biayaLainLain,
                 'honorPenarik' => $honorPenarik,
                 'totalTarikanBersih' => $totalTarikanBersih,
                 'totalSRSudahBayar' => $totalSRSudahBayar,
                 'totalSRBelumBayar' => $totalSRBelumBayar,
                 'totalSR' => $totalSR,
                 'laporanId' => $laporanBulanan->id,
-                'saldoAwal' => $saldoAwal,
             ],
             'recentTransactions' => $recentTransactions,
             'pelangganBelumBayar' => $pelangganBelumBayar,
@@ -925,8 +828,6 @@ class HomeController extends Controller
             'bulan' => 'required|string|size:7', // Format: YYYY-MM
             'biaya_operasional_penarik' => 'required|numeric|min:0',
             'biaya_pad_desa' => 'nullable|numeric|min:0',
-            'biaya_operasional_lapangan' => 'nullable|numeric|min:0',
-            'biaya_lain_lain' => 'nullable|numeric|min:0',
             'wilayah' => 'nullable|string|max:100',
         ]);
         
@@ -941,14 +842,6 @@ class HomeController extends Controller
         
         if (isset($validated['biaya_pad_desa'])) {
             $updateData['biaya_pad_desa'] = $validated['biaya_pad_desa'];
-        }
-
-        if (isset($validated['biaya_operasional_lapangan'])) {
-            $updateData['biaya_operasional_lapangan'] = $validated['biaya_operasional_lapangan'];
-        }
-
-        if (isset($validated['biaya_lain_lain'])) {
-            $updateData['biaya_lain_lain'] = $validated['biaya_lain_lain'];
         }
         
         if (isset($validated['wilayah'])) {
@@ -983,12 +876,6 @@ class HomeController extends Controller
                          $resetData = ['biaya_operasional_penarik' => 0];
                          if (isset($updateData['biaya_pad_desa'])) {
                              $resetData['biaya_pad_desa'] = 0;
-                         }
-                         if (isset($updateData['biaya_operasional_lapangan'])) {
-                             $resetData['biaya_operasional_lapangan'] = 0;
-                         }
-                         if (isset($updateData['biaya_lain_lain'])) {
-                             $resetData['biaya_lain_lain'] = 0;
                          }
                          $report->update($resetData);
                      }

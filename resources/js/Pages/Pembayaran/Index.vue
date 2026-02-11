@@ -146,7 +146,7 @@
                                         <p class="mt-2">Tidak ada data pembayaran ditemukan</p>
                                     </td>
                                 </tr>
-                                <tr v-for="item in paginatedPembayaranList" :key="item.id" class="hover:bg-gray-50 transition-colors">
+                                <tr v-for="item in filteredPembayaranList" :key="item.id" class="hover:bg-gray-50 transition-colors">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm text-gray-900">{{ formatTanggalPembayaran(item.tanggal_bayar) }}</div>
                                         <div class="text-xs text-gray-500">{{ formatBulan(item.bulan_bayar) }}</div>
@@ -208,22 +208,6 @@
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
-                    <div class="bg-white px-4 py-3 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between sm:px-6 gap-3">
-                        <div class="text-sm text-gray-700 text-center sm:text-left">
-                            Menampilkan 
-                            <span class="font-semibold">{{ filteredPembayaranList.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0 }}</span> 
-                            sampai 
-                            <span class="font-semibold">{{ Math.min(currentPage * itemsPerPage, filteredPembayaranList.length) }}</span> 
-                            dari 
-                            <span class="font-semibold">{{ filteredPembayaranList.length }}</span> 
-                            data
-                        </div>
-                        <ClientPagination 
-                            :current-page="currentPage" 
-                            :total-pages="totalPages" 
-                            @page-change="onPageChange" 
-                        />
                     </div>
                 </div>
             </div>
@@ -373,7 +357,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
@@ -462,29 +446,5 @@ const openDetailModal = (pembayaran) => {
 const closeDetailModal = () => {
     showDetailModal.value = false;
     selectedPembayaran.value = null;
-};
-
-// --- Pagination Logic ---
-import ClientPagination from '@/Components/ClientPagination.vue';
-
-const currentPage = ref(1);
-const itemsPerPage = 20;
-
-const paginatedPembayaranList = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return filteredPembayaranList.value.slice(start, end);
-});
-
-const totalPages = computed(() => {
-    return Math.ceil(filteredPembayaranList.value.length / itemsPerPage);
-});
-
-watch(filteredPembayaranList, () => {
-    currentPage.value = 1;
-});
-
-const onPageChange = (page) => {
-    currentPage.value = page;
 };
 </script>

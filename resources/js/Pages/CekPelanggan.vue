@@ -251,7 +251,7 @@
                                         <p class="mt-2">Tidak ada data pelanggan yang ditemukan</p>
                                     </td>
                                 </tr>
-                                <tr v-for="item in paginatedPelanggan" :key="item.id_pelanggan" class="hover:bg-gray-50 transition-colors">
+                                <tr v-for="item in filteredPelanggan" :key="item.id_pelanggan" class="hover:bg-gray-50 transition-colors">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900">{{ item.id_pelanggan }}</div>
                                     </td>
@@ -431,22 +431,6 @@
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
-                    <div class="bg-white px-4 py-3 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between sm:px-6 gap-3">
-                        <div class="text-sm text-gray-700 text-center sm:text-left">
-                            Menampilkan 
-                            <span class="font-semibold">{{ filteredPelanggan.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0 }}</span> 
-                            sampai 
-                            <span class="font-semibold">{{ Math.min(currentPage * itemsPerPage, filteredPelanggan.length) }}</span> 
-                            dari 
-                            <span class="font-semibold">{{ filteredPelanggan.length }}</span> 
-                            data
-                        </div>
-                        <ClientPagination 
-                            :current-page="currentPage" 
-                            :total-pages="totalPages" 
-                            @page-change="onPageChange" 
-                        />
                     </div>
                 </div>
 
@@ -663,7 +647,7 @@
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200">
-                                        <tr v-for="item in paginatedModalPembayaran" :key="item.id" class="hover:bg-gray-50">
+                                        <tr v-for="item in pembayaranList" :key="item.id" class="hover:bg-gray-50">
                                             <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm">{{ formatBulan(item.bulan_bayar) }}</td>
                                             <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm">{{ formatTanggal(item.tanggal_bayar) }}</td>
                                             <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">{{ item.meteran_sebelum || '-' }}</td>
@@ -723,22 +707,6 @@
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
-                        <div class="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-                            <div class="text-xs text-gray-500 text-center sm:text-left">
-                                Menampilkan 
-                                <span class="font-semibold">{{ pembayaranList.length > 0 ? (currentModalPage - 1) * itemsPerPage + 1 : 0 }}</span> 
-                                sampai 
-                                <span class="font-semibold">{{ Math.min(currentModalPage * itemsPerPage, pembayaranList.length) }}</span> 
-                                dari 
-                                <span class="font-semibold">{{ pembayaranList.length }}</span> 
-                                data
-                            </div>
-                            <ClientPagination 
-                                :current-page="currentModalPage" 
-                                :total-pages="totalModalPages" 
-                                @page-change="onModalPageChange" 
-                            />
                         </div>
                     </div>
                 </div> <!-- Penutup modal body (p-4 overflow-y-auto) -->
@@ -1308,68 +1276,5 @@ const confirmDelete = (pelanggan) => {
     if (confirm(`Apakah Anda yakin ingin menghapus pelanggan ${pelanggan.nama_pelanggan}?`)) {
         router.delete(`/pelanggan/${pelanggan.id}`);
     }
-};
-
-// --- Pagination Logic ---
-import ClientPagination from '@/Components/ClientPagination.vue';
-
-const currentPage = ref(1);
-const itemsPerPage = 20;
-
-const paginatedPelanggan = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return filteredPelanggan.value.slice(start, end);
-});
-
-const totalPages = computed(() => {
-    return Math.ceil(filteredPelanggan.value.length / itemsPerPage);
-});
-
-// Watch filtering changes to reset page
-watch([searchQuery, statusFilter, bulanFilter, wilayahFilter], () => {
-    currentPage.value = 1;
-});
-
-// --- Pagination Logic for Pembayaran Modal ---
-const currentPembayaranPage = ref(1);
-
-const paginatedPembayaranList = computed(() => {
-    const start = (currentPembayaranPage.value - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return filteredPembayaranList.value.slice(start, end);
-});
-
-const totalPembayaranPages = computed(() => {
-    return Math.ceil(filteredPembayaranList.value.length / itemsPerPage);
-});
-
-watch(filteredPembayaranList, () => {
-    currentPembayaranPage.value = 1;
-});
-
-// --- Pagination Logic for Pembayaran Modal (Ref) ---
-const currentModalPage = ref(1);
-
-const paginatedModalPembayaran = computed(() => {
-    const start = (currentModalPage.value - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return pembayaranList.value.slice(start, end);
-});
-
-const totalModalPages = computed(() => {
-    return Math.ceil(pembayaranList.value.length / itemsPerPage);
-});
-
-watch(pembayaranList, () => {
-    currentModalPage.value = 1;
-});
-
-const onPageChange = (page) => {
-    currentPage.value = page;
-};
-
-const onModalPageChange = (page) => {
-    currentModalPage.value = page;
 };
 </script>

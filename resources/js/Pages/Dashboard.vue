@@ -367,48 +367,6 @@
                     </div>
                 </div>
 
-                <!-- Analisis Keuntungan Bulanan (Chart) -->
-                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-                    <h3 class="text-xl font-semibold text-gray-900 mb-6">Analisis Keuntungan Bulanan (Tahun Ini)</h3>
-                    
-                    <div class="relative h-64">
-                         <!-- Y-Axis Lines (Optional, simplified) -->
-                         <div class="absolute inset-0 flex flex-col justify-between text-xs text-gray-400">
-                            <span>Rp {{ formatShort(maxProfit) }}</span>
-                            <span>Rp {{ formatShort(maxProfit / 2) }}</span>
-                            <span>Rp 0</span>
-                        </div>
-
-                        <!-- Bars -->
-                        <div class="absolute inset-0 flex items-end justify-between pl-12 pb-6">
-                            <div 
-                                v-for="(stat, index) in monthlyStats" 
-                                :key="index" 
-                                class="flex flex-col items-center flex-1 group"
-                            >
-                                <div class="relative w-full flex justify-center h-56 items-end">
-                                    <!-- Bar -->
-                                    <div 
-                                        class="w-3/5 sm:w-4/5 rounded-t-sm transition-all duration-500 ease-out group-hover:opacity-90 relative"
-                                        :class="stat.profit >= 0 ? 'bg-green-500' : 'bg-red-500'"
-                                        :style="{ height: `${Math.max((Math.abs(stat.profit) / (maxProfit || 1)) * 100, 2)}%` }"
-                                    >
-                                        <!-- Tooltip -->
-                                        <div class="opacity-0 group-hover:opacity-100 absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-gray-900 text-white text-xs rounded py-1 px-2 pointer-events-none whitespace-nowrap z-10 transition-opacity">
-                                            <div class="font-bold">Rp {{ formatRupiah(stat.profit) }}</div>
-                                            <div class="text-[10px] text-gray-300">
-                                                In: {{ formatShort(stat.pemasukan) }} <br>
-                                                Out: {{ formatShort(stat.pengeluaran) }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="text-xs text-gray-500 mt-2 font-medium">{{ stat.month }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Laporan Keuangan Bulanan -->
                 <div class="bg-white rounded-lg shadow-md p-6 mb-8">
                     <div class="flex justify-between items-center mb-6">
@@ -478,30 +436,6 @@
                             <p class="text-xs text-yellow-700 mt-1">Pendapatan Asli Desa</p>
                         </div>
 
-                        <!-- Biaya Operasional Lapangan -->
-                        <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg p-5 border border-teal-200">
-                            <div class="flex items-center justify-between mb-2">
-                                <h4 class="text-sm font-medium text-teal-900">Biaya Ops. Lapangan</h4>
-                                <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                </svg>
-                            </div>
-                            <p class="text-2xl font-bold text-teal-900">Rp {{ formatRupiah(laporanKeuangan.biayaOperasionalLapangan) }}</p>
-                            <p class="text-xs text-teal-700 mt-1">Perbaikan & Lapangan</p>
-                        </div>
-
-                        <!-- Biaya Lain-lain -->
-                        <div class="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-5 border border-pink-200">
-                            <div class="flex items-center justify-between mb-2">
-                                <h4 class="text-sm font-medium text-pink-900">Biaya Lain-lain</h4>
-                                <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
-                                </svg>
-                            </div>
-                            <p class="text-2xl font-bold text-pink-900">Rp {{ formatRupiah(laporanKeuangan.biayaLainLain) }}</p>
-                            <p class="text-xs text-pink-700 mt-1">Keperluan lainnya</p>
-                        </div>
-
                         <!-- Honor Penarik -->
                         <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-5 border border-indigo-200">
                             <div class="flex items-center justify-between mb-2">
@@ -518,32 +452,12 @@
                         <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-5 border-2 border-blue-300 md:col-span-2">
                             <div class="flex items-center justify-between mb-2">
                                 <h4 class="text-base font-semibold text-blue-900">Total Tarikan Bersih</h4>
-                                <div class="flex items-center gap-2">
-                                    <button 
-                                        @click="showAccumulation = !showAccumulation"
-                                        class="text-xs px-2 py-1 rounded border transition"
-                                        :class="showAccumulation ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'"
-                                        title="Toggle untuk melihat akumulasi saldo dari bulan sebelumnya"
-                                    >
-                                        {{ showAccumulation ? 'Akumulasi ON' : 'Akumulasi OFF' }}
-                                    </button>
-                                    <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                                    </svg>
-                                </div>
+                                <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                                </svg>
                             </div>
-                            <p class="text-3xl font-bold text-blue-900">Rp {{ formatRupiah(totalBersihDisplay) }}</p>
-                            <div class="text-xs sm:text-sm text-blue-700 mt-1">
-                                <p>Sisa untuk kas & operasional KP-SPAMS</p>
-                                <div v-if="showAccumulation" class="mt-2 bg-blue-200 bg-opacity-50 p-2 rounded">
-                                    <p class="font-medium">
-                                        Saldo Awal (Bulan Lalu): Rp {{ formatRupiah(laporanKeuangan.saldoAwal || 0) }}
-                                    </p>
-                                    <p v-if="(laporanKeuangan.saldoAwal || 0) === 0" class="text-xs mt-1 text-blue-600">
-                                        Belum ada saldo dari bulan sebelumnya
-                                    </p>
-                                </div>
-                            </div>
+                            <p class="text-3xl font-bold text-blue-900">Rp {{ formatRupiah(laporanKeuangan.totalTarikanBersih) }}</p>
+                            <p class="text-sm text-blue-700 mt-1">Sisa untuk kas & operasional KP-SPAMS</p>
                         </div>
 
                         <!-- SR Stats -->
@@ -627,7 +541,7 @@
                 
                 <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Update Biaya Operasional</h3>
+                        <h3 class="text-lg font-semibold text-gray-900">Update Biaya Operasional Penarik</h3>
                         <button @click="showModalOperasional = false" class="text-gray-400 hover:text-gray-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -647,7 +561,7 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Operasional Penarik (Rp)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Operasional (Rp)</label>
                             <input 
                                 type="number" 
                                 v-model="formOperasional.biaya_operasional_penarik"
@@ -657,7 +571,7 @@
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
                                 required
                             />
-                            <p class="text-xs text-gray-500 mt-1">BBM, maintenance ringan, dll.</p>
+                            <p class="text-xs text-gray-500 mt-1">BBM, maintenance, dll.</p>
                         </div>
 
                         <div class="mb-4">
@@ -671,32 +585,6 @@
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
                             />
                             <p class="text-xs text-gray-500 mt-1">Pendapatan Asli Desa</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Operasional Lapangan (Rp)</label>
-                            <input 
-                                type="number" 
-                                v-model="formOperasional.biaya_operasional_lapangan"
-                                step="1000"
-                                min="0"
-                                placeholder="0"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
-                            />
-                            <p class="text-xs text-gray-500 mt-1">Perbaikan, bahan baku, dll.</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Lain-lain (Rp)</label>
-                            <input 
-                                type="number" 
-                                v-model="formOperasional.biaya_lain_lain"
-                                step="1000"
-                                min="0"
-                                placeholder="0"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
-                            />
-                            <p class="text-xs text-gray-500 mt-1">Keperluan lainnya</p>
                         </div>
 
                         <div class="flex gap-3">
@@ -753,41 +641,17 @@ const props = defineProps({
     recentTransactions: {
         type: Array,
         default: () => []
-    },
-    monthlyStats: {
-        type: Array,
-        default: () => []
     }
 });
 
 const showModalOperasional = ref(false);
-const showAccumulation = ref(false);
 const processing = ref(false);
 const selectedWilayah = ref('');
-
-const totalBersihDisplay = computed(() => {
-    if (!props.laporanKeuangan) return 0;
-    
-    let total = props.laporanKeuangan.totalTarikanBersih;
-    
-    // Convert to number just in case
-    total = Number(total) || 0;
-    
-    if (showAccumulation.value) {
-        let saldoAwal = Number(props.laporanKeuangan.saldoAwal) || 0;
-        console.log('Saldo Awal from backend:', props.laporanKeuangan.saldoAwal, 'Converted:', saldoAwal);
-        total += saldoAwal;
-    }
-    
-    return total;
-});
 
 const formOperasional = ref({
     bulan: props.laporanKeuangan.bulan,
     biaya_operasional_penarik: props.laporanKeuangan.biayaOperasionalPenarik,
     biaya_pad_desa: props.laporanKeuangan.biayaPadDesa,
-    biaya_operasional_lapangan: props.laporanKeuangan.biayaOperasionalLapangan,
-    biaya_lain_lain: props.laporanKeuangan.biayaLainLain,
     wilayah: selectedWilayah.value || null
 });
 
@@ -803,8 +667,6 @@ const reloadDashboard = () => {
             formOperasional.value.wilayah = selectedWilayah.value || null;
             formOperasional.value.biaya_operasional_penarik = props.laporanKeuangan.biayaOperasionalPenarik;
             formOperasional.value.biaya_pad_desa = props.laporanKeuangan.biayaPadDesa;
-            formOperasional.value.biaya_operasional_lapangan = props.laporanKeuangan.biayaOperasionalLapangan;
-            formOperasional.value.biaya_lain_lain = props.laporanKeuangan.biayaLainLain;
         }
     });
 };
@@ -819,20 +681,10 @@ const submitOperasional = () => {
     });
 };
 
-const maxProfit = computed(() => {
-    if (!props.monthlyStats || props.monthlyStats.length === 0) return 1000000;
-    const max = Math.max(...props.monthlyStats.map(s => Math.abs(s.profit)));
-    return max > 0 ? max : 1000000;
-});
-
-const activePercentage = computed(() => { // Renamed from aktifPercentage to fix unused variable but wait, template uses aktifPercentage?
-    // Template uses aktifPercentage. Let's keep it.
+const aktifPercentage = computed(() => {
     if (props.stats.totalPelanggan === 0) return 0;
     return Math.round((props.stats.pelangganAktif / props.stats.totalPelanggan) * 100);
 });
-
-// Alias for template if needed, or just rename the function
-const aktifPercentage = activePercentage;
 
 const persenPelangganBayar = computed(() => {
     if (props.stats.pelangganAktif === 0) return 0;
@@ -850,12 +702,6 @@ const formatRupiah = (angka) => {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0
     }).format(angka);
-};
-
-const formatShort = (n) => {
-    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'jt';
-    if (n >= 1000) return (n / 1000).toFixed(0) + 'rb';
-    return n;
 };
 
 const waLink = (no) => {

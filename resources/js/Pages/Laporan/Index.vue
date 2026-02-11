@@ -176,20 +176,6 @@
                              <p class="text-xs text-yellow-600 mt-1">Pendapatan Asli Desa (Klik untuk edit)</p>
                         </div>
 
-                        <!-- Biaya Operasional Lapangan -->
-                        <div class="bg-teal-50 rounded-xl p-4 sm:p-5 border border-teal-100 cursor-pointer hover:bg-teal-100 transition" @click="openModalOperasional" title="Klik untuk update">
-                             <h4 class="text-xs sm:text-sm font-semibold text-teal-900 mb-2">Biaya Ops. Lapangan</h4>
-                             <p class="text-xl sm:text-2xl font-bold text-teal-800">{{ formatRupiah(detail.biayaOperasionalLapangan) }}</p>
-                             <p class="text-xs text-teal-600 mt-1">Perbaikan & Lapangan (Klik untuk edit)</p>
-                        </div>
-
-                        <!-- Biaya Lain-lain -->
-                        <div class="bg-pink-50 rounded-xl p-4 sm:p-5 border border-pink-100 cursor-pointer hover:bg-pink-100 transition" @click="openModalOperasional" title="Klik untuk update">
-                             <h4 class="text-xs sm:text-sm font-semibold text-pink-900 mb-2">Biaya Lain-lain</h4>
-                             <p class="text-xl sm:text-2xl font-bold text-pink-800">{{ formatRupiah(detail.biayaLainLain) }}</p>
-                             <p class="text-xs text-pink-600 mt-1">Keperluan lainnya (Klik untuk edit)</p>
-                        </div>
-
                          <!-- Total Honor -->
                         <div class="bg-indigo-50 rounded-xl p-4 sm:p-5 border border-indigo-100">
                              <h4 class="text-xs sm:text-sm font-semibold text-indigo-900 mb-2">Total Honor Penarik</h4>
@@ -200,26 +186,10 @@
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-6">
                         <!-- Total Tarikan Bersih -->
-                        <!-- Total Tarikan Bersih -->
                         <div class="bg-blue-50 rounded-xl p-4 sm:p-6 border border-blue-200 flex flex-col justify-center">
-                            <div class="flex justify-between items-start mb-1">
-                                <h4 class="text-sm sm:text-base font-bold text-blue-900">Total Tarikan Bersih (Kas KP-SPAMS)</h4>
-                                <button 
-                                    @click="showAccumulation = !showAccumulation"
-                                    class="text-xs px-2 py-1 rounded border transition flex-shrink-0 ml-2"
-                                    :class="showAccumulation ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'"
-                                    title="Klik untuk melihat akumulasi dari bulan sebelumnya"
-                                >
-                                    {{ showAccumulation ? 'Akumulasi ON' : 'Akumulasi OFF' }}
-                                </button>
-                            </div>
-                            <p class="text-2xl sm:text-3xl font-bold text-blue-700">{{ formatRupiah(totalBersihDisplay) }}</p>
-                            <div class="text-xs sm:text-sm text-blue-600 mt-2">
-                                <p>Dana bersih untuk kas desa/KP-SPAMS setelah dikurangi honor.</p>
-                                <p v-if="showAccumulation" class="mt-1 font-medium bg-blue-100 p-1 rounded inline-block">
-                                    Termasuk Saldo Awal: {{ formatRupiah(detail.saldoAwal || 0) }}
-                                </p>
-                            </div>
+                            <h4 class="text-sm sm:text-base font-bold text-blue-900 mb-1">Total Tarikan Bersih (Kas KP-SPAMS)</h4>
+                            <p class="text-2xl sm:text-3xl font-bold text-blue-700">{{ formatRupiah(detail.totalTarikanBersih) }}</p>
+                            <p class="text-xs sm:text-sm text-blue-600 mt-2">Dana bersih untuk kas desa/KP-SPAMS setelah dikurangi honor.</p>
                         </div>
 
                         <!-- SR Status -->
@@ -245,7 +215,7 @@
                 <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                         <h3 class="font-bold text-gray-700">Rincian Transaksi</h3>
-                        <span class="text-xs font-medium text-gray-500 bg-white border border-gray-200 rounded-full px-3 py-1">Menampilkan {{ data.from }}-{{ data.to }} dari {{ data.total }} data</span>
+                        <span class="text-xs font-medium text-gray-500 bg-white border border-gray-200 rounded-full px-3 py-1">Menampilkan {{ data.length }} data</span>
                     </div>
                     
                     <div class="overflow-x-auto">
@@ -261,13 +231,13 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-if="data.data.length === 0">
+                                <tr v-if="data.length === 0">
                                     <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                                         <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                         <p>Tidak ada data pembayaran ditemukan untuk periode ini.</p>
                                     </td>
                                 </tr>
-                                <tr v-for="item in data.data" :key="item.id" class="hover:bg-gray-50 transition-colors">
+                                <tr v-for="item in data" :key="item.id" class="hover:bg-gray-50 transition-colors">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                         {{ formatDate(item.tanggal_bayar) }}
                                     </td>
@@ -291,9 +261,6 @@
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
-                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                        <Pagination :links="data.links" />
                     </div>
                 </div>
             </div>
@@ -355,32 +322,6 @@
                             <p class="text-xs text-gray-500 mt-1">Pendapatan Asli Desa</p>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Operasional Lapangan (Rp)</label>
-                            <input 
-                                type="number" 
-                                v-model="formOperasional.biaya_operasional_lapangan"
-                                step="1000"
-                                min="0"
-                                placeholder="0"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
-                            />
-                            <p class="text-xs text-gray-500 mt-1">Perbaikan, bahan baku, dll.</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Lain-lain (Rp)</label>
-                            <input 
-                                type="number" 
-                                v-model="formOperasional.biaya_lain_lain"
-                                step="1000"
-                                min="0"
-                                placeholder="0"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
-                            />
-                            <p class="text-xs text-gray-500 mt-1">Keperluan lainnya</p>
-                        </div>
-
                         <div class="flex gap-3">
                             <button 
                                 type="submit"
@@ -407,35 +348,16 @@
 
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import Pagination from '@/Components/Pagination.vue';
-import { ref, watch, reactive, computed } from 'vue';
+import { ref, watch, reactive } from 'vue'; // Added reactive
 import { router } from '@inertiajs/vue3';
 import debounce from 'lodash/debounce';
 
 const props = defineProps({
-    data: Object,
+    data: Array,
     summary: Object,
     detail: Object,
     filters: Object,
     options: Object,
-});
-
-const showAccumulation = ref(false);
-
-const totalBersihDisplay = computed(() => {
-    if (!props.detail) return 0;
-    
-    let total = props.detail.totalTarikanBersih;
-    
-    // Convert to number just in case
-    total = Number(total) || 0;
-    
-    if (showAccumulation.value) {
-        let saldoAwal = Number(props.detail.saldoAwal) || 0;
-        total += saldoAwal;
-    }
-    
-    return total;
 });
 
 const form = ref({
@@ -451,8 +373,6 @@ const formOperasional = reactive({
     bulan: '',
     biaya_operasional_penarik: 0,
     biaya_pad_desa: 0,
-    biaya_operasional_lapangan: 0,
-    biaya_lain_lain: 0,
     wilayah: ''
 });
 
@@ -470,8 +390,6 @@ const openModalOperasional = () => {
     formOperasional.bulan = `${year}-${month}`;
     formOperasional.biaya_operasional_penarik = props.detail ? props.detail.biayaOperasional : 0;
     formOperasional.biaya_pad_desa = props.detail ? props.detail.biayaPadDesa : 0;
-    formOperasional.biaya_operasional_lapangan = props.detail ? props.detail.biayaOperasionalLapangan : 0;
-    formOperasional.biaya_lain_lain = props.detail ? props.detail.biayaLainLain : 0;
     formOperasional.wilayah = form.value.wilayah !== 'semua' ? form.value.wilayah : null; // Use filter wilayah if exists
     
     showModalOperasional.value = true;
