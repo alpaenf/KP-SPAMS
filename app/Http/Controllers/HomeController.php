@@ -481,23 +481,23 @@ class HomeController extends Controller
         $bulanIni = now()->format('Y-m');
         $pelangganAktifIds = (clone $pelangganQuery)->where('status_aktif', true)->pluck('id');
         
-        // Pisahkan pembayaran bulan ini dan tunggakan
-        $pembayaranBulanIniSaja = Pembayaran::where('bulan_bayar', $bulanIni)
+        // Pisahkan pembayaran bulan ini dan tunggakan (Cash Flow Basis)
+        $startOfMonth = now()->startOfMonth();
+        $endOfMonth = now()->endOfMonth();
+
+        $paymentsThisMonth = Pembayaran::whereBetween('tanggal_bayar', [$startOfMonth, $endOfMonth])
             ->whereIn('pelanggan_id', $pelangganAktifIds)
-            ->sum('jumlah_bayar');
+            ->get();
+
+        $totalPembayaran = $paymentsThisMonth->sum('jumlah_bayar');
         
-        // Pembayaran tunggakan (dibayar bulan ini tapi untuk bulan sebelumnya)
-        $pembayaranTunggakan = Pembayaran::where('bulan_bayar', '<', $bulanIni)
-            ->where('tanggal_bayar', '>=', now()->startOfMonth())
-            ->whereIn('pelanggan_id', $pelangganAktifIds)
-            ->sum('jumlah_bayar');
+        // Pembayaran untuk tagihan bulan ini (tepat waktu)
+        $pembayaranBulanIniSaja = $paymentsThisMonth->where('bulan_bayar', $bulanIni)->sum('jumlah_bayar');
         
-        $totalPembayaran = $pembayaranBulanIniSaja + $pembayaranTunggakan;
+        // Pembayaran untuk tagihan bulan lalu (tunggakan)
+        $pembayaranTunggakan = $paymentsThisMonth->where('bulan_bayar', '<', $bulanIni)->sum('jumlah_bayar');
         
-        $sudahBayarCount = Pembayaran::where('bulan_bayar', $bulanIni)
-            ->whereIn('pelanggan_id', $pelangganAktifIds)
-            ->distinct('pelanggan_id')
-            ->count('pelanggan_id');
+        $sudahBayarCount = $paymentsThisMonth->where('bulan_bayar', $bulanIni)->unique('pelanggan_id')->count();
         
         $belumBayarCount = $pelangganAktifIds->count() - $sudahBayarCount;
         
@@ -513,7 +513,7 @@ class HomeController extends Controller
             ['biaya_operasional_penarik' => 0]
         );
         
-        // 1. Total Tarikan (semua pembayaran bulan ini, termasuk tunggakan)
+        // 1. Total Tarikan (semua pembayaran RECEIVED bulan ini)
         $totalTarikan = $totalPembayaran;
         
         // 2. 20% Tarikan
@@ -545,12 +545,11 @@ class HomeController extends Controller
         $totalSR = $pelangganAktifIds->count();
         
         // === Hitung Saldo Awal (Akumulasi Bulan Sebelumnya) ===
-        $previousLimit = $bulanIni; // e.g. "2024-02"
-        $tahun = substr($bulanIni, 0, 4);
-
-        // A. Pemasukan Lalu
+        $previousLimit = $startOfMonth; 
+        
+        // A. Pemasukan Lalu (Cash Flow: Received BEFORE start of this month)
         $queryLalu = Pembayaran::query();
-        $queryLalu->where('bulan_bayar', '<', $previousLimit);
+        $queryLalu->where('tanggal_bayar', '<', $previousLimit);
         // Admin bisa filter wilayah manual
         if ($wilayahFilter && auth()->user()->isAdmin()) {
             $queryLalu->whereHas('pelanggan', function ($q) use ($wilayahFilter) {
@@ -559,9 +558,10 @@ class HomeController extends Controller
         }
         $pemasukanLalu = $queryLalu->sum('jumlah_bayar');
 
-        // B. Pengeluaran Lalu (Biaya Operasional)
+        // B. Pengeluaran Lalu (Biaya Operasional - Accrual by Month is fine as expense usually booked per month)
+        // Filter laporan bulanan sebelum bulan ini
         $laporanLaluQuery = \App\Models\LaporanBulanan::query();
-        $laporanLaluQuery->where('bulan', '<', $previousLimit);
+        $laporanLaluQuery->where('bulan', '<', $bulanIni); // $bulanIni is "YYYY-MM"
         if ($wilayahFilter) {
              $laporanLaluQuery->where('wilayah', $wilayahFilter);
         }
@@ -574,7 +574,7 @@ class HomeController extends Controller
         $totalBiayaLalu = $biayaOpsPenarikLalu + $biayaPadDesaLalu + $biayaOpsLapanganLalu + $biayaLainLainLalu;
 
         // C. Hitung Saldo Awal Bersih
-        // Net Profit = (0.8 * Revenue) - Expenses (excluding 20% honor because it's already deducted from Revenue)
+        // Net Profit = (0.8 * Revenue) - Expenses
         $saldoAwal = ($pemasukanLalu * 0.80) - $totalBiayaLalu;
         
         // Pelanggan yang belum bayar bulan ini (untuk list)
@@ -582,6 +582,7 @@ class HomeController extends Controller
         $pelangganBelumBayarQuery = Pelanggan::forUser()
             ->where('status_aktif', true)
             ->whereNotIn('id', function($query) use ($bulanIni) {
+                // Yang sudah bayar TAGIHAN bulan ini
                 $query->select('pelanggan_id')
                     ->from('pembayarans')
                     ->where('bulan_bayar', $bulanIni);
@@ -600,8 +601,8 @@ class HomeController extends Controller
         // List Transaksi Terakhir (untuk melihat siapa yang baru bayar, termasuk bayar tunggakan)
         // Filter berdasarkan wilayah user penarik
         $recentTransactionsQuery = Pembayaran::with('pelanggan')
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year);
+            ->whereMonth('tanggal_bayar', now()->month)
+            ->whereYear('tanggal_bayar', now()->year);
         
         // Jika penarik, filter berdasarkan wilayah
         if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
@@ -638,14 +639,16 @@ class HomeController extends Controller
         $currentYear = now()->year;
         
         for ($m = 1; $m <= 12; $m++) {
-            $monthStr = $currentYear . '-' . str_pad($m, 2, '0', STR_PAD_LEFT);
-            $monthName = \Carbon\Carbon::createFromDate($currentYear, $m, 1)->locale('id')->isoFormat('MMM');
+            $monthDate = \Carbon\Carbon::createFromDate($currentYear, $m, 1);
+            $monthStr = $monthDate->format('Y-m');
+            $monthName = $monthDate->locale('id')->isoFormat('MMM');
             
-            // Pemasukan (Total Bayar pada bulan laporan tersebut)
-            // Note: Menggunakan 'bulan_bayar' sebagai acuan periode laporan
-            $pemasukan = Pembayaran::where('bulan_bayar', $monthStr)->sum('jumlah_bayar');
+            // Pemasukan (Total Received in Month m)
+            $pemasukan = Pembayaran::whereYear('tanggal_bayar', $currentYear)
+                ->whereMonth('tanggal_bayar', $m)
+                ->sum('jumlah_bayar');
             
-            // Pengeluaran
+            // Pengeluaran (Based on Report Month)
             $laporan = \App\Models\LaporanBulanan::where('bulan', $monthStr)->first();
             
             $biayaOpsPenarik = $laporan ? $laporan->biaya_operasional_penarik : 0;
