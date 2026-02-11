@@ -545,11 +545,15 @@ class HomeController extends Controller
         $totalSR = $pelangganAktifIds->count();
         
         // === Hitung Saldo Awal (Akumulasi Bulan Sebelumnya) ===
-        $previousLimit = $startOfMonth; 
+        // Logic: Accrual / Billing Period Basis (bulan_bayar)
+        // This calculates the "Retained Earnings" from previous billing periods
         
-        // A. Pemasukan Lalu (Cash Flow: Received BEFORE start of this month)
+        $previousLimit = $bulanIni; // e.g., "2024-02"
+        
+        // A. Pemasukan Lalu (Based on Billing Month)
         $queryLalu = Pembayaran::query();
-        $queryLalu->where('tanggal_bayar', '<', $previousLimit);
+        $queryLalu->where('bulan_bayar', '<', $previousLimit);
+        
         // Admin bisa filter wilayah manual
         if ($wilayahFilter && auth()->user()->isAdmin()) {
             $queryLalu->whereHas('pelanggan', function ($q) use ($wilayahFilter) {
@@ -558,10 +562,10 @@ class HomeController extends Controller
         }
         $pemasukanLalu = $queryLalu->sum('jumlah_bayar');
 
-        // B. Pengeluaran Lalu (Biaya Operasional - Accrual by Month is fine as expense usually booked per month)
+        // B. Pengeluaran Lalu (Biaya Operasional)
         // Filter laporan bulanan sebelum bulan ini
         $laporanLaluQuery = \App\Models\LaporanBulanan::query();
-        $laporanLaluQuery->where('bulan', '<', $bulanIni); // $bulanIni is "YYYY-MM"
+        $laporanLaluQuery->where('bulan', '<', $previousLimit);
         if ($wilayahFilter) {
              $laporanLaluQuery->where('wilayah', $wilayahFilter);
         }
@@ -601,8 +605,8 @@ class HomeController extends Controller
         // List Transaksi Terakhir (untuk melihat siapa yang baru bayar, termasuk bayar tunggakan)
         // Filter berdasarkan wilayah user penarik
         $recentTransactionsQuery = Pembayaran::with('pelanggan')
-            ->whereMonth('tanggal_bayar', now()->month)
-            ->whereYear('tanggal_bayar', now()->year);
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year);
         
         // Jika penarik, filter berdasarkan wilayah
         if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
@@ -634,19 +638,16 @@ class HomeController extends Controller
                 ];
             });
 
-        // Hitung Statistik Bulanan untuk Grafik
+        // Hitung Statistik Bulanan untuk Grafik (Accrual Based to match Laporan)
         $monthlyStats = [];
         $currentYear = now()->year;
         
         for ($m = 1; $m <= 12; $m++) {
-            $monthDate = \Carbon\Carbon::createFromDate($currentYear, $m, 1);
-            $monthStr = $monthDate->format('Y-m');
-            $monthName = $monthDate->locale('id')->isoFormat('MMM');
+            $monthStr = $currentYear . '-' . str_pad($m, 2, '0', STR_PAD_LEFT);
+            $monthName = \Carbon\Carbon::createFromDate($currentYear, $m, 1)->locale('id')->isoFormat('MMM');
             
-            // Pemasukan (Total Received in Month m)
-            $pemasukan = Pembayaran::whereYear('tanggal_bayar', $currentYear)
-                ->whereMonth('tanggal_bayar', $m)
-                ->sum('jumlah_bayar');
+            // Pemasukan (Total Billed & Paid for Month m)
+            $pemasukan = Pembayaran::where('bulan_bayar', $monthStr)->sum('jumlah_bayar');
             
             // Pengeluaran (Based on Report Month)
             $laporan = \App\Models\LaporanBulanan::where('bulan', $monthStr)->first();

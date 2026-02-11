@@ -23,13 +23,12 @@ class LaporanController extends Controller
         // === 1. Query Data Pembayaran (Untuk Tabel & Total Tarikan) ===
         $query = Pembayaran::with('pelanggan');
 
-        // Filter Tahun & Bulan via tanggal_bayar (Cash Flow Basis)
+        // Filter Tahun & Bulan via bulan_bayar (Accrual Basis)
         if ($bulan && $bulan !== 'semua') {
-            $query->whereYear('tanggal_bayar', $tahun)
-                  ->whereMonth('tanggal_bayar', $bulan);
+            $query->where('bulan_bayar', $tahun . '-' . $bulan);
         } else {
              // Semua bulan di tahun ini
-            $query->whereYear('tanggal_bayar', $tahun);
+            $query->where('bulan_bayar', 'like', $tahun . '-%');
         }
 
         // Filter Wilayah untuk penarik
@@ -110,15 +109,14 @@ class LaporanController extends Controller
         $srBelumBayar = max(0, $totalSR - $srSudahBayar);
 
         // === 4. Hitung Saldo Awal (Akumulasi Bulan Sebelumnya) ===
-        // Logic: Cash Flow based (Based on Payment Date)
+        // Logic: Accrual / Billing Period Basis (bulan_bayar)
+        // This ensures back-filled data for previous months counts as "Saldo Awal"
         
-        $currentYear = $tahun;
-        $currentMonth = ($bulan && $bulan !== 'semua') ? $bulan : '01'; // If all, assume start of year
-        $startDate = Carbon::createFromDate($currentYear, $currentMonth, 1)->startOfMonth();
+        $previousLimit = ($bulan && $bulan !== 'semua') ? $tahun . '-' . $bulan : $tahun . '-01';
         
-        // A. Pemasukan Lalu (Saldo Masuk sebelum periode ini)
+        // A. Pemasukan Lalu (Saldo Masuk sebelum periode laporan ini)
         $queryLalu = Pembayaran::query();
-        $queryLalu->where('tanggal_bayar', '<', $startDate);
+        $queryLalu->where('bulan_bayar', '<', $previousLimit);
         
         // Filter Wilayah (Copy logic dari atas)
         if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
@@ -135,11 +133,8 @@ class LaporanController extends Controller
         $pemasukanLalu = $queryLalu->sum('jumlah_bayar');
 
         // B. Pengeluaran Lalu (Biaya Operasional)
-        // Expenses are usually booked by month period, so we filter by 'bulan' column < Current Month YYYY-MM
-        $previousMonthStr = $startDate->format('Y-m');
-        
         $laporanLaluQuery = LaporanBulanan::query();
-        $laporanLaluQuery->where('bulan', '<', $previousMonthStr);
+        $laporanLaluQuery->where('bulan', '<', $previousLimit);
 
         if ($wilayah && $wilayah !== 'semua') {
              $laporanLaluQuery->where('wilayah', $wilayah);
@@ -158,7 +153,7 @@ class LaporanController extends Controller
         $saldoAwal = ($pemasukanLalu * 0.80) - $totalBiayaLalu;
 
         // === 5. Opsi Filter ===
-        $tahunOpsi = Pembayaran::selectRaw('YEAR(tanggal_bayar) as tahun')
+        $tahunOpsi = Pembayaran::selectRaw('LEFT(bulan_bayar, 4) as tahun')
             ->distinct()
             ->orderBy('tahun', 'desc')
             ->pluck('tahun')
@@ -346,10 +341,9 @@ class LaporanController extends Controller
         $query = Pembayaran::with('pelanggan');
 
         if ($bulan && $bulan !== 'semua') {
-            $query->whereYear('tanggal_bayar', $tahun)
-                  ->whereMonth('tanggal_bayar', $bulan);
+            $query->where('bulan_bayar', $tahun . '-' . $bulan);
         } else {
-             $query->whereYear('tanggal_bayar', $tahun);
+            $query->where('bulan_bayar', 'like', $tahun . '-%');
         }
 
         // Filter Wilayah untuk penarik
