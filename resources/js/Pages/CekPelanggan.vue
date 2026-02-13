@@ -751,16 +751,50 @@
                             </svg>
                         </button>
                     </div>
-                    <div class="mt-2">
-                        <img :src="selectedPhoto?.foto_rumah_url" :alt="`Foto Rumah ${selectedPhoto?.nama_pelanggan}`" class="w-full h-auto rounded-lg" />
+                    
+                    <!-- Loading State -->
+                    <div v-if="photoLoading" class="mt-2 flex justify-center items-center py-20">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                     </div>
+                    
+                    <!-- Photo Display -->
+                    <div v-else-if="selectedPhoto?.foto_rumah_url" class="mt-2">
+                        <img 
+                            :src="selectedPhoto.foto_rumah_url" 
+                            :alt="`Foto Rumah ${selectedPhoto.nama_pelanggan}`" 
+                            class="w-full h-auto rounded-lg border border-gray-200"
+                            @load="photoLoading = false"
+                            @error="handlePhotoError"
+                        />
+                    </div>
+                    
+                    <!-- Error State -->
+                    <div v-else-if="photoError" class="mt-2 p-8 text-center bg-red-50 rounded-lg">
+                        <svg class="w-16 h-16 mx-auto text-red-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <h3 class="text-lg font-medium text-red-900 mb-2">Foto Tidak Dapat Dimuat</h3>
+                        <p class="text-sm text-red-700 mb-4">{{ photoErrorMessage }}</p>
+                        <p class="text-xs text-gray-600">File mungkin tidak ada atau storage link belum dibuat.</p>
+                    </div>
+                    
+                    <!-- No Photo State -->
+                    <div v-else class="mt-2 p-8 text-center bg-gray-50 rounded-lg">
+                        <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p class="text-gray-600">Tidak ada foto rumah</p>
+                    </div>
+                    
                     <div class="mt-4 flex justify-between items-center">
                         <div class="text-sm text-gray-600">
                             <p><span class="font-semibold">ID Pelanggan:</span> {{ selectedPhoto?.id_pelanggan }}</p>
+                            <p><span class="font-semibold">NIK:</span> {{ selectedPhoto?.nik || '-' }}</p>
                             <p><span class="font-semibold">Wilayah:</span> {{ selectedPhoto?.wilayah }}</p>
                         </div>
                         <a 
-                            :href="selectedPhoto?.foto_rumah_url" 
+                            v-if="selectedPhoto?.foto_rumah_url && !photoError"
+                            :href="selectedPhoto.foto_rumah_url" 
                             download 
                             class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition inline-flex items-center"
                         >
@@ -817,6 +851,9 @@ const wilayahFilter = ref('all');
 const showMobileMenu = ref(false);
 const showPhotoModal = ref(false);
 const selectedPhoto = ref(null);
+const photoLoading = ref(false);
+const photoError = ref(false);
+const photoErrorMessage = ref('');
 
 // Tab state
 const activeTab = ref('pelanggan');
@@ -1321,7 +1358,20 @@ const printReceipt = (pembayaranId) => {
 
 const showFotoModal = (pelanggan) => {
     selectedPhoto.value = pelanggan;
+    photoLoading.value = true;
+    photoError.value = false;
+    photoErrorMessage.value = '';
     showPhotoModal.value = true;
+    
+    // Debug: Log URL foto
+    console.log('Foto URL:', pelanggan?.foto_rumah_url);
+};
+
+const handlePhotoError = (event) => {
+    photoLoading.value = false;
+    photoError.value = true;
+    photoErrorMessage.value = 'Gagal memuat foto. File mungkin tidak ditemukan atau storage link belum dibuat.';
+    console.error('Error loading photo:', event);
 };
 
 const exportExcel = () => {
