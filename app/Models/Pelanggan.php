@@ -14,6 +14,7 @@ class Pelanggan extends Model
     protected $fillable = [
         'id_pelanggan',
         'nama_pelanggan',
+        'nik',
         'no_whatsapp',
         'rt',
         'rw',
@@ -23,6 +24,7 @@ class Pelanggan extends Model
         'latitude',
         'longitude',
         'google_maps_url',
+        'foto_rumah',
         'bulan_bayar',
         'tanggal_bayar',
         'jumlah_bayar',
@@ -132,5 +134,17 @@ class Pelanggan extends Model
     {
         $svg = $this->generateQrCode('svg', 200);
         return 'data:image/svg+xml;base64,' . base64_encode($svg);
+    }
+    
+    /**
+     * Get URL foto rumah
+     */
+    public function getFotoRumahUrlAttribute(): ?string
+    {
+        if (!$this->foto_rumah) {
+            return null;
+        }
+        
+        return asset('storage/' . $this->foto_rumah);
     }
 }

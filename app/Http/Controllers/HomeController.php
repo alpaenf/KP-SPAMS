@@ -366,6 +366,7 @@ class HomeController extends Controller
                 'id' => $p->id,
                 'id_pelanggan' => $p->id_pelanggan,
                 'nama_pelanggan' => $p->nama_pelanggan,
+                'nik' => $p->nik,
                 'no_whatsapp' => $p->no_whatsapp,
                 'rt' => $p->rt,
                 'rw' => $p->rw,
@@ -375,6 +376,7 @@ class HomeController extends Controller
                 'has_coordinates' => $p->hasCoordinates(),
                 'google_maps_link' => $p->google_maps_link,
                 'google_maps_url' => $p->google_maps_url,
+                'foto_rumah_url' => $p->foto_rumah_url,
                 'sudah_bayar' => $sudahBayar,
                 'tanggal_bayar' => $isSosial ? '-' : ($pembayaranBulanIni?->tanggal_bayar?->format('d/m/Y')),
                 'jumlah_bayar' => $jumlahTagihan,
@@ -717,6 +719,7 @@ class HomeController extends Controller
         $validated = $request->validate([
             'id_pelanggan' => 'required|string|max:50|unique:pelanggan,id_pelanggan',
             'nama_pelanggan' => 'required|string|max:255',
+            'nik' => 'nullable|string|max:16',
             'no_whatsapp' => 'nullable|string|max:20',
             'rt' => 'nullable|numeric|max:999',
             'rw' => 'nullable|numeric|max:999',
@@ -725,8 +728,15 @@ class HomeController extends Controller
             'latitude' => 'nullable|numeric|max:999',
             'longitude' => 'nullable|numeric',
             'google_maps_url' => 'nullable|url|max:500',
+            'foto_rumah' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
             'status_aktif' => 'boolean',
         ]);
+        
+        // Handle foto rumah upload
+        if ($request->hasFile('foto_rumah')) {
+            $path = $request->file('foto_rumah')->store('foto_rumah', 'public');
+            $validated['foto_rumah'] = $path;
+        }
         
         // Debug: Log kategori yang diterima
         \Log::info('Kategori received:', ['kategori' => $request->kategori, 'validated' => $validated['kategori']]);
@@ -743,6 +753,7 @@ class HomeController extends Controller
                 'id' => $pelanggan->id,
                 'id_pelanggan' => $pelanggan->id_pelanggan,
                 'nama_pelanggan' => $pelanggan->nama_pelanggan,
+                'nik' => $pelanggan->nik,
                 'no_whatsapp' => $pelanggan->no_whatsapp,
                 'rt' => $pelanggan->rt,
                 'rw' => $pelanggan->rw,
@@ -751,6 +762,8 @@ class HomeController extends Controller
                 'latitude' => $pelanggan->latitude,
                 'longitude' => $pelanggan->longitude,
                 'google_maps_url' => $pelanggan->google_maps_url,
+                'foto_rumah' => $pelanggan->foto_rumah,
+                'foto_rumah_url' => $pelanggan->foto_rumah_url,
                 'status_aktif' => $pelanggan->status_aktif,
             ]
         ]);
@@ -761,6 +774,7 @@ class HomeController extends Controller
         $validated = $request->validate([
             'id_pelanggan' => 'required|string|max:50|unique:pelanggan,id_pelanggan,' . $pelanggan->id,
             'nama_pelanggan' => 'required|string|max:255',
+            'nik' => 'nullable|string|max:16',
             'no_whatsapp' => 'nullable|string|max:20',
             'rt' => 'nullable|numeric|max:999',
             'rw' => 'nullable|numeric|max:999',
@@ -769,8 +783,20 @@ class HomeController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'google_maps_url' => 'nullable|url|max:500',
+            'foto_rumah' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
             'status_aktif' => 'boolean',
         ]);
+        
+        // Handle foto rumah upload
+        if ($request->hasFile('foto_rumah')) {
+            // Hapus foto lama jika ada
+            if ($pelanggan->foto_rumah && \Storage::disk('public')->exists($pelanggan->foto_rumah)) {
+                \Storage::disk('public')->delete($pelanggan->foto_rumah);
+            }
+            
+            $path = $request->file('foto_rumah')->store('foto_rumah', 'public');
+            $validated['foto_rumah'] = $path;
+        }
         
         $pelanggan->update($validated);
         

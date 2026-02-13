@@ -46,6 +46,22 @@
                                 <p v-if="errors.nama_pelanggan" class="mt-1 text-sm text-red-600">{{ errors.nama_pelanggan }}</p>
                             </div>
 
+                            <!-- NIK -->
+                            <div>
+                                <label for="nik" class="block text-sm font-medium text-gray-700 mb-2">NIK</label>
+                                <input
+                                    type="text"
+                                    id="nik"
+                                    v-model="form.nik"
+                                    placeholder="3579012345678901"
+                                    maxlength="16"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                                    :class="{ 'border-red-500': errors.nik }"
+                                />
+                                <p v-if="errors.nik" class="mt-1 text-sm text-red-600">{{ errors.nik }}</p>
+                                <p class="mt-1 text-xs text-gray-500">Nomor Induk Kependudukan (16 digit)</p>
+                            </div>
+
                             <!-- No WhatsApp -->
                             <div>
                                 <label for="no_whatsapp" class="block text-sm font-medium text-gray-700 mb-2">No. WhatsApp</label>
@@ -198,6 +214,36 @@
                             <p class="mt-1 text-xs text-gray-500">Paste shortened Google Maps link (contoh: https://maps.app.goo.gl/8jxgfLkPirsLH9uc7)</p>
                         </div>
 
+                        <!-- Foto Rumah -->
+                        <div class="mt-6">
+                            <label for="foto_rumah" class="block text-sm font-medium text-gray-700 mb-2">
+                                Foto Rumah
+                            </label>
+                            
+                            <!-- Foto Lama -->
+                            <div v-if="props.pelanggan.foto_rumah_url && !photoPreview" class="mb-3">
+                                <p class="text-sm text-gray-600 mb-2">Foto saat ini:</p>
+                                <img :src="props.pelanggan.foto_rumah_url" alt="Foto Rumah" class="w-48 h-48 object-cover rounded-lg border border-gray-300" />
+                            </div>
+                            
+                            <input
+                                type="file"
+                                id="foto_rumah"
+                                accept="image/jpeg,image/jpg,image/png"
+                                @change="handleFileUpload"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                                :class="{ 'border-red-500': errors.foto_rumah }"
+                            />
+                            <p v-if="errors.foto_rumah" class="mt-1 text-sm text-red-600">{{ errors.foto_rumah }}</p>
+                            <p class="mt-1 text-xs text-gray-500">Format: JPG, JPEG, PNG. Maksimal 2MB. Kosongkan jika tidak ingin mengubah foto</p>
+                            
+                            <!-- Preview Foto Baru -->
+                            <div v-if="photoPreview" class="mt-4">
+                                <p class="text-sm font-medium text-gray-700 mb-2">Preview foto baru:</p>
+                                <img :src="photoPreview" alt="Preview" class="w-48 h-48 object-cover rounded-lg border border-gray-300" />
+                            </div>
+                        </div>
+
                         <!-- Status Aktif -->
                         <div class="mt-6">
                             <label class="flex items-center">
@@ -253,6 +299,7 @@ const props = defineProps({
 const form = ref({
     id_pelanggan: props.pelanggan.id_pelanggan,
     nama_pelanggan: props.pelanggan.nama_pelanggan,
+    nik: props.pelanggan.nik || '',
     no_whatsapp: props.pelanggan.no_whatsapp || '',
     rt: props.pelanggan.rt,
     rw: props.pelanggan.rw,
@@ -261,16 +308,40 @@ const form = ref({
     latitude: props.pelanggan.latitude,
     longitude: props.pelanggan.longitude,
     google_maps_url: props.pelanggan.google_maps_url || '',
-
+    foto_rumah: null,
     status_aktif: props.pelanggan.status_aktif
 });
 
 const processing = ref(false);
+const photoPreview = ref(null);
+
+const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        form.value.foto_rumah = file;
+        
+        // Create preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            photoPreview.value = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+};
 
 const submitForm = () => {
     processing.value = true;
     
-    router.put(`/pelanggan/${props.pelanggan.id}`, form.value, {
+    // Create FormData for file upload
+    const formData = new FormData();
+    for (const key in form.value) {
+        if (form.value[key] !== null && form.value[key] !== '') {
+            formData.append(key, form.value[key]);
+        }
+    }
+    formData.append('_method', 'PUT');
+    
+    router.post(`/pelanggan/${props.pelanggan.id}`, formData, {
         onFinish: () => {
             processing.value = false;
         }

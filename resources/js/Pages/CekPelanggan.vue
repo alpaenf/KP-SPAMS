@@ -230,12 +230,14 @@
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID Pelanggan</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Nama</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">NIK</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">No. WhatsApp</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">RT / RW</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Wilayah</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Kategori</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Status Bayar</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Foto Rumah</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Lokasi</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Google Maps</th>
                                     <th v-if="$page.props.auth?.user" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Aksi</th>
@@ -256,6 +258,9 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900">{{ item.nama_pelanggan }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">{{ item.nik || '-' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <a v-if="item.no_whatsapp" :href="`https://wa.me/${item.no_whatsapp.replace(/^0/, '62')}`" target="_blank" class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm">
@@ -336,6 +341,19 @@
                                             </svg>
                                             Belum Bayar
                                         </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <button 
+                                            v-if="item.foto_rumah_url"
+                                            @click="showFotoModal(item)"
+                                            class="inline-flex items-center px-3 py-1 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-700 transition"
+                                        >
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            Lihat Foto
+                                        </button>
+                                        <span v-else class="text-gray-400 text-xs">Tidak ada foto</span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                                         <Link 
@@ -715,6 +733,47 @@
             </div> <!-- Penutup max-w-7xl mx-auto -->
         </div> <!-- Penutup py-12 -->
     </AppLayout>
+    
+    <!-- Modal Foto Rumah -->
+    <div v-if="showPhotoModal" class="fixed inset-0 z-50 overflow-y-auto" @click="showPhotoModal = false">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full" @click.stop>
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-gray-900">
+                            Foto Rumah - {{ selectedPhoto?.nama_pelanggan }}
+                        </h3>
+                        <button @click="showPhotoModal = false" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="mt-2">
+                        <img :src="selectedPhoto?.foto_rumah_url" :alt="`Foto Rumah ${selectedPhoto?.nama_pelanggan}`" class="w-full h-auto rounded-lg" />
+                    </div>
+                    <div class="mt-4 flex justify-between items-center">
+                        <div class="text-sm text-gray-600">
+                            <p><span class="font-semibold">ID Pelanggan:</span> {{ selectedPhoto?.id_pelanggan }}</p>
+                            <p><span class="font-semibold">Wilayah:</span> {{ selectedPhoto?.wilayah }}</p>
+                        </div>
+                        <a 
+                            :href="selectedPhoto?.foto_rumah_url" 
+                            download 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition inline-flex items-center"
+                        >
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Download
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup>
@@ -756,6 +815,8 @@ const statusFilter = ref('all');
 const bulanFilter = ref('all');
 const wilayahFilter = ref('all');
 const showMobileMenu = ref(false);
+const showPhotoModal = ref(false);
+const selectedPhoto = ref(null);
 
 // Tab state
 const activeTab = ref('pelanggan');
@@ -1256,6 +1317,11 @@ const downloadPdf = (pembayaranId) => {
 const printReceipt = (pembayaranId) => {
     // Open print view in new window
     window.open(`/pembayaran/${pembayaranId}/print`, '_blank');
+};
+
+const showFotoModal = (pelanggan) => {
+    selectedPhoto.value = pelanggan;
+    showPhotoModal.value = true;
 };
 
 const exportExcel = () => {
