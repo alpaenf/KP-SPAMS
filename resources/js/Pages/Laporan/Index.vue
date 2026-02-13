@@ -197,11 +197,18 @@
                              <p class="text-xs text-pink-600 mt-1">Biaya lain-lain (Klik untuk edit)</p>
                         </div>
 
+                        <!-- Biaya CSR -->
+                        <div class="bg-purple-50 rounded-xl p-4 sm:p-5 border border-purple-100 cursor-pointer hover:bg-purple-100 transition" @click="openModalOperasional" title="Klik untuk update">
+                             <h4 class="text-xs sm:text-sm font-semibold text-purple-900 mb-2">Biaya CSR</h4>
+                             <p class="text-xl sm:text-2xl font-bold text-purple-800">{{ formatRupiah(detail.biayaCSR || 0) }}</p>
+                             <p class="text-xs text-purple-600 mt-1">Corporate Social  Responsibility (Klik untuk edit)</p>
+                        </div>
+
                         <!-- Total Semua Biaya -->
                         <div class="bg-red-50 rounded-xl p-4 sm:p-5 border border-red-100">
                              <h4 class="text-xs sm:text-sm font-semibold text-red-900 mb-2">Total Semua Biaya</h4>
-                             <p class="text-xl sm:text-2xl font-bold text-red-800">{{ formatRupiah((Number(detail?.honorPenarik) || 0) + (Number(detail?.biayaOpsLapangan) || 0) + (Number(detail?.biayaPadDesa) || 0) + (Number(detail?.biayaLainLain) || 0)) }}</p>
-                             <p class="text-xs text-red-600 mt-1">Honor + Ops + PAD + Lain-lain</p>
+                             <p class="text-xl sm:text-2xl font-bold text-red-800">{{ formatRupiah((Number(detail?.honorPenarik) || 0) + (Number(detail?.biayaOpsLapangan) || 0) + (Number(detail?.biayaPadDesa) || 0) + (Number(detail?.biayaLainLain) || 0) + (Number(detail?.biayaCSR) || 0)) }}</p>
+                             <p class="text-xs text-red-600 mt-1">Honor + Ops + PAD + Lain-lain + CSR</p>
                         </div>
                     </div>
 
@@ -386,6 +393,19 @@
                             <p class="text-xs text-gray-500 mt-1">Biaya lain-lain</p>
                         </div>
 
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya CSR (Rp)</label>
+                            <input 
+                                type="number" 
+                                v-model="formOperasional.biaya_csr"
+                                step="1000"
+                                min="0"
+                                placeholder="0"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">Corporate Social Responsibility</p>
+                        </div>
+
                         <div class="flex gap-3">
                             <button 
                                 type="submit"
@@ -461,6 +481,7 @@ const formOperasional = reactive({
     biaya_pad_desa: 0,
     biaya_operasional_lapangan: 0,
     biaya_lain_lain: 0,
+    biaya_csr: 0,
     wilayah: ''
 });
 
@@ -480,6 +501,7 @@ const openModalOperasional = () => {
     formOperasional.biaya_pad_desa = props.detail ? props.detail.biayaPadDesa : 0;
     formOperasional.biaya_operasional_lapangan = props.detail ? props.detail.biayaOpsLapangan : 0;
     formOperasional.biaya_lain_lain = props.detail ? props.detail.biayaLainLain : 0;
+    formOperasional.biaya_csr = props.detail ? (props.detail.biayaCSR || 0) : 0;
     formOperasional.wilayah = form.value.wilayah !== 'semua' ? form.value.wilayah : null; // Use filter wilayah if exists
     
     showModalOperasional.value = true;
