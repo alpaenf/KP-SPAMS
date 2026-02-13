@@ -1,5 +1,12 @@
 <template>
     <AppLayout>
+        <!-- Debug Info - Hapus setelah fix -->
+        <div v-if="false" class="bg-yellow-100 border-l-4 border-yellow-500 p-4 m-4">
+            <p class="font-bold">Debug Info:</p>
+            <p>Total Pelanggan: {{ pelangganList?.length || 0 }}</p>
+            <p>Filtered: {{ filteredPelanggan?.length || 0 }}</p>
+        </div>
+        
         <div class="py-12">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="mb-6">
