@@ -6,6 +6,7 @@ use App\Models\Pelanggan;
 use App\Models\Pembayaran;
 use App\Models\PaymentSetting;
 use App\Exports\PelangganExport;
+use App\Helpers\WilayahHelper;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
@@ -444,7 +445,9 @@ class HomeController extends Controller
         
         // Admin bisa filter wilayah manual, penarik otomatis filtered
         if ($wilayahFilter && auth()->user()->isAdmin()) {
-            $pelangganQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayahFilter))]);
+            $wilayahNormalized = WilayahHelper::normalize($wilayahFilter);
+            $sqlExpr = WilayahHelper::getSqlExpression();
+            $pelangganQuery->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
         }
         
         $totalPelanggan = (clone $pelangganQuery)->count();
@@ -561,7 +564,9 @@ class HomeController extends Controller
         
         // Admin bisa filter wilayah manual
         if ($wilayahFilter && auth()->user()->isAdmin()) {
-            $pelangganBelumBayarQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayahFilter))]);
+            $wilayahNormalized = WilayahHelper::normalize($wilayahFilter);
+            $sqlExpr = WilayahHelper::getSqlExpression();
+            $pelangganBelumBayarQuery->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
         }
         
         $pelangganBelumBayar = $pelangganBelumBayarQuery
@@ -578,12 +583,16 @@ class HomeController extends Controller
         // Jika penarik, filter berdasarkan wilayah
         if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
             $recentTransactionsQuery->whereHas('pelanggan', function ($q) {
-                $q->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim(auth()->user()->getWilayah()))]);
+                $wilayahNormalized = WilayahHelper::normalize(auth()->user()->getWilayah());
+                $sqlExpr = WilayahHelper::getSqlExpression();
+                $q->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
             });
         } elseif ($wilayahFilter && auth()->user()->isAdmin()) {
             // Admin dengan filter wilayah
             $recentTransactionsQuery->whereHas('pelanggan', function ($q) use ($wilayahFilter) {
-                $q->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayahFilter))]);
+                $wilayahNormalized = WilayahHelper::normalize($wilayahFilter);
+                $sqlExpr = WilayahHelper::getSqlExpression();
+                $q->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
             });
         }
         
@@ -617,11 +626,15 @@ class HomeController extends Controller
             // Filter berdasarkan role dan wilayah
             if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
                 $pembayaranQuery->whereHas('pelanggan', function ($q) {
-                    $q->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim(auth()->user()->getWilayah()))]);
+                    $wilayahNormalized = WilayahHelper::normalize(auth()->user()->getWilayah());
+                    $sqlExpr = WilayahHelper::getSqlExpression();
+                    $q->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
                 });
             } elseif ($wilayahFilter && auth()->user()->isAdmin()) {
                 $pembayaranQuery->whereHas('pelanggan', function ($q) use ($wilayahFilter) {
-                    $q->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayahFilter))]);
+                    $wilayahNormalized = WilayahHelper::normalize($wilayahFilter);
+                    $sqlExpr = WilayahHelper::getSqlExpression();
+                    $q->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
                 });
             }
             
@@ -631,9 +644,13 @@ class HomeController extends Controller
             $laporanQuery = \App\Models\LaporanBulanan::where('bulan', $targetMonth);
             
             if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
-                $laporanQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim(auth()->user()->getWilayah()))]);
+                $wilayahNormalized = WilayahHelper::normalize(auth()->user()->getWilayah());
+                $sqlExpr = WilayahHelper::getSqlExpression();
+                $laporanQuery->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
             } elseif ($wilayahFilter && auth()->user()->isAdmin()) {
-                $laporanQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayahFilter))]);
+                $wilayahNormalized = WilayahHelper::normalize($wilayahFilter);
+                $sqlExpr = WilayahHelper::getSqlExpression();
+                $laporanQuery->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
             }
             
             $laporan = $laporanQuery->first();
@@ -1004,9 +1021,11 @@ class HomeController extends Controller
             $query->where('status_aktif', false);
         }
 
-        // Filter wilayah (case-insensitive)
+        // Filter wilayah (case-insensitive dengan underscore normalization)
         if ($wilayah !== 'all') {
-            $query->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayah))]);
+            $wilayahNormalized = WilayahHelper::normalize($wilayah);
+            $sqlExpr = WilayahHelper::getSqlExpression();
+            $query->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
         }
 
         $pelangganList = $query->orderBy('id_pelanggan', 'asc')->get()

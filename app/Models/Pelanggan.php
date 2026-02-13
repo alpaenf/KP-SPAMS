@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Helpers\WilayahHelper;
 
 class Pelanggan extends Model
 {
@@ -70,17 +71,18 @@ class Pelanggan extends Model
             return $query;
         }
         
-        // Penarik hanya bisa lihat wilayahnya (case-insensitive)
+        // Penarik hanya bisa lihat wilayahnya (case-insensitive, normalisasi underscore/spasi)
         if ($user->isPenarik() && $user->hasWilayah()) {
-            $wilayahUser = strtolower(trim($user->getWilayah()));
-            return $query->whereRaw('LOWER(TRIM(wilayah)) = ?', [$wilayahUser]);
+            $wilayahNormalized = WilayahHelper::normalize($user->getWilayah());
+            $sqlExpr = WilayahHelper::getSqlExpression();
+            return $query->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
         }
         
         return $query;
     }
     
     /**
-     * Scope: Filter berdasarkan wilayah tertentu (case-insensitive)
+     * Scope: Filter berdasarkan wilayah tertentu (case-insensitive, normalisasi underscore/spasi)
      */
     public function scopeByWilayah($query, $wilayah)
     {
@@ -88,8 +90,9 @@ class Pelanggan extends Model
             return $query;
         }
         
-        $wilayahLower = strtolower(trim($wilayah));
-        return $query->whereRaw('LOWER(TRIM(wilayah)) = ?', [$wilayahLower]);
+        $wilayahNormalized = WilayahHelper::normalize($wilayah);
+        $sqlExpr = WilayahHelper::getSqlExpression();
+        return $query->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
     }
     
     public function getGoogleMapsLinkAttribute(): ?string

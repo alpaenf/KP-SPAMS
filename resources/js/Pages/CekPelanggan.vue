@@ -852,11 +852,11 @@ const filteredPelanggan = computed(() => {
         result = result.filter(p => !p.status_aktif);
     }
     
-    // Filter berdasarkan wilayah (case-insensitive dan trim)
+    // Filter berdasarkan wilayah (case-insensitive, trim, dan normalisasi underscore/spasi)
     if (wilayahFilter.value !== 'all') {
-        const filterValue = wilayahFilter.value.toLowerCase().trim();
+        const filterValue = wilayahFilter.value.toLowerCase().trim().replace(/_/g, ' ').replace(/\s+/g, ' ');
         result = result.filter(p => {
-            const pelangganWilayah = (p.wilayah || '').toLowerCase().trim();
+            const pelangganWilayah = (p.wilayah || '').toLowerCase().trim().replace(/_/g, ' ').replace(/\s+/g, ' ');
             return pelangganWilayah === filterValue;
         });
     }
@@ -892,12 +892,14 @@ const getStatusBayar = (pelanggan) => {
     };
 };
 
-// Computed untuk wilayah options (dinamis dari data)
+// Computed untuk wilayah options (dinamis dari data, normalisasi underscore)
 const wilayahOptions = computed(() => {
     const wilayahSet = new Set();
     allPelanggan.value.forEach(p => {
         if (p.wilayah) {
-            wilayahSet.add(p.wilayah.trim());
+            // Normalisasi: underscore jadi spasi, trim, lowercase untuk set
+            const normalized = p.wilayah.trim().replace(/_/g, ' ');
+            wilayahSet.add(normalized);
         }
     });
     return Array.from(wilayahSet).sort();
@@ -916,12 +918,11 @@ const filteredPembayaranList = computed(() => {
         );
     }
     
-    // Filter by wilayah
-    // Filter by wilayah (case-insensitive dan trim)
+    // Filter by wilayah (case-insensitive, trim, dan normalisasi underscore/spasi)
     if (wilayahFilterPembayaran.value !== 'all') {
-        const filterValue = wilayahFilterPembayaran.value.toLowerCase().trim();
+        const filterValue = wilayahFilterPembayaran.value.toLowerCase().trim().replace(/_/g, ' ').replace(/\s+/g, ' ');
         result = result.filter(p => {
-            const pelangganWilayah = (p.wilayah || '').toLowerCase().trim();
+            const pelangganWilayah = (p.wilayah || '').toLowerCase().trim().replace(/_/g, ' ').replace(/\s+/g, ' ');
             return pelangganWilayah === filterValue;
         });
     }

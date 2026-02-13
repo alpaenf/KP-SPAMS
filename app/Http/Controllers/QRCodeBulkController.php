@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pelanggan;
+use App\Helpers\WilayahHelper;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -17,9 +18,11 @@ class QRCodeBulkController extends Controller
     {
         $query = Pelanggan::query();
         
-        // Filter berdasarkan wilayah jika ada (case-insensitive)
+        // Filter berdasarkan wilayah jika ada (case-insensitive dengan underscore normalization)
         if ($request->has('wilayah') && $request->wilayah !== 'all') {
-            $query->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($request->wilayah))]);
+            $wilayahNormalized = WilayahHelper::normalize($request->wilayah);
+            $sqlExpr = WilayahHelper::getSqlExpression();
+            $query->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
         }
         
         // Filter berdasarkan RT/RW jika ada
@@ -67,9 +70,11 @@ class QRCodeBulkController extends Controller
     {
         $query = Pelanggan::query();
         
-        // Filter berdasarkan wilayah jika ada (case-insensitive)
+        // Filter berdasarkan wilayah jika ada (case-insensitive dengan underscore normalization)
         if ($request->has('wilayah') && $request->wilayah !== 'all') {
-            $query->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($request->wilayah))]);
+            $wilayahNormalized = WilayahHelper::normalize($request->wilayah);
+            $sqlExpr = WilayahHelper::getSqlExpression();
+            $query->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
         }
         
         // Filter berdasarkan RT/RW jika ada

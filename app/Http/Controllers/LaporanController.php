@@ -6,6 +6,7 @@ use App\Models\LaporanBulanan;
 use App\Models\Pelanggan;
 use App\Models\Pembayaran;
 use App\Exports\LaporanExport;
+use App\Helpers\WilayahHelper;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -29,9 +30,9 @@ class LaporanController extends Controller
         if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
             // Penarik hanya bisa lihat wilayahnya sendiri (already handled by forUser)
         } elseif ($wilayah && $wilayah !== 'semua') {
-            // Admin bisa filter wilayah manual
+            // Admin bisa filter wilayah manual (menggunakan normalized matching)
             $pelangganQuery->where(function ($q) use ($wilayah) {
-                $q->where('wilayah', $wilayah)
+                $q->byWilayah($wilayah) // Use normalized scope
                   ->orWhere('rw', $wilayah)
                   ->orWhere('rt', $wilayah);
             });
@@ -113,9 +114,13 @@ class LaporanController extends Controller
         
         // Jika filter wilayah ada (penarik otomatis, admin manual)
         if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
-            $laporanQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim(auth()->user()->getWilayah()))]);
+            $wilayahNormalized = WilayahHelper::normalize(auth()->user()->getWilayah());
+            $sqlExpr = WilayahHelper::getSqlExpression();
+            $laporanQuery->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
         } elseif ($wilayah && $wilayah !== 'semua') {
-            $laporanQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayah))]);
+            $wilayahNormalized = WilayahHelper::normalize($wilayah);
+            $sqlExpr = WilayahHelper::getSqlExpression();
+            $laporanQuery->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
         }
 
         $biayaOperasional = $laporanQuery->sum('biaya_operasional_penarik');
@@ -237,7 +242,9 @@ class LaporanController extends Controller
         }
         
         if ($wilayah && $wilayah !== 'semua') {
-            $laporanQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayah))]);
+            $wilayahNormalized = WilayahHelper::normalize($wilayah);
+            $sqlExpr = WilayahHelper::getSqlExpression();
+            $laporanQuery->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
         }
         
         $laporanBulanan = $laporanQuery->get();
@@ -305,9 +312,10 @@ class LaporanController extends Controller
             // Penarik hanya bisa lihat wilayahnya sendiri (already handled by forUser)
         } elseif ($wilayah && $wilayah !== 'semua') {
             // Admin bisa filter wilayah manual (case-insensitive)
-            $wilayahLower = strtolower(trim($wilayah));
-            $pelangganQuery->where(function ($q) use ($wilayahLower, $wilayah) {
-                $q->whereRaw('LOWER(TRIM(wilayah)) = ?', [$wilayahLower])
+            $wilayahNormalized = WilayahHelper::normalize($wilayah);
+            $sqlExpr = WilayahHelper::getSqlExpression();
+            $pelangganQuery->where(function ($q) use ($wilayahNormalized, $sqlExpr, $wilayah) {
+                $q->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized])
                   ->orWhere('rw', $wilayah)
                   ->orWhere('rt', $wilayah);
             });
@@ -363,9 +371,13 @@ class LaporanController extends Controller
         
         // Jika filter wilayah ada (penarik otomatis, admin manual)
         if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
-            $laporanQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim(auth()->user()->getWilayah()))]);
+            $wilayahNormalized = WilayahHelper::normalize(auth()->user()->getWilayah());
+            $sqlExpr = WilayahHelper::getSqlExpression();
+            $laporanQuery->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
         } elseif ($wilayah && $wilayah !== 'semua') {
-            $laporanQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayah))]);
+            $wilayahNormalized = WilayahHelper::normalize($wilayah);
+            $sqlExpr = WilayahHelper::getSqlExpression();
+            $laporanQuery->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized]);
         }
 
         $biayaOperasional = $laporanQuery->sum('biaya_operasional_penarik');

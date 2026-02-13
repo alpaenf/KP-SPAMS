@@ -703,12 +703,13 @@ const filteredPelanggan = computed(() => {
         data = data.filter(p => String(p.rw || '').includes(rwFilter.value));
     }
     if (searchQuery.value) {
-        const q = searchQuery.value.toLowerCase().trim();
-        data = data.filter(p => 
-            (p.nama_pelanggan || '').toLowerCase().includes(q) || 
-            (p.id_pelanggan || '').toLowerCase().includes(q) ||
-            (p.wilayah || '').toLowerCase().trim().includes(q)
-        );
+        const q = searchQuery.value.toLowerCase().trim().replace(/_/g, ' ').replace(/\s+/g, ' ');
+        data = data.filter(p => {
+            const normalizeStr = (str) => String(str || '').toLowerCase().trim().replace(/_/g, ' ').replace(/\s+/g, ' ');
+            return normalizeStr(p.nama_pelanggan).includes(q) || 
+                   normalizeStr(p.id_pelanggan).includes(q) ||
+                   normalizeStr(p.wilayah).includes(q);
+        });
     }
     return data;
 });
