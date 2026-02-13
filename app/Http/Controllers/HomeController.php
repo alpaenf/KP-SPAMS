@@ -536,11 +536,14 @@ class HomeController extends Controller
         // 3d. Biaya Lain-lain (dari database, bisa diubah)
         $biayaLainLain = $laporanBulanan->biaya_lain_lain ?? 0;
         
+        // 3e. Biaya CSR (dari database, bisa diubah)
+        $biayaCSR = $laporanBulanan->biaya_csr ?? 0;
+        
         // 4. Honor Penarik = 20% + Operasional
         $honorPenarik = $tarik20Persen + $biayaOperasionalPenarik;
         
-        // 4b. Total Semua Biaya = Honor Penarik + PAD Desa + Ops Lapangan + Lain-lain
-        $totalSemuaBiaya = $honorPenarik + $biayaPadDesa + $biayaOpsLapangan + $biayaLainLain;
+        // 4b. Total Semua Biaya = Honor Penarik + PAD Desa + Ops Lapangan + Lain-lain + CSR
+        $totalSemuaBiaya = $honorPenarik + $biayaPadDesa + $biayaOpsLapangan + $biayaLainLain + $biayaCSR;
         
         // 5. Total Tarikan Bersih = Total - Total Semua Biaya
         $totalTarikanBersih = $totalTarikan - $totalSemuaBiaya;
@@ -694,6 +697,7 @@ class HomeController extends Controller
                 'biayaPadDesa' => $biayaPadDesa,
                 'biayaOpsLapangan' => $biayaOpsLapangan,
                 'biayaLainLain' => $biayaLainLain,
+                'biayaCSR' => $biayaCSR,
                 'honorPenarik' => $honorPenarik,
                 'totalSemuaBiaya' => $totalSemuaBiaya,
                 'totalTarikanBersih' => $totalTarikanBersih,
@@ -925,6 +929,7 @@ class HomeController extends Controller
             'biaya_pad_desa' => 'nullable|numeric|min:0',
             'biaya_operasional_lapangan' => 'nullable|numeric|min:0',
             'biaya_lain_lain' => 'nullable|numeric|min:0',
+            'biaya_csr' => 'nullable|numeric|min:0',
             'wilayah' => 'nullable|string|max:100',
         ]);
         
@@ -947,6 +952,10 @@ class HomeController extends Controller
         
         if (isset($validated['biaya_lain_lain'])) {
             $updateData['biaya_lain_lain'] = $validated['biaya_lain_lain'];
+        }
+        
+        if (isset($validated['biaya_csr'])) {
+            $updateData['biaya_csr'] = $validated['biaya_csr'];
         }
         
         if (isset($validated['wilayah'])) {

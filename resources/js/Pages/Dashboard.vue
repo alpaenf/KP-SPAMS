@@ -491,6 +491,18 @@
                             <p class="text-xs text-pink-700 mt-1">Biaya lain-lain</p>
                         </div>
 
+                        <!-- Biaya CSR -->
+                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-5 border border-purple-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-sm font-medium text-purple-900">Biaya CSR</h4>
+                                <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
+                                </svg>
+                            </div>
+                            <p class="text-2xl font-bold text-purple-900">Rp {{ formatRupiah(laporanKeuangan.biayaCSR || 0) }}</p>
+                            <p class="text-xs text-purple-700 mt-1">Corporate Social Responsibility</p>
+                        </div>
+
                         <!-- Total Semua Biaya -->
                         <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-5 border border-red-200">
                             <div class="flex items-center justify-between mb-2">
@@ -642,6 +654,19 @@
                             <p class="text-xs text-gray-500 mt-1">Pendapatan Asli Desa</p>
                         </div>
 
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya CSR (Rp)</label>
+                            <input 
+                                type="number" 
+                                v-model="formOperasional.biaya_csr"
+                                step="1000"
+                                min="0"
+                                placeholder="0"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">Corporate Social Responsibility</p>
+                        </div>
+
                         <div class="flex gap-3">
                             <button 
                                 type="submit"
@@ -717,6 +742,7 @@ const formOperasional = ref({
     bulan: props.laporanKeuangan.bulan,
     biaya_operasional_penarik: props.laporanKeuangan.biayaOperasionalPenarik,
     biaya_pad_desa: props.laporanKeuangan.biayaPadDesa,
+    biaya_csr: props.laporanKeuangan.biayaCSR || 0,
     wilayah: selectedWilayah.value || null
 });
 
@@ -732,6 +758,7 @@ const reloadDashboard = () => {
             formOperasional.value.wilayah = selectedWilayah.value || null;
             formOperasional.value.biaya_operasional_penarik = props.laporanKeuangan.biayaOperasionalPenarik;
             formOperasional.value.biaya_pad_desa = props.laporanKeuangan.biayaPadDesa;
+            formOperasional.value.biaya_csr = props.laporanKeuangan.biayaCSR || 0;
         }
     });
 };
