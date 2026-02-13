@@ -759,27 +759,24 @@
                         </button>
                     </div>
                     
-                    <!-- Photo Display or Loading -->
-                    <div v-if="selectedPhoto?.foto_rumah_url && !photoError" class="mt-2">
-                        <!-- Debug: Show loading state -->
-                        <div v-if="photoLoading" class="flex justify-center items-center py-20 bg-blue-50 rounded-lg">
+                    <!-- Photo Display -->
+                    <div v-if="selectedPhoto?.foto_rumah_url && !photoError" class="mt-2 relative">
+                        <!-- Loading Overlay -->
+                        <div v-if="photoLoading" class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-10 rounded-lg">
                             <div class="text-center">
-                                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-2"></div>
                                 <p class="text-sm text-gray-600">Memuat foto...</p>
-                                <p class="text-xs text-gray-500 mt-2">{{ selectedPhoto.foto_rumah_url }}</p>
                             </div>
                         </div>
                         
                         <!-- Photo -->
-                        <div v-show="!photoLoading">
-                            <img 
-                                :src="selectedPhoto.foto_rumah_url" 
-                                :alt="`Foto Rumah ${selectedPhoto.nama_pelanggan}`" 
-                                class="w-full h-auto rounded-lg border border-gray-200"
-                                @load="onPhotoLoad"
-                                @error="handlePhotoError"
-                            />
-                        </div>
+                        <img 
+                            :src="selectedPhoto.foto_rumah_url" 
+                            :alt="`Foto Rumah ${selectedPhoto.nama_pelanggan}`" 
+                            class="w-full h-auto rounded-lg border border-gray-200"
+                            @load="onPhotoLoad"
+                            @error="handlePhotoError"
+                        />
                     </div>
                     
                     <!-- Error State -->
@@ -1377,17 +1374,23 @@ const showFotoModal = (pelanggan) => {
     selectedPhoto.value = pelanggan;
     photoError.value = false;
     photoErrorMessage.value = '';
+    showPhotoModal.value = true;
     
-    // Check if photo URL exists
+    // Set loading dan timeout fallback
     if (pelanggan?.foto_rumah_url) {
         photoLoading.value = true;
-        console.log('Photo loading set to:', true);
+        console.log('Photo loading set to true');
+        
+        // Fallback: auto-hide loading after 3 seconds
+        setTimeout(() => {
+            if (photoLoading.value) {
+                console.log('Timeout: forcing loading to false');
+                photoLoading.value = false;
+            }
+        }, 3000);
     } else {
         photoLoading.value = false;
-        console.log('No photo URL, loading set to:', false);
     }
-    
-    showPhotoModal.value = true;
 };
 
 const onPhotoLoad = () => {
