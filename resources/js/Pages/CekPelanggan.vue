@@ -752,14 +752,16 @@
                         </button>
                     </div>
                     
-                    <!-- Loading State -->
-                    <div v-if="photoLoading" class="mt-2 flex justify-center items-center py-20">
-                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                    </div>
-                    
-                    <!-- Photo Display -->
-                    <div v-else-if="selectedPhoto?.foto_rumah_url" class="mt-2">
+                    <!-- Photo Display or Loading -->
+                    <div v-if="selectedPhoto?.foto_rumah_url && !photoError" class="mt-2">
+                        <!-- Loading Spinner -->
+                        <div v-if="photoLoading" class="flex justify-center items-center py-20">
+                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                        </div>
+                        
+                        <!-- Photo -->
                         <img 
+                            v-show="!photoLoading"
                             :src="selectedPhoto.foto_rumah_url" 
                             :alt="`Foto Rumah ${selectedPhoto.nama_pelanggan}`" 
                             class="w-full h-auto rounded-lg border border-gray-200"
@@ -1358,9 +1360,16 @@ const printReceipt = (pembayaranId) => {
 
 const showFotoModal = (pelanggan) => {
     selectedPhoto.value = pelanggan;
-    photoLoading.value = true;
     photoError.value = false;
     photoErrorMessage.value = '';
+    
+    // Check if photo URL exists
+    if (pelanggan?.foto_rumah_url) {
+        photoLoading.value = true;
+    } else {
+        photoLoading.value = false;
+    }
+    
     showPhotoModal.value = true;
     
     // Debug: Log URL foto
