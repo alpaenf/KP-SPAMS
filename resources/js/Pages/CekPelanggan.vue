@@ -761,20 +761,25 @@
                     
                     <!-- Photo Display or Loading -->
                     <div v-if="selectedPhoto?.foto_rumah_url && !photoError" class="mt-2">
-                        <!-- Loading Spinner -->
-                        <div v-if="photoLoading" class="flex justify-center items-center py-20">
-                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                        <!-- Debug: Show loading state -->
+                        <div v-if="photoLoading" class="flex justify-center items-center py-20 bg-blue-50 rounded-lg">
+                            <div class="text-center">
+                                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                                <p class="text-sm text-gray-600">Memuat foto...</p>
+                                <p class="text-xs text-gray-500 mt-2">{{ selectedPhoto.foto_rumah_url }}</p>
+                            </div>
                         </div>
                         
                         <!-- Photo -->
-                        <img 
-                            v-show="!photoLoading"
-                            :src="selectedPhoto.foto_rumah_url" 
-                            :alt="`Foto Rumah ${selectedPhoto.nama_pelanggan}`" 
-                            class="w-full h-auto rounded-lg border border-gray-200"
-                            @load="photoLoading = false"
-                            @error="handlePhotoError"
-                        />
+                        <div v-show="!photoLoading">
+                            <img 
+                                :src="selectedPhoto.foto_rumah_url" 
+                                :alt="`Foto Rumah ${selectedPhoto.nama_pelanggan}`" 
+                                class="w-full h-auto rounded-lg border border-gray-200"
+                                @load="onPhotoLoad"
+                                @error="handlePhotoError"
+                            />
+                        </div>
                     </div>
                     
                     <!-- Error State -->
@@ -1366,6 +1371,9 @@ const printReceipt = (pembayaranId) => {
 };
 
 const showFotoModal = (pelanggan) => {
+    console.log('Opening modal for:', pelanggan?.nama_pelanggan);
+    console.log('Foto URL:', pelanggan?.foto_rumah_url);
+    
     selectedPhoto.value = pelanggan;
     photoError.value = false;
     photoErrorMessage.value = '';
@@ -1373,21 +1381,25 @@ const showFotoModal = (pelanggan) => {
     // Check if photo URL exists
     if (pelanggan?.foto_rumah_url) {
         photoLoading.value = true;
+        console.log('Photo loading set to:', true);
     } else {
         photoLoading.value = false;
+        console.log('No photo URL, loading set to:', false);
     }
     
     showPhotoModal.value = true;
-    
-    // Debug: Log URL foto
-    console.log('Foto URL:', pelanggan?.foto_rumah_url);
+};
+
+const onPhotoLoad = () => {
+    console.log('Photo loaded successfully!');
+    photoLoading.value = false;
 };
 
 const handlePhotoError = (event) => {
+    console.error('Error loading photo:', event);
     photoLoading.value = false;
     photoError.value = true;
     photoErrorMessage.value = 'Gagal memuat foto. File mungkin tidak ditemukan atau storage link belum dibuat.';
-    console.error('Error loading photo:', event);
 };
 
 const exportExcel = () => {
