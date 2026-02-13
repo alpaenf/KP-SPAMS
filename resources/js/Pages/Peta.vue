@@ -703,11 +703,11 @@ const filteredPelanggan = computed(() => {
         data = data.filter(p => String(p.rw || '').includes(rwFilter.value));
     }
     if (searchQuery.value) {
-        const q = searchQuery.value.toLowerCase();
+        const q = searchQuery.value.toLowerCase().trim();
         data = data.filter(p => 
             (p.nama_pelanggan || '').toLowerCase().includes(q) || 
             (p.id_pelanggan || '').toLowerCase().includes(q) ||
-            (p.wilayah || '').toLowerCase().includes(q)
+            (p.wilayah || '').toLowerCase().trim().includes(q)
         );
     }
     return data;

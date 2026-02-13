@@ -444,7 +444,7 @@ class HomeController extends Controller
         
         // Admin bisa filter wilayah manual, penarik otomatis filtered
         if ($wilayahFilter && auth()->user()->isAdmin()) {
-            $pelangganQuery->where('wilayah', $wilayahFilter);
+            $pelangganQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayahFilter))]);
         }
         
         $totalPelanggan = (clone $pelangganQuery)->count();
@@ -561,7 +561,7 @@ class HomeController extends Controller
         
         // Admin bisa filter wilayah manual
         if ($wilayahFilter && auth()->user()->isAdmin()) {
-            $pelangganBelumBayarQuery->where('wilayah', $wilayahFilter);
+            $pelangganBelumBayarQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayahFilter))]);
         }
         
         $pelangganBelumBayar = $pelangganBelumBayarQuery
@@ -578,12 +578,12 @@ class HomeController extends Controller
         // Jika penarik, filter berdasarkan wilayah
         if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
             $recentTransactionsQuery->whereHas('pelanggan', function ($q) {
-                $q->where('wilayah', auth()->user()->getWilayah());
+                $q->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim(auth()->user()->getWilayah()))]);
             });
         } elseif ($wilayahFilter && auth()->user()->isAdmin()) {
             // Admin dengan filter wilayah
             $recentTransactionsQuery->whereHas('pelanggan', function ($q) use ($wilayahFilter) {
-                $q->where('wilayah', $wilayahFilter);
+                $q->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayahFilter))]);
             });
         }
         
@@ -617,11 +617,11 @@ class HomeController extends Controller
             // Filter berdasarkan role dan wilayah
             if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
                 $pembayaranQuery->whereHas('pelanggan', function ($q) {
-                    $q->where('wilayah', auth()->user()->getWilayah());
+                    $q->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim(auth()->user()->getWilayah()))]);
                 });
             } elseif ($wilayahFilter && auth()->user()->isAdmin()) {
                 $pembayaranQuery->whereHas('pelanggan', function ($q) use ($wilayahFilter) {
-                    $q->where('wilayah', $wilayahFilter);
+                    $q->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayahFilter))]);
                 });
             }
             
@@ -631,9 +631,9 @@ class HomeController extends Controller
             $laporanQuery = \App\Models\LaporanBulanan::where('bulan', $targetMonth);
             
             if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
-                $laporanQuery->where('wilayah', auth()->user()->getWilayah());
+                $laporanQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim(auth()->user()->getWilayah()))]);
             } elseif ($wilayahFilter && auth()->user()->isAdmin()) {
-                $laporanQuery->where('wilayah', $wilayahFilter);
+                $laporanQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayahFilter))]);
             }
             
             $laporan = $laporanQuery->first();
@@ -1004,9 +1004,9 @@ class HomeController extends Controller
             $query->where('status_aktif', false);
         }
 
-        // Filter wilayah
+        // Filter wilayah (case-insensitive)
         if ($wilayah !== 'all') {
-            $query->where('wilayah', $wilayah);
+            $query->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayah))]);
         }
 
         $pelangganList = $query->orderBy('id_pelanggan', 'asc')->get()

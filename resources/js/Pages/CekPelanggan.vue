@@ -171,10 +171,9 @@
                                 class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
                             >
                                 <option value="all">Semua Wilayah</option>
-                                <option value="Dawuhan">Dawuhan</option>                                <option value="Kubangsari Kulon">Kubangsari Kulon</option>
-                                <option value="Kubangsari Wetan">Kubangsari Wetan</option>
-                                <option value="Sokarame">Sokarame</option>
-                                <option value="Tiparjaya">Tiparjaya</option>
+                                <option v-for="wilayah in wilayahOptions" :key="wilayah" :value="wilayah">
+                                    {{ wilayah }}
+                                </option>
                             </select>
                         </div>
                     </div>
@@ -853,18 +852,21 @@ const filteredPelanggan = computed(() => {
         result = result.filter(p => !p.status_aktif);
     }
     
-    // Filter berdasarkan wilayah
+    // Filter berdasarkan wilayah (case-insensitive dan trim)
     if (wilayahFilter.value !== 'all') {
-        result = result.filter(p => p.wilayah === wilayahFilter.value);
+        const filterValue = wilayahFilter.value.toLowerCase().trim();
+        result = result.filter(p => {
+            const pelangganWilayah = (p.wilayah || '').toLowerCase().trim();
+            return pelangganWilayah === filterValue;
+        });
     }
     
-
-    
     if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase();
+        const query = searchQuery.value.toLowerCase().trim();
         result = result.filter(p => 
-            p.id_pelanggan.toLowerCase().includes(query) ||
-            p.nama_pelanggan.toLowerCase().includes(query) ||
+            (p.id_pelanggan || '').toLowerCase().includes(query) ||
+            (p.nama_pelanggan || '').toLowerCase().includes(query) ||
+            (p.wilayah || '').toLowerCase().includes(query) ||
             (p.rt && p.rt.toString().includes(query)) ||
             (p.rw && p.rw.toString().includes(query))
         );
@@ -890,13 +892,24 @@ const getStatusBayar = (pelanggan) => {
     };
 };
 
+// Computed untuk wilayah options (dinamis dari data)
+const wilayahOptions = computed(() => {
+    const wilayahSet = new Set();
+    allPelanggan.value.forEach(p => {
+        if (p.wilayah) {
+            wilayahSet.add(p.wilayah.trim());
+        }
+    });
+    return Array.from(wilayahSet).sort();
+});
+
 // Computed untuk filter pembayaran
 const filteredPembayaranList = computed(() => {
     let result = props.pembayaranList || [];
     
     // Filter by search query
     if (searchPembayaran.value) {
-        const query = searchPembayaran.value.toLowerCase();
+        const query = searchPembayaran.value.toLowerCase().trim();
         result = result.filter(p =>
             p.id_pelanggan.toLowerCase().includes(query) ||
             p.nama_pelanggan.toLowerCase().includes(query)
@@ -904,8 +917,13 @@ const filteredPembayaranList = computed(() => {
     }
     
     // Filter by wilayah
+    // Filter by wilayah (case-insensitive dan trim)
     if (wilayahFilterPembayaran.value !== 'all') {
-        result = result.filter(p => p.wilayah === wilayahFilterPembayaran.value);
+        const filterValue = wilayahFilterPembayaran.value.toLowerCase().trim();
+        result = result.filter(p => {
+            const pelangganWilayah = (p.wilayah || '').toLowerCase().trim();
+            return pelangganWilayah === filterValue;
+        });
     }
     
     return result;

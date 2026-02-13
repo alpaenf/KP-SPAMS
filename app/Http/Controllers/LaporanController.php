@@ -113,9 +113,9 @@ class LaporanController extends Controller
         
         // Jika filter wilayah ada (penarik otomatis, admin manual)
         if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
-            $laporanQuery->where('wilayah', auth()->user()->getWilayah());
+            $laporanQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim(auth()->user()->getWilayah()))]);
         } elseif ($wilayah && $wilayah !== 'semua') {
-            $laporanQuery->where('wilayah', $wilayah);
+            $laporanQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayah))]);
         }
 
         $biayaOperasional = $laporanQuery->sum('biaya_operasional_penarik');
@@ -147,13 +147,18 @@ class LaporanController extends Controller
             array_unshift($tahunOpsi, Carbon::now()->year);
         }
 
-        // Ambil opsi wilayah untuk dropdown
+        // Ambil opsi wilayah untuk dropdown (dengan normalisasi)
         $wilayahOpsi = Pelanggan::select('wilayah')
             ->whereNotNull('wilayah')
             ->where('wilayah', '!=', '')
             ->distinct()
             ->orderBy('wilayah')
             ->pluck('wilayah')
+            ->map(function($w) {
+                return trim($w);
+            })
+            ->unique()
+            ->values()
             ->toArray();
 
         return Inertia::render('Laporan/Index', [
@@ -232,7 +237,7 @@ class LaporanController extends Controller
         }
         
         if ($wilayah && $wilayah !== 'semua') {
-            $laporanQuery->where('wilayah', $wilayah);
+            $laporanQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayah))]);
         }
         
         $laporanBulanan = $laporanQuery->get();
@@ -299,9 +304,10 @@ class LaporanController extends Controller
         if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
             // Penarik hanya bisa lihat wilayahnya sendiri (already handled by forUser)
         } elseif ($wilayah && $wilayah !== 'semua') {
-            // Admin bisa filter wilayah manual
-            $pelangganQuery->where(function ($q) use ($wilayah) {
-                $q->where('wilayah', $wilayah)
+            // Admin bisa filter wilayah manual (case-insensitive)
+            $wilayahLower = strtolower(trim($wilayah));
+            $pelangganQuery->where(function ($q) use ($wilayahLower, $wilayah) {
+                $q->whereRaw('LOWER(TRIM(wilayah)) = ?', [$wilayahLower])
                   ->orWhere('rw', $wilayah)
                   ->orWhere('rt', $wilayah);
             });
@@ -357,9 +363,9 @@ class LaporanController extends Controller
         
         // Jika filter wilayah ada (penarik otomatis, admin manual)
         if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
-            $laporanQuery->where('wilayah', auth()->user()->getWilayah());
+            $laporanQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim(auth()->user()->getWilayah()))]);
         } elseif ($wilayah && $wilayah !== 'semua') {
-            $laporanQuery->where('wilayah', $wilayah);
+            $laporanQuery->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($wilayah))]);
         }
 
         $biayaOperasional = $laporanQuery->sum('biaya_operasional_penarik');

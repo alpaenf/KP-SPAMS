@@ -17,9 +17,9 @@ class QRCodeBulkController extends Controller
     {
         $query = Pelanggan::query();
         
-        // Filter berdasarkan wilayah jika ada
+        // Filter berdasarkan wilayah jika ada (case-insensitive)
         if ($request->has('wilayah') && $request->wilayah !== 'all') {
-            $query->where('wilayah', $request->wilayah);
+            $query->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($request->wilayah))]);
         }
         
         // Filter berdasarkan RT/RW jika ada
@@ -67,9 +67,9 @@ class QRCodeBulkController extends Controller
     {
         $query = Pelanggan::query();
         
-        // Filter berdasarkan wilayah jika ada
+        // Filter berdasarkan wilayah jika ada (case-insensitive)
         if ($request->has('wilayah') && $request->wilayah !== 'all') {
-            $query->where('wilayah', $request->wilayah);
+            $query->whereRaw('LOWER(TRIM(wilayah)) = ?', [strtolower(trim($request->wilayah))]);
         }
         
         // Filter berdasarkan RT/RW jika ada
