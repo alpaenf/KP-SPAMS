@@ -335,10 +335,24 @@ const submitForm = () => {
     
     // Create FormData for file upload
     const formData = new FormData();
-    for (const key in form.value) {
-        if (form.value[key] !== null && form.value[key] !== '') {
-            formData.append(key, form.value[key]);
-        }
+    
+    // Append all fields properly
+    formData.append('id_pelanggan', form.value.id_pelanggan || '');
+    formData.append('nama_pelanggan', form.value.nama_pelanggan || '');
+    formData.append('nik', form.value.nik || '');
+    formData.append('no_whatsapp', form.value.no_whatsapp || '');
+    formData.append('rt', form.value.rt || '');
+    formData.append('rw', form.value.rw || '');
+    formData.append('kategori', form.value.kategori || 'umum');
+    formData.append('wilayah', form.value.wilayah || '');
+    formData.append('latitude', form.value.latitude || '');
+    formData.append('longitude', form.value.longitude || '');
+    formData.append('google_maps_url', form.value.google_maps_url || '');
+    formData.append('status_aktif', form.value.status_aktif ? '1' : '0');
+    
+    // Only append foto_rumah if file is selected
+    if (form.value.foto_rumah instanceof File) {
+        formData.append('foto_rumah', form.value.foto_rumah);
     }
     
     router.post('/pelanggan', formData, {
