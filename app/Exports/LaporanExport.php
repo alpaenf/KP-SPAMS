@@ -67,7 +67,11 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithTit
         $rows->push(['DETAIL KEUANGAN']);
         $rows->push(['Total Tarikan (Kotor)', 'Rp ' . number_format($this->detail['totalTarikan'], 0, ',', '.')]);
         $rows->push(['20% Jasa Penarik', 'Rp ' . number_format($this->detail['tarik20Persen'], 0, ',', '.')]);
-        $rows->push(['Biaya Operasional', 'Rp ' . number_format($this->detail['biayaOperasional'], 0, ',', '.')]);
+        $rows->push(['Biaya Operasional Penarik', 'Rp ' . number_format($this->detail['biayaOperasional'], 0, ',', '.')]);
+        $rows->push(['Biaya PAD Desa', 'Rp ' . number_format($this->detail['biayaPadDesa'], 0, ',', '.')]);
+        $rows->push(['Biaya Ops Lapangan', 'Rp ' . number_format($this->detail['biayaOpsLapangan'], 0, ',', '.')]);
+        $rows->push(['Biaya Lain-lain', 'Rp ' . number_format($this->detail['biayaLainLain'], 0, ',', '.')]);
+        $rows->push(['Biaya CSR', 'Rp ' . number_format($this->detail['biayaCSR'] ?? 0, 0, ',', '.')]);
         $rows->push(['Total Honor Penarik', 'Rp ' . number_format($this->detail['honorPenarik'], 0, ',', '.')]);
         $rows->push(['Total Tarikan Bersih', 'Rp ' . number_format($this->detail['totalTarikanBersih'], 0, ',', '.')]);
         $rows->push(['']);

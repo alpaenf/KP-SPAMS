@@ -320,13 +320,14 @@
                 <thead>
                     <tr>
                         <th style="width: 5%;">No</th>
-                        <th style="width: 15%;">Bulan</th>
-                        <th style="width: 15%;">Wilayah</th>
-                        <th style="width: 15%;" class="text-right">Ops Penarik</th>
-                        <th style="width: 15%;" class="text-right">PAD Desa</th>
-                        <th style="width: 15%;" class="text-right">Ops Lapangan</th>
+                        <th style="width: 12%;">Bulan</th>
+                        <th style="width: 10%;">Wilayah</th>
+                        <th style="width: 13%;" class="text-right">Ops Penarik</th>
+                        <th style="width: 13%;" class="text-right">PAD Desa</th>
+                        <th style="width: 13%;" class="text-right">Ops Lapangan</th>
                         <th style="width: 10%;" class="text-right">Lain-lain</th>
-                        <th style="width: 10%;" class="text-right">Total</th>
+                        <th style="width: 12%;" class="text-right">CSR</th>
+                        <th style="width: 12%;" class="text-right">Total</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -335,7 +336,8 @@
                             $totalBiaya = ($laporan->biaya_operasional_penarik ?? 0) 
                                 + ($laporan->biaya_pad_desa ?? 0)
                                 + ($laporan->biaya_operasional_lapangan ?? 0)
-                                + ($laporan->biaya_lain_lain ?? 0);
+                                + ($laporan->biaya_lain_lain ?? 0)
+                                + ($laporan->biaya_csr ?? 0);
                         @endphp
                         <tr>
                             <td class="text-center">{{ $index + 1 }}</td>
@@ -345,11 +347,12 @@
                             <td class="text-right">Rp {{ number_format($laporan->biaya_pad_desa ?? 0, 0, ',', '.') }}</td>
                             <td class="text-right">Rp {{ number_format($laporan->biaya_operasional_lapangan ?? 0, 0, ',', '.') }}</td>
                             <td class="text-right">Rp {{ number_format($laporan->biaya_lain_lain ?? 0, 0, ',', '.') }}</td>
+                            <td class="text-right">Rp {{ number_format($laporan->biaya_csr ?? 0, 0, ',', '.') }}</td>
                             <td class="text-right font-semibold">Rp {{ number_format($totalBiaya, 0, ',', '.') }}</td>
                         </tr>
                     @endforeach
                     <tr style="background-color: #fee2e2; font-weight: bold;">
-                        <td colspan="7" class="text-right">TOTAL PENGELUARAN (Termasuk Honor Penarik 20%):</td>
+                        <td colspan="8" class="text-right">TOTAL PENGELUARAN (Termasuk Honor Penarik 20%):</td>
                         <td class="text-right">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</td>
                     </tr>
                 </tbody>

@@ -641,7 +641,7 @@
                             <p class="text-xs text-gray-500 mt-1">BBM, maintenance, dll.</p>
                         </div>
 
-                        <div class="mb-4">
+                        <div v-if="$page.props.auth.user.role === 'admin'" class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Biaya PAD Desa (Rp)</label>
                             <input 
                                 type="number" 
@@ -654,7 +654,7 @@
                             <p class="text-xs text-gray-500 mt-1">Pendapatan Asli Desa</p>
                         </div>
 
-                        <div class="mb-4">
+                        <div v-if="$page.props.auth.user.role === 'admin'" class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Biaya CSR (Rp)</label>
                             <input 
                                 type="number" 

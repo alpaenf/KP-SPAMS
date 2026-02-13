@@ -127,12 +127,13 @@ class LaporanController extends Controller
         $biayaPadDesa = $laporanQuery->sum('biaya_pad_desa');
         $biayaOpsLapangan = $laporanQuery->sum('biaya_operasional_lapangan');
         $biayaLainLain = $laporanQuery->sum('biaya_lain_lain');
+        $biayaCSR = $laporanQuery->sum('biaya_csr');
 
         // C. Honor Penarik
         $honorPenarik = $tarik20Persen + $biayaOperasional;
 
-        // D. Total Tarikan Bersih (dikurangi honor penarik, PAD Desa, Ops Lapangan, dan Lain-lain)
-        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa - $biayaOpsLapangan - $biayaLainLain;
+        // D. Total Tarikan Bersih (dikurangi honor penarik, PAD Desa, Ops Lapangan, Lain-lain, dan CSR)
+        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa - $biayaOpsLapangan - $biayaLainLain - $biayaCSR;
 
         // === 3. Statistik SR (Sambungan Rumah) ===
         // Use pelanggan IDs already calculated earlier
@@ -180,6 +181,7 @@ class LaporanController extends Controller
                 'biayaPadDesa' => $biayaPadDesa,
                 'biayaOpsLapangan' => $biayaOpsLapangan,
                 'biayaLainLain' => $biayaLainLain,
+                'biayaCSR' => $biayaCSR,
                 'honorPenarik' => $honorPenarik, // 20% + Ops
                 'honorMurni' => $honorPenarik,   // Sama, penamaan beda konteks
                 'totalTarikanBersih' => $totalTarikanBersih,
@@ -384,8 +386,9 @@ class LaporanController extends Controller
         $biayaPadDesa = $laporanQuery->sum('biaya_pad_desa');
         $biayaOpsLapangan = $laporanQuery->sum('biaya_operasional_lapangan');
         $biayaLainLain = $laporanQuery->sum('biaya_lain_lain');
+        $biayaCSR = $laporanQuery->sum('biaya_csr');
         $honorPenarik = $tarik20Persen + $biayaOperasional;
-        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa - $biayaOpsLapangan - $biayaLainLain;
+        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa - $biayaOpsLapangan - $biayaLainLain - $biayaCSR;
 
         // Statistik SR - use pelanggan IDs already calculated
         $totalSR = $pelangganAktifIds->count();
@@ -406,6 +409,7 @@ class LaporanController extends Controller
                 'biayaPadDesa' => $biayaPadDesa,
                 'biayaOpsLapangan' => $biayaOpsLapangan,
                 'biayaLainLain' => $biayaLainLain,
+                'biayaCSR' => $biayaCSR,
                 'honorPenarik' => $honorPenarik,
                 'honorMurni' => $honorPenarik,
                 'totalTarikanBersih' => $totalTarikanBersih,

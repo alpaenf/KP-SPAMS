@@ -933,6 +933,29 @@ class HomeController extends Controller
             'wilayah' => 'nullable|string|max:100',
         ]);
         
+        // SECURITY: Proteksi untuk role penarik
+        $user = auth()->user();
+        
+        // 1. Penarik hanya bisa update wilayahnya sendiri
+        if ($user->isPenarik()) {
+            if (!$user->hasWilayah()) {
+                return redirect()->back()->with('error', 'Anda tidak memiliki wilayah yang terdaftar.');
+            }
+            
+            // Paksa wilayah ke wilayah penarik, abaikan input dari request
+            $validated['wilayah'] = $user->getWilayah();
+            
+            // 2. Penarik TIDAK boleh mengubah field sensitif (hanya admin)
+            // Field sensitif: PAD Desa, Ops Lapangan, Lain-lain, CSR
+            if (isset($validated['biaya_pad_desa']) || 
+                isset($validated['biaya_operasional_lapangan']) || 
+                isset($validated['biaya_lain_lain']) || 
+                isset($validated['biaya_csr'])) {
+                return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengubah biaya selain operasional penarik.');
+            }
+        }
+        
+        // 3. Jika admin update tanpa wilayah spesifik, gunakan "semua wilayah" mode
         $laporanQuery = ['bulan' => $validated['bulan']];
         if (isset($validated['wilayah'])) {
             $laporanQuery['wilayah'] = $validated['wilayah'];
@@ -942,20 +965,23 @@ class HomeController extends Controller
             'biaya_operasional_penarik' => $validated['biaya_operasional_penarik'],
         ];
         
-        if (isset($validated['biaya_pad_desa'])) {
-            $updateData['biaya_pad_desa'] = $validated['biaya_pad_desa'];
-        }
-        
-        if (isset($validated['biaya_operasional_lapangan'])) {
-            $updateData['biaya_operasional_lapangan'] = $validated['biaya_operasional_lapangan'];
-        }
-        
-        if (isset($validated['biaya_lain_lain'])) {
-            $updateData['biaya_lain_lain'] = $validated['biaya_lain_lain'];
-        }
-        
-        if (isset($validated['biaya_csr'])) {
-            $updateData['biaya_csr'] = $validated['biaya_csr'];
+        // Hanya admin yang bisa update field ini
+        if ($user->isAdmin()) {
+            if (isset($validated['biaya_pad_desa'])) {
+                $updateData['biaya_pad_desa'] = $validated['biaya_pad_desa'];
+            }
+            
+            if (isset($validated['biaya_operasional_lapangan'])) {
+                $updateData['biaya_operasional_lapangan'] = $validated['biaya_operasional_lapangan'];
+            }
+            
+            if (isset($validated['biaya_lain_lain'])) {
+                $updateData['biaya_lain_lain'] = $validated['biaya_lain_lain'];
+            }
+            
+            if (isset($validated['biaya_csr'])) {
+                $updateData['biaya_csr'] = $validated['biaya_csr'];
+            }
         }
         
         if (isset($validated['wilayah'])) {
