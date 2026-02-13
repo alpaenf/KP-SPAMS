@@ -70,16 +70,17 @@ class Pelanggan extends Model
             return $query;
         }
         
-        // Penarik hanya bisa lihat wilayahnya
+        // Penarik hanya bisa lihat wilayahnya (case-insensitive)
         if ($user->isPenarik() && $user->hasWilayah()) {
-            return $query->where('wilayah', $user->getWilayah());
+            $wilayahUser = strtolower(trim($user->getWilayah()));
+            return $query->whereRaw('LOWER(TRIM(wilayah)) = ?', [$wilayahUser]);
         }
         
         return $query;
     }
     
     /**
-     * Scope: Filter berdasarkan wilayah tertentu
+     * Scope: Filter berdasarkan wilayah tertentu (case-insensitive)
      */
     public function scopeByWilayah($query, $wilayah)
     {
@@ -87,7 +88,8 @@ class Pelanggan extends Model
             return $query;
         }
         
-        return $query->where('wilayah', $wilayah);
+        $wilayahLower = strtolower(trim($wilayah));
+        return $query->whereRaw('LOWER(TRIM(wilayah)) = ?', [$wilayahLower]);
     }
     
     public function getGoogleMapsLinkAttribute(): ?string
