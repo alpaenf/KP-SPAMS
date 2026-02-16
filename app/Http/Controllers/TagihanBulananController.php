@@ -73,9 +73,19 @@ class TagihanBulananController extends Controller
             });
         
         // Ambil pembayaran bulan ini
-        $pembayaranList = Pembayaran::with('pelanggan')
-            ->where('bulan_bayar', $bulan)
-            ->orderBy('tanggal_bayar', 'desc')
+        // Apply filter wilayah untuk role penarik
+        $user = $request->user();
+        $query = Pembayaran::with('pelanggan')
+            ->where('bulan_bayar', $bulan);
+        
+        // Filter by penarik wilayah if role is penarik
+        if ($user && $user->role === 'penarik' && $user->wilayah) {
+            $query->whereHas('pelanggan', function ($q) use ($user) {
+                $q->where('wilayah', $user->wilayah);
+            });
+        }
+        
+        $pembayaranList = $query->orderBy('tanggal_bayar', 'desc')
             ->get()
             ->map(function ($p) {
                 return [
