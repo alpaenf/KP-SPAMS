@@ -134,6 +134,17 @@ class TagihanBulananController extends Controller
         // Cek pelanggan kategori
         $pelanggan = Pelanggan::findOrFail($validated['pelanggan_id']);
         
+        // Set default values jika tidak ada di request
+        if (!isset($validated['tarif_per_kubik'])) {
+            $validated['tarif_per_kubik'] = 1500; // Default tarif per kubik
+        }
+        if (!isset($validated['ada_abunemen'])) {
+            $validated['ada_abunemen'] = true; // Default ada abunemen
+        }
+        if (!isset($validated['biaya_abunemen'])) {
+            $validated['biaya_abunemen'] = 3000; // Default biaya abunemen
+        }
+        
         // Jika kategori sosial, set total tagihan = 0 dan status SUDAH_BAYAR
         if ($pelanggan->kategori === 'sosial') {
             $validated['total_tagihan'] = 0;
