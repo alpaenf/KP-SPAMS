@@ -533,8 +533,8 @@
                         </p>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="col-span-2">
+                    <div class="space-y-4">
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Bulan Tagihan</label>
                             <input
                                 type="month"
@@ -545,50 +545,54 @@
                             <p class="text-xs text-gray-500 mt-1">Bulan yang sedang dipilih di halaman utama</p>
                         </div>
                         
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Meteran Sebelum (m³)</label>
-                            <input
-                                type="number"
-                                v-model="inputForm.meteran_sebelum"
-                                step="0.01"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
-                                @input="hitungPemakaian"
-                            />
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Meteran Sebelum (m³)</label>
+                                <input
+                                    type="number"
+                                    v-model="inputForm.meteran_sebelum"
+                                    step="0.01"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                                    @input="hitungPemakaian"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Meteran Sesudah (m³)</label>
+                                <input
+                                    type="number"
+                                    v-model="inputForm.meteran_sesudah"
+                                    step="0.01"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                                    @input="hitungPemakaian"
+                                />
+                            </div>
                         </div>
                         
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Meteran Sesudah (m³)</label>
-                            <input
-                                type="number"
-                                v-model="inputForm.meteran_sesudah"
-                                step="0.01"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
-                                @input="hitungPemakaian"
-                            />
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Pemakaian (m³)</label>
-                            <input
-                                type="number"
-                                :value="pemakaianKubik"
-                                readonly
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                            />
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Pemakaian (m³)</label>
+                                <input
+                                    type="number"
+                                    :value="pemakaianKubik"
+                                    readonly
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                                />
+                            </div>
+                            
+                            <div v-if="selectedPelanggan?.kategori !== 'sosial'">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tarif per m³ (Rp)</label>
+                                <input
+                                    type="number"
+                                    v-model="inputForm.tarif_per_kubik"
+                                    step="100"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                                    @input="hitungPemakaian"
+                                />
+                            </div>
                         </div>
                         
                         <div v-if="selectedPelanggan?.kategori !== 'sosial'">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Tarif per m³ (Rp)</label>
-                            <input
-                                type="number"
-                                v-model="inputForm.tarif_per_kubik"
-                                step="100"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
-                                @input="hitungPemakaian"
-                            />
-                        </div>
-                        
-                        <div v-if="selectedPelanggan?.kategori !== 'sosial'" class="col-span-2">
                             <label class="flex items-center">
                                 <input
                                     type="checkbox"
@@ -611,7 +615,7 @@
                             />
                         </div>
                         
-                        <div class="col-span-2">
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Total Tagihan (Rp)</label>
                             <input
                                 type="text"
