@@ -26,7 +26,7 @@ foreach ($tagihanBermasalah as $tagihan) {
     
     // Set default values jika NULL
     if ($tagihan->tarif_per_kubik === null || $tagihan->tarif_per_kubik == 0) {
-        $tagihan->tarif_per_kubik = 1500;
+        $tagihan->tarif_per_kubik = 2000;
     }
     if ($tagihan->ada_abunemen === null) {
         $tagihan->ada_abunemen = true;

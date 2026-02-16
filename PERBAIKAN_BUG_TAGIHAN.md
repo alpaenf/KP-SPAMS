@@ -82,7 +82,7 @@ Menambahkan nilai default untuk field yang nullable sebelum disimpan ke database
 ```php
 // Set default values jika tidak ada di request
 if (!isset($validated['tarif_per_kubik'])) {
-    $validated['tarif_per_kubik'] = 1500; // Default tarif per kubik
+    $validated['tarif_per_kubik'] = 2000; // Default tarif per kubik
 }
 if (!isset($validated['ada_abunemen'])) {
     $validated['ada_abunemen'] = true; // Default ada abunemen
@@ -119,13 +119,13 @@ php fix_tagihan_zero.php
 - ✅ Input meteran baru akan otomatis menghitung total tagihan dengan benar
 - ✅ Data lama yang total_tagihannya 0 bisa diperbaiki dengan script `fix_tagihan_zero.php`
 - ✅ Perhitungan menggunakan nilai default:
-  - Tarif per kubik: Rp 1.500/m³
+  - Tarif per kubik: Rp 2.000/m³
   - Biaya abunemen: Rp 3.000
 
 **Contoh perhitungan setelah perbaikan:**
-- DW004 (Imung): 7 m³ × Rp 1.500 + Rp 3.000 = **Rp 13.500**
-- DW005 (Darko): 14 m³ × Rp 1.500 + Rp 3.000 = **Rp 24.000**
-- DW006 (Sholihin): 44 m³ × Rp 1.500 + Rp 3.000 = **Rp 69.000**
+- DW004 (Imung): 7 m³ × Rp 2.000 + Rp 3.000 = **Rp 17.000**
+- DW005 (Darko): 14 m³ × Rp 2.000 + Rp 3.000 = **Rp 31.000**
+- DW006 (Sholihin): 44 m³ × Rp 2.000 + Rp 3.000 = **Rp 91.000**
 
 ---
 
@@ -167,7 +167,7 @@ php fix_tagihan_zero.php
 ## 📝 Catatan Penting
 
 1. **Nilai Default:**
-   - Tarif per kubik: Rp 1.500
+   - Tarif per kubik: Rp 2.000
    - Biaya abunemen: Rp 3.000
    - Jika nilai ini berbeda untuk wilayah tertentu, perlu disesuaikan di frontend
 

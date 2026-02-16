@@ -136,7 +136,7 @@ class TagihanBulananController extends Controller
         
         // Set default values jika tidak ada di request
         if (!isset($validated['tarif_per_kubik'])) {
-            $validated['tarif_per_kubik'] = 1500; // Default tarif per kubik
+            $validated['tarif_per_kubik'] = 2000; // Default tarif per kubik
         }
         if (!isset($validated['ada_abunemen'])) {
             $validated['ada_abunemen'] = true; // Default ada abunemen
