@@ -62,6 +62,8 @@ class TagihanBulananController extends Controller
                         'ada_abunemen' => $tagihan->ada_abunemen,
                         'biaya_abunemen' => $tagihan->biaya_abunemen,
                         'total_tagihan' => $tagihan->total_tagihan,
+                        'jumlah_terbayar' => $tagihan->jumlah_terbayar,
+                        'sisa_tagihan' => $tagihan->sisa_tagihan,
                         'status_bayar' => $tagihan->status_bayar,
                         'status_konfirmasi' => $tagihan->status_konfirmasi,
                         'bukti_transfer' => $tagihan->bukti_transfer,
