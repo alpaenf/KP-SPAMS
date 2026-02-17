@@ -197,6 +197,15 @@
                                 Dibayar pada: <span class="font-semibold text-gray-700">{{ pelanggan.tanggal_bayar }}</span>
                             </div>
 
+                            <!-- Info Cicilan (jika ada) -->
+                            <InfoCicilan
+                                v-if="pelanggan.tagihan_bulan_ini"
+                                :total-tagihan="pelanggan.jumlah_bayar || 0"
+                                :jumlah-terbayar="pelanggan.jumlah_terbayar || 0"
+                                :status-bayar="pelanggan.status_bayar"
+                                class="mt-4"
+                            />
+
                             <!-- Tombol Konfirmasi Pembayaran untuk yang Belum Bayar -->
                             <div v-if="pelanggan.status_bayar !== 'Lunas' && pelanggan.kategori !== 'sosial'" class="mt-6 space-y-3">
                                 <!-- Tombol Bayar Sekarang (Primary Action) -->
@@ -928,6 +937,7 @@
 
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import InfoCicilan from '@/Components/InfoCicilan.vue';
 import VisiMisiSection from '@/Components/LandingPage/VisiMisiSection.vue';
 import LayananSection from '@/Components/LandingPage/LayananSection.vue';
 import SejarahSection from '@/Components/LandingPage/SejarahSection.vue';

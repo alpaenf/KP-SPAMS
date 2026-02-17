@@ -634,6 +634,16 @@
                                     </p>
                                 </div>
                             </div>
+                            
+                            <!-- Info Cicilan (jika ada) -->
+                            <InfoCicilan
+                                v-if="selectedPelanggan?.tagihan"
+                                :total-tagihan="selectedPelanggan.tagihan.total_tagihan || 0"
+                                :jumlah-terbayar="selectedPelanggan.tagihan.jumlah_terbayar || 0"
+                                :status-bayar="selectedPelanggan.tagihan.status_bayar || 'BELUM_BAYAR'"
+                                class="mt-4"
+                            />
+                            
                             <button
                                 @click="submitPembayaran"
                                 :disabled="isSubmitting"
@@ -825,6 +835,7 @@
 import { ref, computed, watch } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import InfoCicilan from '@/Components/InfoCicilan.vue';
 import axios from 'axios';
 
 const props = defineProps({

@@ -626,6 +626,15 @@
                         </div>
                     </div>
                     
+                    <!-- Info Cicilan (jika ada) -->
+                    <InfoCicilan
+                        v-if="selectedPelanggan?.tagihan"
+                        :total-tagihan="selectedPelanggan.tagihan.total_tagihan || 0"
+                        :jumlah-terbayar="selectedPelanggan.tagihan.jumlah_terbayar || 0"
+                        :status-bayar="selectedPelanggan.tagihan.status_bayar || 'BELUM_BAYAR'"
+                        class="mt-4"
+                    />
+                    
                     <div class="mt-6 flex gap-3">
                         <button
                             @click="submitMeteran"
@@ -970,6 +979,7 @@
 
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import InfoCicilan from '@/Components/InfoCicilan.vue';
 import { Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import axios from 'axios';
