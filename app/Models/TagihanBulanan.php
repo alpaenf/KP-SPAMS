@@ -19,6 +19,7 @@ class TagihanBulanan extends Model
         'ada_abunemen',
         'biaya_abunemen',
         'total_tagihan',
+        'jumlah_terbayar',
         'status_bayar',
         'keterangan',
     ];
@@ -30,6 +31,7 @@ class TagihanBulanan extends Model
         'tarif_per_kubik' => 'decimal:2',
         'biaya_abunemen' => 'decimal:2',
         'total_tagihan' => 'decimal:2',
+        'jumlah_terbayar' => 'decimal:2',
         'ada_abunemen' => 'boolean',
     ];
     
@@ -58,6 +60,35 @@ class TagihanBulanan extends Model
         
         // Total tagihan = biaya pemakaian + biaya abunemen
         $this->total_tagihan = $biaya_pemakaian + $biaya_abunemen;
+    }
+    
+    /**
+     * Hitung sisa tagihan yang belum dibayar
+     */
+    public function getSisaTagihanAttribute(): float
+    {
+        return max(0, $this->total_tagihan - $this->jumlah_terbayar);
+    }
+    
+    /**
+     * Cek apakah sudah lunas
+     */
+    public function isLunas(): bool
+    {
+        return $this->jumlah_terbayar >= $this->total_tagihan;
+    }
+    
+    /**
+     * Tambah pembayaran cicilan
+     */
+    public function tambahCicilan(float $jumlah): void
+    {
+        $this->jumlah_terbayar += $jumlah;
+        
+        // Update status jika sudah lunas
+        if ($this->isLunas()) {
+            $this->status_bayar = 'SUDAH_BAYAR';
+        }
     }
     
     /**
