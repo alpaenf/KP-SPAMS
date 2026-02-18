@@ -65,8 +65,15 @@ const persentase = computed(() => {
 });
 
 const shouldShow = computed(() => {
-    // Tampilkan jika ada cicilan (jumlah_terbayar > 0) dan belum lunas
-    return props.jumlahTerbayar > 0 && props.statusBayar !== 'SUDAH_BAYAR';
+    // Tampilkan jika:
+    // 1. Belum lunas (BELUM_BAYAR)
+    // 2. Ada tagihan (total > 0)
+    // 3. Sudah ada pembayaran sebagian (jumlah_terbayar > 0) ATAU masih ada sisa tagihan
+    if (props.statusBayar === 'SUDAH_BAYAR') return false;
+    if (props.totalTagihan === 0) return false;
+    
+    // Tampilkan jika ada cicilan (sudah bayar sebagian) atau tunggakan dengan info
+    return props.jumlahTerbayar > 0 || props.totalTagihan > 0;
 });
 
 const formatRupiah = (value) => {

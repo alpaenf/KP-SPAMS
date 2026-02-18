@@ -135,7 +135,7 @@ class PembayaranController extends Controller
             'tunggakan' => 'nullable|numeric|min:0',
             'jumlah_kubik' => 'nullable|numeric|min:0',
             'jumlah_bayar' => 'required|numeric|min:0',
-            'keterangan' => 'nullable|string|max:500',
+            'keterangan' => 'required|string|in:LUNAS,TUNGGAKAN,CICILAN',
             'bayar_tunggakan' => 'nullable|boolean',
             'id_tunggakan' => 'nullable|array',
             'id_tunggakan.*' => 'integer|exists:tagihan_bulanan,id',
@@ -172,8 +172,6 @@ class PembayaranController extends Controller
             ->where('bulan', $validated['bulan_bayar'])
             ->first();
         
-        $keterangan = strtoupper($validated['keterangan'] ?? 'LUNAS');
-        
         if ($tagihan) {
             // Update data meteran dan tagihan agar sinkron dengan pembayaran
             $tagihan->meteran_sebelum = $validated['meteran_sebelum'] ?? $tagihan->meteran_sebelum;
@@ -185,35 +183,75 @@ class PembayaranController extends Controller
                 $tagihan->ada_abunemen = $validated['abunemen'];
             }
             
-            // LOGIKA CICILAN BARU
+            // Update total tagihan
+            $tagihan->total_tagihan = $validated['jumlah_bayar'];
+            
+            // Trim dan uppercase keterangan untuk konsistensi
+            $keterangan = trim(strtoupper($validated['keterangan'] ?? ''));
+            
+            // Logika status bayar berdasarkan keterangan:
+            // - TUNGGAKAN: tetap BELUM_BAYAR (belum dibayar sama sekali)
+            // - CICILAN: BELUM_BAYAR jika belum lunas, SUDAH_BAYAR jika sudah lunas
+            // - LUNAS: SUDAH_BAYAR
+            // - Kosong/lainnya: bergantung pada jumlah bayar vs total tagihan
+            
             if ($keterangan === 'TUNGGAKAN') {
-                // TUNGGAKAN: Tidak bayar sama sekali, status tetap BELUM_BAYAR
+                // Jika dibuat sebagai tunggakan, tetap BELUM_BAYAR
                 $tagihan->status_bayar = 'BELUM_BAYAR';
-                // Tidak update jumlah_terbayar
-                
+                $tagihan->jumlah_terbayar = 0; // Reset jumlah terbayar untuk tunggakan
             } elseif ($keterangan === 'CICILAN') {
-                // CICILAN: Tambahkan ke jumlah yang sudah terbayar
-                $tagihan->tambahCicilan($validated['jumlah_bayar']);
-                // Status auto-update di method tambahCicilan()
+                // Untuk cicilan, cek apakah sudah lunas
+                $totalTagihanRef = $tagihan->total_tagihan > 0 ? $tagihan->total_tagihan : $validated['jumlah_bayar'];
                 
-            } else {
-                // LUNAS: Bayar penuh langsung
-                $tagihan->jumlah_terbayar = $validated['jumlah_bayar'];
+                if ($validated['jumlah_bayar'] >= $totalTagihanRef) {
+                    $tagihan->status_bayar = 'SUDAH_BAYAR';
+                    $tagihan->jumlah_terbayar = $validated['jumlah_bayar'];
+                } else {
+                    $tagihan->status_bayar = 'BELUM_BAYAR';
+                    $tagihan->jumlah_terbayar = $validated['jumlah_bayar'];
+                }
+            } elseif ($keterangan === 'LUNAS') {
+                // Eksplisit LUNAS
                 $tagihan->status_bayar = 'SUDAH_BAYAR';
+                $tagihan->jumlah_terbayar = $validated['jumlah_bayar'];
+            } else {
+                // Default: cek apakah jumlah bayar >= total tagihan
+                $totalTagihanRef = $tagihan->total_tagihan > 0 ? $tagihan->total_tagihan : $validated['jumlah_bayar'];
+                
+                if ($validated['jumlah_bayar'] >= $totalTagihanRef) {
+                    $tagihan->status_bayar = 'SUDAH_BAYAR';
+                } else {
+                    $tagihan->status_bayar = 'BELUM_BAYAR';
+                }
+                $tagihan->jumlah_terbayar = $validated['jumlah_bayar'];
             }
             
             $tagihan->save();
         } else {
             // Jika belum ada tagihan, buat baru
+            $keterangan = trim(strtoupper($validated['keterangan'] ?? ''));
+            
+            // Logika status bayar:
+            // - TUNGGAKAN: BELUM_BAYAR (belum dibayar)
+            // - CICILAN: BELUM_BAYAR (cicilan belum lunas)
+            // - LUNAS: SUDAH_BAYAR
+            // - Kosong/lainnya: bergantung pada jumlah bayar
+            
             $statusBayar = 'SUDAH_BAYAR';
             $jumlahTerbayar = $validated['jumlah_bayar'];
             
             if ($keterangan === 'TUNGGAKAN') {
                 $statusBayar = 'BELUM_BAYAR';
-                $jumlahTerbayar = 0; // Belum bayar sama sekali
+                $jumlahTerbayar = 0; // Tunggakan = belum bayar sama sekali
             } elseif ($keterangan === 'CICILAN') {
-                $statusBayar = 'BELUM_BAYAR'; // Cicilan dianggap belum lunas
-                $jumlahTerbayar = $validated['jumlah_bayar']; // Catat cicilan pertama
+                // Cicilan dianggap belum lunas (bisa ditambah pembayaran di kemudian hari)
+                $statusBayar = 'BELUM_BAYAR';
+            } elseif ($keterangan !== 'LUNAS') {
+                // Jika bukan TUNGGAKAN, CICILAN, atau LUNAS, cek jumlah bayar
+                // Anggap tidak lunas jika jumlah bayar 0 atau tidak ada
+                if ($validated['jumlah_bayar'] <= 0) {
+                    $statusBayar = 'BELUM_BAYAR';
+                }
             }
             
             \App\Models\TagihanBulanan::create([

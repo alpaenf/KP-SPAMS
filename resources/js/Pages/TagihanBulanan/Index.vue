@@ -196,9 +196,16 @@
                                         <div v-else class="text-sm text-gray-400">-</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-bold" :class="item.tagihan ? 'text-blue-600' : 'text-gray-400'">
-                                            {{ item.tagihan ? formatRupiah(item.tagihan.total_tagihan) : 'Belum ada' }}
+                                        <div v-if="item.tagihan" class="space-y-1">
+                                            <div class="text-sm font-bold text-blue-600">
+                                                {{ formatRupiah(item.tagihan.total_tagihan) }}
+                                            </div>
+                                            <!-- Tampilkan info cicilan jika ada pembayaran sebagian -->
+                                            <div v-if="item.tagihan.jumlah_terbayar > 0 && item.tagihan.status_bayar === 'BELUM_BAYAR'" class="text-xs text-green-600">
+                                                Terbayar: {{ formatRupiah(item.tagihan.jumlah_terbayar) }}
+                                            </div>
                                         </div>
+                                        <div v-else class="text-sm text-gray-400">Belum ada</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex flex-col gap-1">
@@ -220,11 +227,20 @@
                                                 </svg>
                                                 Nunggak
                                             </span>
-                                            <span v-else-if="item.tagihan && item.tagihan.status_bayar === 'BELUM_BAYAR' && item.tagihan.status_konfirmasi === 'none'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                                </svg>
-                                                Belum Bayar
+                                            <span v-else-if="item.tagihan && item.tagihan.status_bayar === 'BELUM_BAYAR' && item.tagihan.status_konfirmasi === 'none'" class="inline-flex flex-col items-start gap-1">
+                                                <!-- Badge Utama: Belum Bayar atau Cicilan -->
+                                                <span v-if="item.tagihan.jumlah_terbayar > 0" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                                                    </svg>
+                                                    Cicilan {{ Math.round((item.tagihan.jumlah_terbayar / item.tagihan.total_tagihan) * 100) }}%
+                                                </span>
+                                                <span v-else class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                                    </svg>
+                                                    Belum Bayar
+                                                </span>
                                             </span>
                                             <span v-else-if="!item.tagihan" class="text-xs text-gray-400">-</span>
                                         </div>
@@ -776,10 +792,11 @@
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan <span class="text-red-500">*</span></label>
                             <select
                                 v-model="pembayaranForm.keterangan"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800"
+                                required
                             >
                                 <option value="LUNAS">Lunas - Bayar penuh tagihan bulan ini</option>
                                 <option value="TUNGGAKAN">Tunggakan - Belum bayar, masuk bulan depan</option>
@@ -1029,7 +1046,7 @@ const pembayaranForm = ref({
     jumlah_kubik: 0,
     abunemen: false,
     jumlah_bayar: 0,
-    keterangan: 'TAGIHAN',
+    keterangan: 'LUNAS', // Default LUNAS untuk pembayaran normal
     catatan: '',
     bayar_tunggakan: false,
 });
@@ -1275,7 +1292,7 @@ const openPembayaranModal = async (pelanggan) => {
         jumlah_kubik: 0,
         abunemen: pelanggan.tagihan?.ada_abunemen || false,
         jumlah_bayar: tagihanBulanIni,
-        keterangan: 'TAGIHAN',
+        keterangan: 'LUNAS', // Default LUNAS untuk pembayaran normal
         catatan: '',
         bayar_tunggakan: false,
     };

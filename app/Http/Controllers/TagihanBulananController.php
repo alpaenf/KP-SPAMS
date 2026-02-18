@@ -341,6 +341,7 @@ class TagihanBulananController extends Controller
                     'meteran_sesudah' => $tagihan->meteran_sesudah ?? 0,
                     'pemakaian_kubik' => $tagihan->pemakaian_kubik ?? 0,
                     'total_tagihan' => $tagihan->total_tagihan ?? 0,
+                    'jumlah_terbayar' => $tagihan->jumlah_terbayar ?? 0,
                     'ada_abunemen' => $tagihan->ada_abunemen ?? false,
                     'biaya_abunemen' => $tagihan->biaya_abunemen ?? 0,
                     'status_bayar' => $tagihan->status_bayar,

@@ -35,7 +35,7 @@ return new class extends Migration
             $totalBayar = DB::table('pembayarans')
                 ->where('pelanggan_id', $tagihan->pelanggan_id)
                 ->where('bulan_bayar', $tagihan->bulan)
-                ->whereNotIn('keterangan', ['TUNGGAKAN']) // Exclude tunggakan
+                ->whereNotIn('keterangan', ['TUNGGAKAN', 'Tunggakan', 'tunggakan']) // Exclude tunggakan
                 ->sum('jumlah_bayar');
             
             if ($totalBayar > 0) {

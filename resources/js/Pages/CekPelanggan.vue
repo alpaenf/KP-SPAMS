@@ -504,6 +504,15 @@
                                 </div>
                             </div>
                             
+                            <!-- Info Cicilan (jika ada) -->
+                            <InfoCicilan
+                                v-if="currentTagihan"
+                                :total-tagihan="currentTagihan.total_tagihan || 0"
+                                :jumlah-terbayar="currentTagihan.jumlah_terbayar || 0"
+                                :status-bayar="currentTagihan.status_bayar || 'BELUM_BAYAR'"
+                                class="mb-4"
+                            />
+                            
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                                 <div class="col-span-1">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Bulan Bayar</label>
@@ -619,12 +628,12 @@
                                     <p v-if="pembayaranErrors.jumlah_bayar" class="text-red-600 text-sm mt-1">{{ pembayaranErrors.jumlah_bayar }}</p>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan <span class="text-red-500">*</span></label>
                                     <select
                                         v-model="pembayaranForm.keterangan"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                                        required
                                     >
-                                        <option value="">Pilih Keterangan</option>
                                         <option value="LUNAS">Lunas - Bayar penuh tagihan bulan ini</option>
                                         <option value="TUNGGAKAN">Tunggakan - Belum bayar, masuk bulan depan</option>
                                         <option value="CICILAN">Cicilan - Bayar sebagian</option>
@@ -634,16 +643,6 @@
                                     </p>
                                 </div>
                             </div>
-                            
-                            <!-- Info Cicilan (jika ada) -->
-                            <InfoCicilan
-                                v-if="selectedPelanggan?.tagihan"
-                                :total-tagihan="selectedPelanggan.tagihan.total_tagihan || 0"
-                                :jumlah-terbayar="selectedPelanggan.tagihan.jumlah_terbayar || 0"
-                                :status-bayar="selectedPelanggan.tagihan.status_bayar || 'BELUM_BAYAR'"
-                                class="mt-4"
-                            />
-                            
                             <button
                                 @click="submitPembayaran"
                                 :disabled="isSubmitting"
@@ -835,8 +834,8 @@
 import { ref, computed, watch } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import InfoCicilan from '@/Components/InfoCicilan.vue';
 import axios from 'axios';
+import InfoCicilan from '@/Components/InfoCicilan.vue';
 
 const props = defineProps({
     pelangganList: {
@@ -890,6 +889,7 @@ const selectedPelanggan = ref(null);
 const pembayaranList = ref([]);
 const loadingPembayaran = ref(false);
 const isSubmitting = ref(false);
+const currentTagihan = ref(null); // Data tagihan bulan ini untuk info cicilan
 
 // Form pembayaran
 const pembayaranForm = ref({
@@ -901,7 +901,7 @@ const pembayaranForm = ref({
     tunggakan: 0,
     jumlah_kubik: null,
     jumlah_bayar: null,
-    keterangan: ''
+    keterangan: 'LUNAS' // Default LUNAS untuk pembayaran normal
 });
 
 const hitungTagihan = () => {
@@ -1148,6 +1148,9 @@ const getPreviousMonth = (monthStr) => {
 const fetchMeteranData = async (bulan) => {
     if (!selectedPelanggan.value) return;
     
+    // Reset currentTagihan
+    currentTagihan.value = null;
+    
     try {
         // 1. Try to get data for the SELECTED month
         // This checks if a bill/meter reading already exists for this specific month
@@ -1165,6 +1168,10 @@ const fetchMeteranData = async (bulan) => {
         
         if (currentTagihanRes.data && currentTagihanRes.data.tagihan) {
             const tagihan = currentTagihanRes.data.tagihan;
+            
+            // Simpan data tagihan lengkap untuk InfoCicilan
+            currentTagihan.value = tagihan;
+            
             pembayaranForm.value.meteran_sebelum = tagihan.meteran_sebelum;
             pembayaranForm.value.meteran_sesudah = tagihan.meteran_sesudah;
             pembayaranForm.value.jumlah_kubik = tagihan.pemakaian_kubik;
@@ -1290,7 +1297,7 @@ const submitPembayaran = async () => {
             tunggakan: 0,
             jumlah_kubik: null,
             jumlah_bayar: null,
-            keterangan: ''
+            keterangan: 'LUNAS' // Reset ke default LUNAS
         };
         
         alert('Pembayaran berhasil ditambahkan!');
