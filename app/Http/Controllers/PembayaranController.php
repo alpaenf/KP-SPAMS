@@ -202,16 +202,23 @@ class PembayaranController extends Controller
                 }
             } elseif ($keterangan === 'CICILAN') {
                 // Untuk cicilan, JANGAN overwrite total_tagihan
-                // Hanya update jumlah_terbayar dan status selalu BELUM_BAYAR
+                // SET jumlah_terbayar (bukan increment, karena ini create pembayaran baru)
                 $tagihan->status_bayar = 'BELUM_BAYAR';
-                $tagihan->jumlah_terbayar = $validated['jumlah_bayar'];
+                $tagihan->jumlah_terbayar = $validated['jumlah_bayar']; // Pakai = karena ini pembayaran baru, bukan top-up
                 
                 // Jika total tagihan masih 0, set berdasarkan perhitungan normal
-                if ($tagihan->total_tagihan == 0) {
+                // ATAU jika tidak ada pemakaian_kubik (data lama), preserve total_tagihan existing
+                if ($tagihan->total_tagihan == 0 && $tagihan->pemakaian_kubik > 0) {
                     // Hitung dari pemakaian + abunemen
                     $biayaPemakaian = $tagihan->pemakaian_kubik * 2000;
                     $biayaAbunemen = $tagihan->ada_abunemen ? 3000 : 0;
                     $tagihan->total_tagihan = $biayaPemakaian + $biayaAbunemen;
+                }
+                // Jika sudah ada total_tagihan, preserve value-nya (jangan recalculate)
+                
+                // Cek apakah cicilan sudah lunas
+                if ($tagihan->jumlah_terbayar >= $tagihan->total_tagihan) {
+                    $tagihan->status_bayar = 'SUDAH_BAYAR';
                 }
             } elseif ($keterangan === 'LUNAS') {
                 // Eksplisit LUNAS - update total tagihan dan set lunas

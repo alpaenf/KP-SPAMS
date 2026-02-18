@@ -689,6 +689,15 @@
                         </div>
                     </div>
                     
+                    <!-- Info Cicilan (jika ada) -->
+                    <InfoCicilan
+                        v-if="selectedPelanggan?.tagihan"
+                        :total-tagihan="selectedPelanggan.tagihan.total_tagihan || 0"
+                        :jumlah-terbayar="selectedPelanggan.tagihan.jumlah_terbayar || 0"
+                        :status-bayar="selectedPelanggan.tagihan.status_bayar || 'BELUM_BAYAR'"
+                        class="mb-4"
+                    />
+                    
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Bayar</label>
@@ -755,33 +764,36 @@
                         </div>
                         
                         <!-- Tunggakan Section -->
-                        <div v-if="selectedPelanggan?.tunggakan?.jumlah > 0" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div v-if="listTunggakan.length > 0" class="bg-red-50 border border-red-200 rounded-lg p-4">
                             <div class="flex items-start">
                                 <input
                                     type="checkbox"
                                     v-model="pembayaranForm.bayar_tunggakan"
                                     @change="toggleBayarTunggakan"
-                                    class="mt-1 mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    class="mt-1 mr-3 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
                                 />
                                 <div class="flex-1">
-                                    <label class="text-sm font-medium text-yellow-800">
-                                        Bayar Tunggakan ({{ selectedPelanggan.tunggakan.jumlah }} bulan)
+                                    <label class="text-sm font-medium text-red-800 flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                        </svg>
+                                        ⚠️ Bayar Tunggakan ({{ listTunggakan.length }} bulan)
                                     </label>
-                                    <p class="text-xs text-yellow-700 mt-1">
-                                        Total tunggakan: {{ formatRupiah(selectedPelanggan.tunggakan.total) }}
+                                    <p class="text-xs text-red-700 mt-1 font-medium">
+                                        Total tunggakan: Rp {{ Number(listTunggakan.reduce((sum, t) => sum + t.sisa_tagihan, 0)).toLocaleString('id-ID') }}
                                     </p>
-                                    <div class="text-xs text-yellow-600 mt-2">
-                                        <div v-for="item in selectedPelanggan.tunggakan.detail" :key="item.id" class="flex justify-between">
-                                            <span>{{ formatBulan(item.bulan) }}</span>
-                                            <span>{{ formatRupiah(item.total_tagihan) }}</span>
+                                    <div class="text-xs text-red-600 mt-2 space-y-1">
+                                        <div v-for="item in listTunggakan" :key="item.id" class="flex justify-between py-1 border-b border-red-200 last:border-0">
+                                            <span class="text-red-700">{{ formatBulan(item.bulan) }}</span>
+                                            <span class="font-bold text-red-900">Rp {{ Number(item.sisa_tagihan).toLocaleString('id-ID') }}</span>
                                         </div>
                                     </div>
                                     
                                     <!-- Input Jumlah Bayar Tunggakan -->
                                     <div v-if="pembayaranForm.bayar_tunggakan" class="mt-3">
-                                        <label class="block text-sm font-medium text-yellow-800 mb-1">
+                                        <label class="block text-sm font-medium text-red-800 mb-1">
                                             Jumlah Bayar Tunggakan (Rp)
-                                            <span class="text-xs font-normal text-yellow-600">- Bisa bayar sebagian/cicil</span>
+                                            <span class="text-xs font-normal text-red-600">- Bisa bayar sebagian/cicil</span>
                                         </label>
                                         <input
                                             type="number"
@@ -789,12 +801,12 @@
                                             @input="hitungTotalBayar"
                                             step="1000"
                                             min="0"
-                                            :max="selectedPelanggan.tunggakan.total"
-                                            class="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-blue-800 bg-white"
+                                            :max="listTunggakan.reduce((sum, t) => sum + t.sisa_tagihan, 0)"
+                                            class="w-full px-3 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 bg-white"
                                             placeholder="Isi jumlah bayar tunggakan (bisa cicil)"
                                         />
-                                        <p class="text-xs text-yellow-600 mt-1">
-                                            💡 Isi sesuai kemampuan (misal: Rp 5.000 dari total Rp {{ formatRupiah(selectedPelanggan.tunggakan.total) }})
+                                        <p class="text-xs text-red-600 mt-1">
+                                            💡 Isi sesuai kemampuan (misal: Rp 5.000 dari total Rp {{ Number(listTunggakan.reduce((sum, t) => sum + t.sisa_tagihan, 0)).toLocaleString('id-ID') }})
                                         </p>
                                     </div>
                                 </div>
@@ -1052,6 +1064,7 @@ const isGenerating = ref(false);
 const isSubmitting = ref(false);
 const isSubmittingPembayaran = ref(false);
 const isProcessing = ref(false);
+const listTunggakan = ref([]);
 
 const generateForm = ref({
     bulan: props.bulan,
@@ -1326,9 +1339,23 @@ const openPembayaranModal = async (pelanggan) => {
         keterangan: 'LUNAS', // Default LUNAS untuk pembayaran normal
         catatan: '',
         bayar_tunggakan: false,
+        jumlah_bayar_tunggakan: 0,
     };
     
     showPembayaranModal.value = true;
+    
+    // Fetch list tunggakan untuk pelanggan ini
+    try {
+        const tunggakanRes = await axios.get(`/api/tagihan-bulanan/${pelanggan.id}/tunggakan`);
+        if (tunggakanRes.data && tunggakanRes.data.tunggakan) {
+            listTunggakan.value = tunggakanRes.data.tunggakan;
+        } else {
+            listTunggakan.value = [];
+        }
+    } catch (error) {
+        console.log('Error fetching tunggakan:', error);
+        listTunggakan.value = [];
+    }
     
     // Ambil data meteran (akan otomatis mengisi dari bulan lalu jika belum ada data bulan ini)
     await fetchMeteranDataForPembayaran(pelanggan);
@@ -1359,7 +1386,8 @@ const hitungPemakaianPembayaran = () => {
 const toggleBayarTunggakan = () => {
     if (pembayaranForm.value.bayar_tunggakan) {
         // Default set jumlah bayar tunggakan = total tunggakan (bisa diedit)
-        pembayaranForm.value.jumlah_bayar_tunggakan = selectedPelanggan.value?.tunggakan?.total || 0;
+        const totalTunggakan = listTunggakan.value.reduce((sum, t) => sum + t.sisa_tagihan, 0);
+        pembayaranForm.value.jumlah_bayar_tunggakan = totalTunggakan;
     } else {
         pembayaranForm.value.jumlah_bayar_tunggakan = 0;
     }
@@ -1383,6 +1411,7 @@ const hitungTotalBayar = () => {
 const closePembayaranModal = () => {
     showPembayaranModal.value = false;
     selectedPelanggan.value = null;
+    listTunggakan.value = [];
 };
 
 const openKonfirmasiModal = (pelanggan) => {
@@ -1459,8 +1488,8 @@ const submitPembayaran = async () => {
         };
         
         // Tambahkan id tunggakan jika bayar tunggakan
-        if (pembayaranForm.value.bayar_tunggakan && selectedPelanggan.value?.tunggakan?.detail) {
-            payload.id_tunggakan = selectedPelanggan.value.tunggakan.detail.map(t => t.id);
+        if (pembayaranForm.value.bayar_tunggakan && listTunggakan.value.length > 0) {
+            payload.id_tunggakan = listTunggakan.value.map(t => t.id);
         }
         
         await axios.post(`/pelanggan/${selectedPelanggan.value.id}/pembayaran`, payload);
