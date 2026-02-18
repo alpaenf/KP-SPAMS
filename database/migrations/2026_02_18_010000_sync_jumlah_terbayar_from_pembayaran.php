@@ -18,7 +18,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        echo "🔄 Syncing jumlah_terbayar from pembayaran...\n";
+        echo "🔄 Syncing jumlah_terbayar from pembayarans...\n";
+
         
         // Ambil semua tagihan yang punya pembayaran
         $tagihanList = DB::table('tagihan_bulanan')
@@ -31,7 +32,7 @@ return new class extends Migration
         foreach ($tagihanList as $tagihan) {
             // Hitung total pembayaran untuk tagihan ini
             // Ambil semua pembayaran dengan bulan_bayar yang sama
-            $totalBayar = DB::table('pembayaran')
+            $totalBayar = DB::table('pembayarans')
                 ->where('pelanggan_id', $tagihan->pelanggan_id)
                 ->where('bulan_bayar', $tagihan->bulan)
                 ->whereNotIn('keterangan', ['TUNGGAKAN']) // Exclude tunggakan
