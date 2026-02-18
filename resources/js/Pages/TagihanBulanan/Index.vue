@@ -1447,9 +1447,15 @@ const submitPembayaran = async () => {
         const payload = {
             bulan_bayar: selectedBulan.value,
             tanggal_bayar: pembayaranForm.value.tanggal_bayar,
+            meteran_sebelum: pembayaranForm.value.meteran_sebelum,
+            meteran_sesudah: pembayaranForm.value.meteran_sesudah,
+            jumlah_kubik: pembayaranForm.value.jumlah_kubik,
+            abunemen: pembayaranForm.value.abunemen,
+            tunggakan: 0, // Tunggakan di handle via bayar_tunggakan
             jumlah_bayar: pembayaranForm.value.jumlah_bayar,
-            keterangan: `${pembayaranForm.value.keterangan}${pembayaranForm.value.catatan ? ' - ' + pembayaranForm.value.catatan : ''}`,
+            keterangan: pembayaranForm.value.keterangan, // Pure enum: LUNAS, CICILAN, TUNGGAKAN
             bayar_tunggakan: pembayaranForm.value.bayar_tunggakan,
+            jumlah_bayar_tunggakan: pembayaranForm.value.jumlah_bayar_tunggakan || 0,
         };
         
         // Tambahkan id tunggakan jika bayar tunggakan
