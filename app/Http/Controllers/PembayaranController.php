@@ -137,6 +137,7 @@ class PembayaranController extends Controller
             'jumlah_bayar' => 'required|numeric|min:0',
             'keterangan' => 'required|string|in:LUNAS,TUNGGAKAN,CICILAN',
             'bayar_tunggakan' => 'nullable|boolean',
+            'jumlah_bayar_tunggakan' => 'nullable|numeric|min:0',
             'id_tunggakan' => 'nullable|array',
             'id_tunggakan.*' => 'integer|exists:tagihan_bulanan,id',
         ]);
@@ -183,43 +184,47 @@ class PembayaranController extends Controller
                 $tagihan->ada_abunemen = $validated['abunemen'];
             }
             
-            // Update total tagihan
-            $tagihan->total_tagihan = $validated['jumlah_bayar'];
-            
             // Trim dan uppercase keterangan untuk konsistensi
             $keterangan = trim(strtoupper($validated['keterangan'] ?? ''));
             
             // Logika status bayar berdasarkan keterangan:
             // - TUNGGAKAN: tetap BELUM_BAYAR (belum dibayar sama sekali)
-            // - CICILAN: BELUM_BAYAR jika belum lunas, SUDAH_BAYAR jika sudah lunas
-            // - LUNAS: SUDAH_BAYAR
-            // - Kosong/lainnya: bergantung pada jumlah bayar vs total tagihan
+            // - CICILAN: BELUM_BAYAR (cicilan belum lunas penuh)
+            // - LUNAS: SUDAH_BAYAR dan update total tagihan
             
             if ($keterangan === 'TUNGGAKAN') {
                 // Jika dibuat sebagai tunggakan, tetap BELUM_BAYAR
                 $tagihan->status_bayar = 'BELUM_BAYAR';
                 $tagihan->jumlah_terbayar = 0; // Reset jumlah terbayar untuk tunggakan
+                // Update total tagihan untuk tunggakan (tagihan yang akan dibayar nanti)
+                if ($tagihan->total_tagihan == 0) {
+                    $tagihan->total_tagihan = $validated['jumlah_bayar'];
+                }
             } elseif ($keterangan === 'CICILAN') {
-                // Untuk cicilan, cek apakah sudah lunas
-                $totalTagihanRef = $tagihan->total_tagihan > 0 ? $tagihan->total_tagihan : $validated['jumlah_bayar'];
+                // Untuk cicilan, JANGAN overwrite total_tagihan
+                // Hanya update jumlah_terbayar dan status selalu BELUM_BAYAR
+                $tagihan->status_bayar = 'BELUM_BAYAR';
+                $tagihan->jumlah_terbayar = $validated['jumlah_bayar'];
                 
-                if ($validated['jumlah_bayar'] >= $totalTagihanRef) {
-                    $tagihan->status_bayar = 'SUDAH_BAYAR';
-                    $tagihan->jumlah_terbayar = $validated['jumlah_bayar'];
-                } else {
-                    $tagihan->status_bayar = 'BELUM_BAYAR';
-                    $tagihan->jumlah_terbayar = $validated['jumlah_bayar'];
+                // Jika total tagihan masih 0, set berdasarkan perhitungan normal
+                if ($tagihan->total_tagihan == 0) {
+                    // Hitung dari pemakaian + abunemen
+                    $biayaPemakaian = $tagihan->pemakaian_kubik * 2000;
+                    $biayaAbunemen = $tagihan->ada_abunemen ? 3000 : 0;
+                    $tagihan->total_tagihan = $biayaPemakaian + $biayaAbunemen;
                 }
             } elseif ($keterangan === 'LUNAS') {
-                // Eksplisit LUNAS
+                // Eksplisit LUNAS - update total tagihan dan set lunas
                 $tagihan->status_bayar = 'SUDAH_BAYAR';
                 $tagihan->jumlah_terbayar = $validated['jumlah_bayar'];
+                $tagihan->total_tagihan = $validated['jumlah_bayar'];
             } else {
                 // Default: cek apakah jumlah bayar >= total tagihan
                 $totalTagihanRef = $tagihan->total_tagihan > 0 ? $tagihan->total_tagihan : $validated['jumlah_bayar'];
                 
                 if ($validated['jumlah_bayar'] >= $totalTagihanRef) {
                     $tagihan->status_bayar = 'SUDAH_BAYAR';
+                    $tagihan->total_tagihan = $validated['jumlah_bayar'];
                 } else {
                     $tagihan->status_bayar = 'BELUM_BAYAR';
                 }
@@ -268,14 +273,39 @@ class PembayaranController extends Controller
             ]);
         }
         
-        // Jika bayar tunggakan juga, update status tunggakan yang dibayar
+        // Jika bayar tunggakan, distribusikan pembayaran ke tunggakan terlama dulu (FIFO)
         if (isset($validated['bayar_tunggakan']) && $validated['bayar_tunggakan'] && isset($validated['id_tunggakan'])) {
-            foreach ($validated['id_tunggakan'] as $tunggakanId) {
-                $tunggakanTagihan = \App\Models\TagihanBulanan::find($tunggakanId);
-                if ($tunggakanTagihan) {
-                    $tunggakanTagihan->status_bayar = 'SUDAH_BAYAR';
-                    $tunggakanTagihan->save();
+            $jumlahBayarTunggakan = floatval($validated['jumlah_bayar_tunggakan'] ?? 0);
+            $sisaPembayaran = $jumlahBayarTunggakan;
+            
+            // Urutkan tunggakan dari yang terlama (berdasarkan bulan)
+            $listTunggakan = \App\Models\TagihanBulanan::whereIn('id', $validated['id_tunggakan'])
+                ->orderBy('bulan', 'asc')
+                ->get();
+            
+            foreach ($listTunggakan as $tunggakanTagihan) {
+                if ($sisaPembayaran <= 0) break;
+                
+                $sisaTagihan = $tunggakanTagihan->total_tagihan - $tunggakanTagihan->jumlah_terbayar;
+                
+                if ($sisaTagihan <= 0) {
+                    // Sudah lunas, skip
+                    continue;
                 }
+                
+                if ($sisaPembayaran >= $sisaTagihan) {
+                    // Bayar lunas tagihan ini
+                    $tunggakanTagihan->jumlah_terbayar = $tunggakanTagihan->total_tagihan;
+                    $tunggakanTagihan->status_bayar = 'SUDAH_BAYAR';
+                    $sisaPembayaran -= $sisaTagihan;
+                } else {
+                    // Bayar sebagian (cicilan)
+                    $tunggakanTagihan->jumlah_terbayar += $sisaPembayaran;
+                    $tunggakanTagihan->status_bayar = 'BELUM_BAYAR'; // Masih ada sisa
+                    $sisaPembayaran = 0;
+                }
+                
+                $tunggakanTagihan->save();
             }
         }
         

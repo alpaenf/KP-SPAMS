@@ -92,6 +92,7 @@ Route::middleware(['auth'])->group(function () {
     
     // API Tagihan by Pelanggan
     Route::get('/api/tagihan-bulanan/{pelangganId}/{bulan}', [\App\Http\Controllers\TagihanBulananController::class, 'getByPelangganBulan'])->name('tagihan-bulanan.get-by-pelanggan-bulan');
+    Route::get('/api/tagihan-bulanan/{pelangganId}/tunggakan', [\App\Http\Controllers\TagihanBulananController::class, 'getTunggakanByPelanggan'])->name('tagihan-bulanan.get-tunggakan');
     
     // Tagihan Bulanan & Meteran
     Route::get('/tagihan-bulanan', [\App\Http\Controllers\TagihanBulananController::class, 'index'])->name('tagihan-bulanan.index');

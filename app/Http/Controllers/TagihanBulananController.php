@@ -375,4 +375,43 @@ class TagihanBulananController extends Controller
             'tagihan' => null,
         ], 404);
     }
+    
+    /**
+     * Get list tunggakan yang belum lunas untuk pelanggan
+     * API endpoint untuk cicilan tunggakan
+     */
+    public function getTunggakanByPelanggan($pelangganId)
+    {
+        try {
+            $tunggakan = TagihanBulanan::where('pelanggan_id', $pelangganId)
+                ->where('status_bayar', 'BELUM_BAYAR')
+                ->orderBy('bulan', 'asc')
+                ->get()
+                ->map(function($t) {
+                    $sisaTagihan = $t->total_tagihan - $t->jumlah_terbayar;
+                    return [
+                        'id' => $t->id,
+                        'bulan' => $t->bulan,
+                        'total_tagihan' => $t->total_tagihan,
+                        'jumlah_terbayar' => $t->jumlah_terbayar,
+                        'sisa_tagihan' => $sisaTagihan,
+                    ];
+                })
+                ->filter(function($t) {
+                    // Only show tunggakan with sisa > 0
+                    return $t['sisa_tagihan'] > 0;
+                });
+            
+            return response()->json([
+                'tunggakan' => $tunggakan->values()->toArray(),
+                'total_tunggakan' => $tunggakan->sum('sisa_tagihan'),
+                'jumlah_bulan' => $tunggakan->count(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching tunggakan: ' . $e->getMessage(),
+                'tunggakan' => [],
+            ], 500);
+        }
+    }
 }

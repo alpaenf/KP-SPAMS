@@ -760,7 +760,7 @@
                                 <input
                                     type="checkbox"
                                     v-model="pembayaranForm.bayar_tunggakan"
-                                    @change="hitungTotalBayar"
+                                    @change="toggleBayarTunggakan"
                                     class="mt-1 mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                                 />
                                 <div class="flex-1">
@@ -776,19 +776,49 @@
                                             <span>{{ formatRupiah(item.total_tagihan) }}</span>
                                         </div>
                                     </div>
+                                    
+                                    <!-- Input Jumlah Bayar Tunggakan -->
+                                    <div v-if="pembayaranForm.bayar_tunggakan" class="mt-3">
+                                        <label class="block text-sm font-medium text-yellow-800 mb-1">
+                                            Jumlah Bayar Tunggakan (Rp)
+                                            <span class="text-xs font-normal text-yellow-600">- Bisa bayar sebagian/cicil</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            v-model="pembayaranForm.jumlah_bayar_tunggakan"
+                                            @input="hitungTotalBayar"
+                                            step="1000"
+                                            min="0"
+                                            :max="selectedPelanggan.tunggakan.total"
+                                            class="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-blue-800 bg-white"
+                                            placeholder="Isi jumlah bayar tunggakan (bisa cicil)"
+                                        />
+                                        <p class="text-xs text-yellow-600 mt-1">
+                                            💡 Isi sesuai kemampuan (misal: Rp 5.000 dari total Rp {{ formatRupiah(selectedPelanggan.tunggakan.total) }})
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah Bayar (Rp)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                {{ pembayaranForm.keterangan === 'CICILAN' ? 'Jumlah Cicilan' : 'Jumlah Bayar' }} (Rp)
+                                <span v-if="pembayaranForm.keterangan === 'CICILAN'" class="text-blue-600 text-xs">- Bisa diedit</span>
+                            </label>
                             <input
                                 type="number"
                                 v-model="pembayaranForm.jumlah_bayar"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800"
+                                :class="[
+                                    'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800',
+                                    (pembayaranForm.keterangan === 'CICILAN' || pembayaranForm.bayar_tunggakan) ? 'bg-white' : 'bg-gray-50'
+                                ]"
+                                step="1000"
+                                min="0"
                                 required
-                                :readonly="!pembayaranForm.bayar_tunggakan"
+                                :readonly="pembayaranForm.keterangan !== 'CICILAN' && !pembayaranForm.bayar_tunggakan"
                             />
+                            <p v-if="pembayaranForm.keterangan === 'CICILAN'" class="text-xs text-blue-600 mt-1">💡 Untuk cicilan, isi jumlah berapa saja (misal: Rp 1.000, Rp 5.000, dll)</p>
                         </div>
                         
                         <div>
@@ -1049,6 +1079,7 @@ const pembayaranForm = ref({
     keterangan: 'LUNAS', // Default LUNAS untuk pembayaran normal
     catatan: '',
     bayar_tunggakan: false,
+    jumlah_bayar_tunggakan: 0, // Jumlah bayar tunggakan (bisa cicil)
 });
 
 const pemakaianKubik = computed(() => {
@@ -1309,22 +1340,42 @@ const hitungPemakaianPembayaran = () => {
     const pemakaian = sesudah - sebelum;
     pembayaranForm.value.jumlah_kubik = pemakaian > 0 ? pemakaian : 0;
     
+    // Jika keterangan CICILAN, jangan auto-calculate - biarkan user edit manual
+    if (pembayaranForm.value.keterangan === 'CICILAN') {
+        return;
+    }
+    
     // Hitung total bayar
     if (selectedPelanggan.value?.kategori === 'sosial') {
         pembayaranForm.value.jumlah_bayar = 0;
     } else {
         const biayaPemakaian = pembayaranForm.value.jumlah_kubik * 2000;
         const biayaAbunemen = pembayaranForm.value.abunemen ? 3000 : 0;
-        const tunggakan = pembayaranForm.value.bayar_tunggakan ? parseFloat(selectedPelanggan.value?.tunggakan?.total || 0) : 0;
+        const tunggakan = pembayaranForm.value.bayar_tunggakan ? parseFloat(pembayaranForm.value.jumlah_bayar_tunggakan || 0) : 0;
         pembayaranForm.value.jumlah_bayar = biayaPemakaian + biayaAbunemen + tunggakan;
     }
+};
+
+const toggleBayarTunggakan = () => {
+    if (pembayaranForm.value.bayar_tunggakan) {
+        // Default set jumlah bayar tunggakan = total tunggakan (bisa diedit)
+        pembayaranForm.value.jumlah_bayar_tunggakan = selectedPelanggan.value?.tunggakan?.total || 0;
+    } else {
+        pembayaranForm.value.jumlah_bayar_tunggakan = 0;
+    }
+    hitungTotalBayar();
 };
 
 const hitungTotalBayar = () => {
     if (!selectedPelanggan.value) return;
     
+    // Jika keterangan CICILAN, jangan auto-calculate - biarkan user edit manual
+    if (pembayaranForm.value.keterangan === 'CICILAN') {
+        return;
+    }
+    
     const tagihanBulanIni = selectedPelanggan.value.tagihan?.total_tagihan || 0;
-    const tunggakan = pembayaranForm.value.bayar_tunggakan ? (selectedPelanggan.value.tunggakan?.total || 0) : 0;
+    const tunggakan = pembayaranForm.value.bayar_tunggakan ? parseFloat(pembayaranForm.value.jumlah_bayar_tunggakan || 0) : 0;
     
     pembayaranForm.value.jumlah_bayar = tagihanBulanIni + tunggakan;
 };
