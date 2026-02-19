@@ -429,21 +429,33 @@
                             <p class="text-xs text-purple-700 mt-1">Jasa penarik</p>
                         </div>
 
-                        <!-- Biaya Operasional -->
-                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-5 border border-orange-200">
+                        <!-- Biaya Operasional Penarik -->
+                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-5 border border-orange-200 relative group">
                             <div class="flex items-center justify-between mb-2">
-                                <h4 class="text-sm font-medium text-orange-900">Biaya Operasional</h4>
+                                <h4 class="text-sm font-medium text-orange-900">Biaya Ops. Penarik</h4>
                                 <svg class="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
                                     <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z" />
                                 </svg>
                             </div>
                             <p class="text-2xl font-bold text-orange-900">Rp {{ formatRupiah(laporanKeuangan.biayaOperasionalPenarik) }}</p>
-                            <p class="text-xs text-orange-700 mt-1">BBM, dll.</p>
+                            <p class="text-xs text-orange-700 mt-1">BBM & Maintenance (klik untuk edit)</p>
+                            
+                            <!-- Edit Button for Penarik -->
+                            <button 
+                                v-if="$page.props.auth.user.role === 'penarik'"
+                                @click="showModalOperasional = true"
+                                class="absolute top-3 right-3 p-2 bg-orange-200 hover:bg-orange-300 text-orange-800 rounded-lg transition opacity-0 group-hover:opacity-100"
+                                title="Edit biaya operasional"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </button>
                         </div>
 
-                        <!-- Biaya PAD Desa -->
-                        <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-5 border border-yellow-200">
+                        <!-- Biaya PAD Desa (Hidden for Penarik) -->
+                        <div v-if="$page.props.auth.user.role !== 'penarik'" class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-5 border border-yellow-200">
                             <div class="flex items-center justify-between mb-2">
                                 <h4 class="text-sm font-medium text-yellow-900">Biaya PAD Desa</h4>
                                 <svg class="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
@@ -478,8 +490,8 @@
                             <p class="text-xs text-teal-700 mt-1">Biaya operasional lapangan</p>
                         </div>
 
-                        <!-- Biaya Lain-lain -->
-                        <div class="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-5 border border-pink-200">
+                        <!-- Biaya Lain-lain (Hidden for Penarik) -->
+                        <div v-if="$page.props.auth.user.role !== 'penarik'" class="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-5 border border-pink-200">
                             <div class="flex items-center justify-between mb-2">
                                 <h4 class="text-sm font-medium text-pink-900">Biaya Lain-lain</h4>
                                 <svg class="w-5 h-5 text-pink-600" fill="currentColor" viewBox="0 0 20 20">
@@ -491,8 +503,8 @@
                             <p class="text-xs text-pink-700 mt-1">Biaya lain-lain</p>
                         </div>
 
-                        <!-- Biaya CSR -->
-                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-5 border border-purple-200">
+                        <!-- Biaya CSR (Hidden for Penarik) -->
+                        <div v-if="$page.props.auth.user.role !== 'penarik'" class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-5 border border-purple-200">
                             <div class="flex items-center justify-between mb-2">
                                 <h4 class="text-sm font-medium text-purple-900">Biaya CSR</h4>
                                 <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
@@ -503,8 +515,8 @@
                             <p class="text-xs text-purple-700 mt-1">Corporate Social Responsibility</p>
                         </div>
 
-                        <!-- Total Semua Biaya -->
-                        <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-5 border border-red-200">
+                        <!-- Total Semua Biaya (Hidden for Penarik) -->
+                        <div v-if="$page.props.auth.user.role !== 'penarik'" class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-5 border border-red-200">
                             <div class="flex items-center justify-between mb-2">
                                 <h4 class="text-sm font-medium text-red-900">Total Semua Biaya</h4>
                                 <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">

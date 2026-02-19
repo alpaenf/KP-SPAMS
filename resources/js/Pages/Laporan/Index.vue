@@ -163,10 +163,22 @@
                         </div>
 
                         <!-- Biaya Operasional Penarik -->
-                        <div class="bg-orange-50 rounded-xl p-4 sm:p-5 border border-orange-100 cursor-pointer hover:bg-orange-100 transition" @click="openModalOperasional" title="Klik untuk update">
+                        <div class="bg-orange-50 rounded-xl p-4 sm:p-5 border border-orange-100 relative group">
                              <h4 class="text-xs sm:text-sm font-semibold text-orange-900 mb-2">Biaya Ops. Penarik</h4>
                              <p class="text-xl sm:text-2xl font-bold text-orange-800">{{ formatRupiah(detail.biayaOperasional) }}</p>
                              <p class="text-xs text-orange-600 mt-1">BBM & Maintenance (Klik untuk edit)</p>
+                             
+                             <!-- Edit Button for Penarik -->
+                             <button 
+                                v-if="$page.props.auth.user.role === 'penarik'"
+                                @click="openModalOperasional"
+                                class="absolute top-3 right-3 p-2 bg-orange-200 hover:bg-orange-300 text-orange-800 rounded-lg transition opacity-0 group-hover:opacity-100"
+                                title="Edit biaya operasional"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </button>
                         </div>
 
                         <!-- Total Honor Penarik -->
@@ -183,29 +195,29 @@
                              <p class="text-xs text-teal-600 mt-1">Operasional lapangan (Klik untuk edit)</p>
                         </div>
 
-                        <!-- Biaya PAD Desa -->
-                        <div class="bg-yellow-50 rounded-xl p-4 sm:p-5 border border-yellow-100 cursor-pointer hover:bg-yellow-100 transition" @click="openModalOperasional" title="Klik untuk update">
+                        <!-- Biaya PAD Desa (Hidden for Penarik) -->
+                        <div v-if="$page.props.auth.user.role !== 'penarik'" class="bg-yellow-50 rounded-xl p-4 sm:p-5 border border-yellow-100 cursor-pointer hover:bg-yellow-100 transition" @click="openModalOperasional" title="Klik untuk update">
                              <h4 class="text-xs sm:text-sm font-semibold text-yellow-900 mb-2">Biaya PAD Desa</h4>
                              <p class="text-xl sm:text-2xl font-bold text-yellow-800">{{ formatRupiah(detail.biayaPadDesa) }}</p>
                              <p class="text-xs text-yellow-600 mt-1">Pendapatan Asli Desa (Klik untuk edit)</p>
                         </div>
 
-                        <!-- Biaya Lain-lain -->
-                        <div class="bg-pink-50 rounded-xl p-4 sm:p-5 border border-pink-100 cursor-pointer hover:bg-pink-100 transition" @click="openModalOperasional" title="Klik untuk update">
+                        <!-- Biaya Lain-lain (Hidden for Penarik) -->
+                        <div v-if="$page.props.auth.user.role !== 'penarik'" class="bg-pink-50 rounded-xl p-4 sm:p-5 border border-pink-100 cursor-pointer hover:bg-pink-100 transition" @click="openModalOperasional" title="Klik untuk update">
                              <h4 class="text-xs sm:text-sm font-semibold text-pink-900 mb-2">Biaya Lain-lain</h4>
                              <p class="text-xl sm:text-2xl font-bold text-pink-800">{{ formatRupiah(detail.biayaLainLain) }}</p>
                              <p class="text-xs text-pink-600 mt-1">Biaya lain-lain (Klik untuk edit)</p>
                         </div>
 
-                        <!-- Biaya CSR -->
-                        <div class="bg-purple-50 rounded-xl p-4 sm:p-5 border border-purple-100 cursor-pointer hover:bg-purple-100 transition" @click="openModalOperasional" title="Klik untuk update">
+                        <!-- Biaya CSR (Hidden for Penarik) -->
+                        <div v-if="$page.props.auth.user.role !== 'penarik'" class="bg-purple-50 rounded-xl p-4 sm:p-5 border border-purple-100 cursor-pointer hover:bg-purple-100 transition" @click="openModalOperasional" title="Klik untuk update">
                              <h4 class="text-xs sm:text-sm font-semibold text-purple-900 mb-2">Biaya CSR</h4>
                              <p class="text-xl sm:text-2xl font-bold text-purple-800">{{ formatRupiah(detail.biayaCSR || 0) }}</p>
                              <p class="text-xs text-purple-600 mt-1">Corporate Social  Responsibility (Klik untuk edit)</p>
                         </div>
 
-                        <!-- Total Semua Biaya -->
-                        <div class="bg-red-50 rounded-xl p-4 sm:p-5 border border-red-100">
+                        <!-- Total Semua Biaya (Hidden for Penarik) -->
+                        <div v-if="$page.props.auth.user.role !== 'penarik'" class="bg-red-50 rounded-xl p-4 sm:p-5 border border-red-100">
                              <h4 class="text-xs sm:text-sm font-semibold text-red-900 mb-2">Total Semua Biaya</h4>
                              <p class="text-xl sm:text-2xl font-bold text-red-800">{{ formatRupiah((Number(detail?.honorPenarik) || 0) + (Number(detail?.biayaOpsLapangan) || 0) + (Number(detail?.biayaPadDesa) || 0) + (Number(detail?.biayaLainLain) || 0) + (Number(detail?.biayaCSR) || 0)) }}</p>
                              <p class="text-xs text-red-600 mt-1">Honor + Ops + PAD + Lain-lain + CSR</p>
