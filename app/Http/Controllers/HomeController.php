@@ -509,7 +509,11 @@ class HomeController extends Controller
         // === LAPORAN KEUANGAN BULANAN ===
         // Filter by wilayah if specified
         $laporanQuery = ['bulan' => $bulanIni];
-        if ($wilayahFilter) {
+        
+        // FIX: Penarik harus gunakan wilayah mereka sendiri
+        if (auth()->user()->isPenarik() && auth()->user()->hasWilayah()) {
+            $laporanQuery['wilayah'] = auth()->user()->getWilayah();
+        } elseif ($wilayahFilter && auth()->user()->isAdmin()) {
             $laporanQuery['wilayah'] = $wilayahFilter;
         }
         

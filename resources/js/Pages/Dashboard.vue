@@ -755,7 +755,7 @@ const formOperasional = ref({
     biaya_operasional_penarik: props.laporanKeuangan.biayaOperasionalPenarik,
     biaya_pad_desa: props.laporanKeuangan.biayaPadDesa,
     biaya_csr: props.laporanKeuangan.biayaCSR || 0,
-    wilayah: selectedWilayah.value || null
+    wilayah: props.$page.props.auth.user.role === 'penarik' ? (props.$page.props.auth.user.wilayah || null) : (selectedWilayah.value || null)
 });
 
 const reloadDashboard = () => {
@@ -767,7 +767,12 @@ const reloadDashboard = () => {
         preserveScroll: true,
         onSuccess: () => {
             // Update form wilayah after reload
-            formOperasional.value.wilayah = selectedWilayah.value || null;
+            // FIX: Untuk penarik, gunakan wilayah user, bukan filter
+            if (props.$page.props.auth.user.role === 'penarik') {
+                formOperasional.value.wilayah = props.$page.props.auth.user.wilayah || null;
+            } else {
+                formOperasional.value.wilayah = selectedWilayah.value || null;
+            }
             formOperasional.value.biaya_operasional_penarik = props.laporanKeuangan.biayaOperasionalPenarik;
             formOperasional.value.biaya_pad_desa = props.laporanKeuangan.biayaPadDesa;
             formOperasional.value.biaya_csr = props.laporanKeuangan.biayaCSR || 0;
