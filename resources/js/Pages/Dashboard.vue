@@ -813,6 +813,10 @@ const reloadDashboard = () => {
 const submitOperasional = () => {
     processing.value = true;
     router.post('/laporan/update-operasional', formOperasional.value, {
+        onSuccess: () => {
+            // Reload dashboard data setelah berhasil update
+            reloadDashboard();
+        },
         onFinish: () => {
             processing.value = false;
             showModalOperasional.value = false;
