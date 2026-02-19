@@ -925,7 +925,6 @@ class HomeController extends Controller
         ]);
     }
     
-
     public function updateBiayaOperasional(Request $request)
     {
         $validated = $request->validate([
@@ -950,48 +949,55 @@ class HomeController extends Controller
                 return redirect()->back()->with('error', 'Anda tidak memiliki wilayah yang terdaftar.');
             }
             
-            // Paksa wilayah ke wilayah penarik
+            // Paksa wilayah ke wilayah penarik, abaikan input dari request
             $validated['wilayah'] = $user->getWilayah();
             
             \Log::info('Penarik update - Wilayah dipaksa ke:', ['wilayah' => $validated['wilayah']]);
             
-            // 2. Proteksi field sensitif
-            if ($request->has('biaya_pad_desa') || 
-                $request->has('biaya_lain_lain') || 
-                $request->has('biaya_csr')) {
-                // Jangan error, cukup abaikan saja input sensitif dari penarik
-                // return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengubah biaya PAD Desa, Lain-lain, atau CSR.');
+            // 2. Penarik TIDAK boleh mengubah field sensitif (hanya admin)
+            // Field sensitif: PAD Desa, Lain-lain, CSR
+            // Penarik BOLEH edit: Ops Penarik, Ops Lapangan
+            if (isset($validated['biaya_pad_desa']) || 
+                isset($validated['biaya_lain_lain']) || 
+                isset($validated['biaya_csr'])) {
+                return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengubah biaya PAD Desa, Lain-lain, atau CSR.');
             }
+        }
+        
+        // 3. Jika admin update tanpa wilayah spesifik, gunakan "semua wilayah" mode
+        $laporanQuery = ['bulan' => $validated['bulan']];
+        if (isset($validated['wilayah'])) {
+            $laporanQuery['wilayah'] = $validated['wilayah'];
         }
         
         $updateData = [
             'biaya_operasional_penarik' => $validated['biaya_operasional_penarik'],
         ];
         
-        // Penarik & Admin bisa update Ops Lapangan
-        // Gunakan array_key_exists atau check $request->has() untuk memastikan nilai 0 terambil
-        if ($request->has('biaya_operasional_lapangan')) {
-            $updateData['biaya_operasional_lapangan'] = $request->input('biaya_operasional_lapangan');
+        // Penarik juga bisa update Ops Lapangan
+        if (isset($validated['biaya_operasional_lapangan'])) {
+            $updateData['biaya_operasional_lapangan'] = $validated['biaya_operasional_lapangan'];
         }
         
         // Hanya admin yang bisa update field ini
         if ($user->isAdmin()) {
-            if ($request->has('biaya_pad_desa')) {
-                $updateData['biaya_pad_desa'] = $request->input('biaya_pad_desa');
+            if (isset($validated['biaya_pad_desa'])) {
+                $updateData['biaya_pad_desa'] = $validated['biaya_pad_desa'];
             }
             
-            if ($request->has('biaya_lain_lain')) {
-                $updateData['biaya_lain_lain'] = $request->input('biaya_lain_lain');
+            if (isset($validated['biaya_lain_lain'])) {
+                $updateData['biaya_lain_lain'] = $validated['biaya_lain_lain'];
             }
             
-            if ($request->has('biaya_csr')) {
-                $updateData['biaya_csr'] = $request->input('biaya_csr');
+            if (isset($validated['biaya_csr'])) {
+                $updateData['biaya_csr'] = $validated['biaya_csr'];
             }
         }
         
-        \Log::info('Update Data Final:', $updateData);
+        \Log::info('Update Data:', $updateData);
         
-        if (isset($validated['wilayah'])) { // Wilayah spesifik (Admin pilih wilayah atau Penarik)
+        if (isset($validated['wilayah'])) {
+             // Specific update for a region
              \Log::info('UpdateOrCreate with query:', ['bulan' => $validated['bulan'], 'wilayah' => $validated['wilayah']]);
              
              $laporan = \App\Models\LaporanBulanan::updateOrCreate(
@@ -999,49 +1005,42 @@ class HomeController extends Controller
                  $updateData
              );
              
-             \Log::info('Laporan updated ID: ' . $laporan->id);
+             \Log::info('Laporan updated:', $laporan->toArray());
         } else {
-             // General update (Admin pilih "Semua Wilayah")
-             // Logic: Update data pertama, reset sisanya agar totalnya pas
+             // General update (No wilayah filter selected - e.g. "Semua Wilayah")
+             // We need to ensure the TOTAL sum matches the user input.
+             // Strategy: Find all records for this month. 
+             // Update the first one to the value and set others to 0.
              
              $reports = \App\Models\LaporanBulanan::where('bulan', $validated['bulan'])->get();
              
              if ($reports->isEmpty()) {
-                 // Create default if not exists
+                 // No record exists, create one with default wilayah
                  \App\Models\LaporanBulanan::create(array_merge($updateData, [
                      'bulan' => $validated['bulan'], 
-                     'wilayah' => 'Dawuhan' // Default fallback
+                     'wilayah' => 'Dawuhan' // Default
                  ]));
              } else {
                  $first = true;
                  foreach($reports as $report) {
                      if ($first) {
+                         // Set the first record to the target value
                          $report->update($updateData);
                          $first = false;
                      } else {
-                         // Reset operasional penarik & lapangan ke 0 untuk record lain
-                         // agar total sum di dashboard sesuai input admin
+                         // Reset others to 0 so the SUM matches the user input
                          $resetData = ['biaya_operasional_penarik' => 0];
-                         
-                         // Jika admin update lapangan, reset lapangan di record lain
-                         if (isset($updateData['biaya_operasional_lapangan'])) {
-                             $resetData['biaya_operasional_lapangan'] = 0;
-                         }
-                         
-                         // Jika admin update PAD, reset PAD
                          if (isset($updateData['biaya_pad_desa'])) {
                              $resetData['biaya_pad_desa'] = 0;
                          }
-                         
                          $report->update($resetData);
                      }
                  }
              }
         }
         
-        return redirect()->back()->with('success', 'Biaya operasional berhasil diperbarui!');
+        return redirect()->back()->with('success', 'Biaya operasional dan PAD Desa berhasil diperbarui!');
     }
-
 
     public function exportPelangganExcel(Request $request)
     {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Pelanggan;
 use App\Models\TagihanBulanan;
 use App\Models\InformasiTarif;
+use App\Helpers\WilayahHelper;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
@@ -51,8 +52,24 @@ class QRScannerController extends Controller
         // VALIDASI WILAYAH untuk Penarik
         $user = auth()->user();
         if ($user && $user->isPenarik() && $user->hasWilayah()) {
+            // DEBUG: Log detail perbandingan wilayah
+            \Log::debug('QR Scan - Wilayah Comparison Debug', [
+                'user_id' => $user->id,
+                'user_wilayah_raw' => $user->wilayah,
+                'user_wilayah_method' => $user->getWilayah(),
+                'user_wilayah_normalized' => WilayahHelper::normalize($user->getWilayah()),
+                'pelanggan_id' => $pelanggan->id_pelanggan,
+                'pelanggan_wilayah_raw' => $pelanggan->wilayah,
+                'pelanggan_wilayah_normalized' => WilayahHelper::normalize($pelanggan->wilayah),
+                'comparison_result' => (WilayahHelper::normalize($pelanggan->wilayah) === WilayahHelper::normalize($user->getWilayah())),
+            ]);
+            
             // Penarik hanya bisa scan pelanggan di wilayahnya
-            if ($pelanggan->wilayah !== $user->getWilayah()) {
+            // FIX: Gunakan WilayahHelper untuk normalisasi (handle underscore, multiple spaces, case-insensitive)
+            $userWilayah = WilayahHelper::normalize($user->getWilayah());
+            $pelangganWilayah = WilayahHelper::normalize($pelanggan->wilayah);
+            
+            if ($pelangganWilayah !== $userWilayah) {
                 \Log::warning('QR Scan - Unauthorized Wilayah Access', [
                     'user_id' => $user->id,
                     'user_wilayah' => $user->getWilayah(),
@@ -131,7 +148,11 @@ class QRScannerController extends Controller
         // VALIDASI WILAYAH untuk Penarik
         $user = auth()->user();
         if ($user && $user->isPenarik() && $user->hasWilayah()) {
-            if ($pelanggan->wilayah !== $user->getWilayah()) {
+            // FIX: Gunakan WilayahHelper untuk normalisasi (handle underscore, multiple spaces, case-insensitive)
+            $userWilayah = WilayahHelper::normalize($user->getWilayah());
+            $pelangganWilayah = WilayahHelper::normalize($pelanggan->wilayah);
+            
+            if ($pelangganWilayah !== $userWilayah) {
                 abort(403, 'Anda tidak memiliki akses ke pelanggan dari wilayah ' . ($pelanggan->wilayah ?? 'ini'));
             }
         }
@@ -198,7 +219,11 @@ class QRScannerController extends Controller
             // VALIDASI WILAYAH untuk Penarik
             $user = auth()->user();
             if ($user && $user->isPenarik() && $user->hasWilayah()) {
-                if ($pelanggan->wilayah !== $user->getWilayah()) {
+                // FIX: Gunakan WilayahHelper untuk normalisasi (handle underscore, multiple spaces, case-insensitive)
+                $userWilayah = WilayahHelper::normalize($user->getWilayah());
+                $pelangganWilayah = WilayahHelper::normalize($pelanggan->wilayah);
+                
+                if ($pelangganWilayah !== $userWilayah) {
                     DB::rollBack();
                     return response()->json([
                         'success' => false,
@@ -344,7 +369,11 @@ class QRScannerController extends Controller
         // Validasi akses wilayah untuk penarik
         $user = auth()->user();
         if ($user && $user->isPenarik() && $user->hasWilayah()) {
-            if ($pelanggan->wilayah !== $user->getWilayah()) {
+            // FIX: Gunakan WilayahHelper untuk normalisasi (handle underscore, multiple spaces, case-insensitive)
+            $userWilayah = WilayahHelper::normalize($user->getWilayah());
+            $pelangganWilayah = WilayahHelper::normalize($pelanggan->wilayah);
+            
+            if ($pelangganWilayah !== $userWilayah) {
                 Log::warning('Penarik mencoba download QR dari wilayah lain', [
                     'user_id' => $user->id,
                     'user_name' => $user->name,
@@ -387,7 +416,11 @@ class QRScannerController extends Controller
         // Validasi akses wilayah untuk penarik
         $user = auth()->user();
         if ($user && $user->isPenarik() && $user->hasWilayah()) {
-            if ($pelanggan->wilayah !== $user->getWilayah()) {
+            // FIX: Gunakan WilayahHelper untuk normalisasi (handle underscore, multiple spaces, case-insensitive)
+            $userWilayah = WilayahHelper::normalize($user->getWilayah());
+            $pelangganWilayah = WilayahHelper::normalize($pelanggan->wilayah);
+            
+            if ($pelangganWilayah !== $userWilayah) {
                 Log::warning('Penarik mencoba download QR image dari wilayah lain', [
                     'user_id' => $user->id,
                     'user_name' => $user->name,
@@ -421,7 +454,11 @@ class QRScannerController extends Controller
         // VALIDASI WILAYAH untuk Penarik
         $user = auth()->user();
         if ($user && $user->isPenarik() && $user->hasWilayah()) {
-            if ($pelanggan->wilayah !== $user->getWilayah()) {
+            // FIX: Gunakan WilayahHelper untuk normalisasi (handle underscore, multiple spaces, case-insensitive)
+            $userWilayah = WilayahHelper::normalize($user->getWilayah());
+            $pelangganWilayah = WilayahHelper::normalize($pelanggan->wilayah);
+            
+            if ($pelangganWilayah !== $userWilayah) {
                return response()->json(['meteran_terakhir' => 0], 403);
             }
         }
