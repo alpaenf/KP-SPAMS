@@ -674,7 +674,6 @@
                                 min="0"
                                 placeholder="0"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
-                                required
                             />
                             <p class="text-xs text-gray-500 mt-1">Biaya operasional lapangan</p>
                         </div>
@@ -811,11 +810,22 @@ const reloadDashboard = () => {
 };
 
 const submitOperasional = () => {
+    console.log('Submitting operasional:', formOperasional.value);
     processing.value = true;
     router.post('/laporan/update-operasional', formOperasional.value, {
         onSuccess: () => {
-            // Reload dashboard data setelah berhasil update
-            reloadDashboard();
+            console.log('Update berhasil, reloading...');
+            // Reload dashboard data setelah berhasil update (force refresh)
+            const url = selectedWilayah.value 
+                ? `/dashboard?wilayah=${encodeURIComponent(selectedWilayah.value)}`
+                : '/dashboard';
+            router.visit(url, {
+                preserveState: false, // Force refresh dengan data baru
+                preserveScroll: true
+            });
+        },
+        onError: (errors) => {
+            console.error('Error update:', errors);
         },
         onFinish: () => {
             processing.value = false;

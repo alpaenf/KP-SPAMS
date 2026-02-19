@@ -937,6 +937,9 @@ class HomeController extends Controller
             'wilayah' => 'nullable|string|max:100',
         ]);
         
+        // DEBUG
+        \Log::info('Update Biaya Operasional - Request Data:', $validated);
+        
         // SECURITY: Proteksi untuk role penarik
         $user = auth()->user();
         
@@ -948,6 +951,8 @@ class HomeController extends Controller
             
             // Paksa wilayah ke wilayah penarik, abaikan input dari request
             $validated['wilayah'] = $user->getWilayah();
+            
+            \Log::info('Penarik update - Wilayah dipaksa ke:', ['wilayah' => $validated['wilayah']]);
             
             // 2. Penarik TIDAK boleh mengubah field sensitif (hanya admin)
             // Field sensitif: PAD Desa, Lain-lain, CSR
@@ -989,12 +994,18 @@ class HomeController extends Controller
             }
         }
         
+        \Log::info('Update Data:', $updateData);
+        
         if (isset($validated['wilayah'])) {
              // Specific update for a region
-             \App\Models\LaporanBulanan::updateOrCreate(
+             \Log::info('UpdateOrCreate with query:', ['bulan' => $validated['bulan'], 'wilayah' => $validated['wilayah']]);
+             
+             $laporan = \App\Models\LaporanBulanan::updateOrCreate(
                  ['bulan' => $validated['bulan'], 'wilayah' => $validated['wilayah']], 
                  $updateData
              );
+             
+             \Log::info('Laporan updated:', $laporan->toArray());
         } else {
              // General update (No wilayah filter selected - e.g. "Semua Wilayah")
              // We need to ensure the TOTAL sum matches the user input.
