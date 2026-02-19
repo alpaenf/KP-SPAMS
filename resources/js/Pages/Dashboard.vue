@@ -479,7 +479,7 @@
                         </div>
 
                         <!-- Biaya Ops Lapangan -->
-                        <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg p-5 border border-teal-200">
+                        <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg p-5 border border-teal-200 relative group">
                             <div class="flex items-center justify-between mb-2">
                                 <h4 class="text-sm font-medium text-teal-900">Biaya Ops Lapangan</h4>
                                 <svg class="w-5 h-5 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
@@ -487,7 +487,19 @@
                                 </svg>
                             </div>
                             <p class="text-2xl font-bold text-teal-900">Rp {{ formatRupiah(laporanKeuangan.biayaOpsLapangan) }}</p>
-                            <p class="text-xs text-teal-700 mt-1">Biaya operasional lapangan</p>
+                            <p class="text-xs text-teal-700 mt-1">Biaya operasional lapangan (klik untuk edit)</p>
+                            
+                            <!-- Edit Button for Penarik -->
+                            <button 
+                                v-if="$page.props.auth.user.role === 'penarik'"
+                                @click="showModalOperasional = true"
+                                class="absolute top-3 right-3 p-2 bg-teal-200 hover:bg-teal-300 text-teal-800 rounded-lg transition opacity-0 group-hover:opacity-100"
+                                title="Edit biaya operasional"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </button>
                         </div>
 
                         <!-- Biaya Lain-lain (Hidden for Penarik) -->
@@ -620,7 +632,7 @@
                 
                 <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Update Biaya Operasional Penarik</h3>
+                        <h3 class="text-lg font-semibold text-gray-900">Update Biaya Operasional</h3>
                         <button @click="showModalOperasional = false" class="text-gray-400 hover:text-gray-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -640,7 +652,7 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Operasional (Rp)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Operasional Penarik (Rp)</label>
                             <input 
                                 type="number" 
                                 v-model="formOperasional.biaya_operasional_penarik"
@@ -651,6 +663,20 @@
                                 required
                             />
                             <p class="text-xs text-gray-500 mt-1">BBM, maintenance, dll.</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Ops. Lapangan (Rp)</label>
+                            <input 
+                                type="number" 
+                                v-model="formOperasional.biaya_operasional_lapangan"
+                                step="1000"
+                                min="0"
+                                placeholder="0"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                                required
+                            />
+                            <p class="text-xs text-gray-500 mt-1">Biaya operasional lapangan</p>
                         </div>
 
                         <div v-if="$page.props.auth.user.role === 'admin'" class="mb-4">
@@ -755,6 +781,7 @@ let chartInstance = null;
 const formOperasional = ref({
     bulan: props.laporanKeuangan.bulan,
     biaya_operasional_penarik: props.laporanKeuangan.biayaOperasionalPenarik,
+    biaya_operasional_lapangan: props.laporanKeuangan.biayaOpsLapangan || 0,
     biaya_pad_desa: props.laporanKeuangan.biayaPadDesa,
     biaya_csr: props.laporanKeuangan.biayaCSR || 0,
     wilayah: page.props.auth.user.role === 'penarik' ? (page.props.auth.user.wilayah || null) : (selectedWilayah.value || null)
@@ -776,6 +803,7 @@ const reloadDashboard = () => {
                 formOperasional.value.wilayah = selectedWilayah.value || null;
             }
             formOperasional.value.biaya_operasional_penarik = props.laporanKeuangan.biayaOperasionalPenarik;
+            formOperasional.value.biaya_operasional_lapangan = props.laporanKeuangan.biayaOpsLapangan || 0;
             formOperasional.value.biaya_pad_desa = props.laporanKeuangan.biayaPadDesa;
             formOperasional.value.biaya_csr = props.laporanKeuangan.biayaCSR || 0;
         }

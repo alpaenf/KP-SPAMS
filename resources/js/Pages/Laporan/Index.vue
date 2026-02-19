@@ -353,7 +353,7 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Operasional (Rp)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Operasional Penarik (Rp)</label>
                             <input 
                                 type="number" 
                                 v-model="formOperasional.biaya_operasional_penarik"
@@ -364,6 +364,20 @@
                                 required
                             />
                             <p class="text-xs text-gray-500 mt-1">BBM, maintenance, dll.</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Ops. Lapangan (Rp)</label>
+                            <input 
+                                type="number" 
+                                v-model="formOperasional.biaya_operasional_lapangan"
+                                step="1000"
+                                min="0"
+                                placeholder="0"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                                required
+                            />
+                            <p class="text-xs text-gray-500 mt-1">Biaya operasional lapangan</p>
                         </div>
 
                         <div v-if="$page.props.auth.user.role === 'admin'" class="mb-4">
@@ -377,19 +391,6 @@
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
                             />
                             <p class="text-xs text-gray-500 mt-1">Pendapatan Asli Desa</p>
-                        </div>
-
-                        <div v-if="$page.props.auth.user.role === 'admin'" class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Biaya Ops. Lapangan (Rp)</label>
-                            <input 
-                                type="number" 
-                                v-model="formOperasional.biaya_operasional_lapangan"
-                                step="1000"
-                                min="0"
-                                placeholder="0"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
-                            />
-                            <p class="text-xs text-gray-500 mt-1">Biaya operasional lapangan</p>
                         </div>
 
                         <div v-if="$page.props.auth.user.role === 'admin'" class="mb-4">

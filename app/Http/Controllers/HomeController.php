@@ -950,12 +950,12 @@ class HomeController extends Controller
             $validated['wilayah'] = $user->getWilayah();
             
             // 2. Penarik TIDAK boleh mengubah field sensitif (hanya admin)
-            // Field sensitif: PAD Desa, Ops Lapangan, Lain-lain, CSR
+            // Field sensitif: PAD Desa, Lain-lain, CSR
+            // Penarik BOLEH edit: Ops Penarik, Ops Lapangan
             if (isset($validated['biaya_pad_desa']) || 
-                isset($validated['biaya_operasional_lapangan']) || 
                 isset($validated['biaya_lain_lain']) || 
                 isset($validated['biaya_csr'])) {
-                return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengubah biaya selain operasional penarik.');
+                return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengubah biaya PAD Desa, Lain-lain, atau CSR.');
             }
         }
         
@@ -969,14 +969,15 @@ class HomeController extends Controller
             'biaya_operasional_penarik' => $validated['biaya_operasional_penarik'],
         ];
         
+        // Penarik juga bisa update Ops Lapangan
+        if (isset($validated['biaya_operasional_lapangan'])) {
+            $updateData['biaya_operasional_lapangan'] = $validated['biaya_operasional_lapangan'];
+        }
+        
         // Hanya admin yang bisa update field ini
         if ($user->isAdmin()) {
             if (isset($validated['biaya_pad_desa'])) {
                 $updateData['biaya_pad_desa'] = $validated['biaya_pad_desa'];
-            }
-            
-            if (isset($validated['biaya_operasional_lapangan'])) {
-                $updateData['biaya_operasional_lapangan'] = $validated['biaya_operasional_lapangan'];
             }
             
             if (isset($validated['biaya_lain_lain'])) {
