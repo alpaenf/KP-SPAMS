@@ -705,13 +705,15 @@
 
 <script setup>
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import InstallPWAButton from '@/Components/InstallPWAButton.vue';
 import { Chart, registerables } from 'chart.js';
 
 // Register Chart.js components
 Chart.register(...registerables);
+
+const page = usePage();
 
 const props = defineProps({
     stats: {
@@ -755,7 +757,7 @@ const formOperasional = ref({
     biaya_operasional_penarik: props.laporanKeuangan.biayaOperasionalPenarik,
     biaya_pad_desa: props.laporanKeuangan.biayaPadDesa,
     biaya_csr: props.laporanKeuangan.biayaCSR || 0,
-    wilayah: props.$page.props.auth.user.role === 'penarik' ? (props.$page.props.auth.user.wilayah || null) : (selectedWilayah.value || null)
+    wilayah: page.props.auth.user.role === 'penarik' ? (page.props.auth.user.wilayah || null) : (selectedWilayah.value || null)
 });
 
 const reloadDashboard = () => {
@@ -768,8 +770,8 @@ const reloadDashboard = () => {
         onSuccess: () => {
             // Update form wilayah after reload
             // FIX: Untuk penarik, gunakan wilayah user, bukan filter
-            if (props.$page.props.auth.user.role === 'penarik') {
-                formOperasional.value.wilayah = props.$page.props.auth.user.wilayah || null;
+            if (page.props.auth.user.role === 'penarik') {
+                formOperasional.value.wilayah = page.props.auth.user.wilayah || null;
             } else {
                 formOperasional.value.wilayah = selectedWilayah.value || null;
             }
