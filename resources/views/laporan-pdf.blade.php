@@ -270,11 +270,14 @@
         <div class="section-title">📥 Detail Pemasukan dari Pembayaran</div>
         
         @php
+            // Filter dengan case-insensitive dan trim whitespace
             $pembayaranUmum = $pembayarans->filter(function($p) {
-                return ($p->pelanggan->kategori ?? 'umum') === 'umum';
+                $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
+                return $kategori === 'umum';
             });
             $pembayaranSosial = $pembayarans->filter(function($p) {
-                return ($p->pelanggan->kategori ?? 'umum') === 'sosial';
+                $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
+                return $kategori === 'sosial';
             });
             $totalUmum = $pembayaranUmum->sum('jumlah_bayar');
             $totalSosial = $pembayaranSosial->sum('jumlah_bayar');

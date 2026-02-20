@@ -86,31 +86,39 @@ class LaporanController extends Controller
         $totalKubik = $pembayarans->sum('jumlah_kubik');
         $totalTransaksi = $pembayarans->count();
         
-        // Calculate by kategori
+        // Calculate by kategori (case-insensitive and trim whitespace)
         $pemasukanUmum = $pembayarans->filter(function($p) { 
-            return ($p->pelanggan->kategori ?? 'umum') === 'umum'; 
+            $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
+            return $kategori === 'umum'; 
         })->sum('jumlah_bayar');
         
         $pemasukanSosial = $pembayarans->filter(function($p) { 
-            return ($p->pelanggan->kategori ?? 'umum') === 'sosial'; 
+            $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
+            return $kategori === 'sosial'; 
         })->sum('jumlah_bayar');
         
         $transaksiUmum = $pembayarans->filter(function($p) { 
-            return ($p->pelanggan->kategori ?? 'umum') === 'umum'; 
+            $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
+            return $kategori === 'umum'; 
         })->count();
         
         $transaksiSosial = $pembayarans->filter(function($p) { 
-            return ($p->pelanggan->kategori ?? 'umum') === 'sosial'; 
+            $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
+            return $kategori === 'sosial'; 
         })->count();
         
-        // Hitung jumlah pelanggan/bangunan unik per kategori
-        $pelangganUmum = $pembayarans->filter(function($p) { 
-            return ($p->pelanggan->kategori ?? 'umum') === 'umum'; 
-        })->unique('pelanggan_id')->count();
+        // Hitung jumlah pelanggan/bangunan aktif per kategori (dari semua pelanggan aktif, bukan hanya yang bayar)
+        $allPelangganAktif = Pelanggan::whereIn('id', $pelangganAktifIds)->get();
         
-        $pelangganSosial = $pembayarans->filter(function($p) { 
-            return ($p->pelanggan->kategori ?? 'umum') === 'sosial'; 
-        })->unique('pelanggan_id')->count();
+        $pelangganUmum = $allPelangganAktif->filter(function($p) { 
+            $kategori = strtolower(trim($p->kategori ?? 'umum'));
+            return $kategori === 'umum'; 
+        })->count();
+        
+        $pelangganSosial = $allPelangganAktif->filter(function($p) { 
+            $kategori = strtolower(trim($p->kategori ?? 'umum'));
+            return $kategori === 'sosial'; 
+        })->count();
 
         // === 2. Hitung Detail Keuangan (Mirip Dashboard) ===
         
@@ -440,31 +448,39 @@ class LaporanController extends Controller
         $totalKubik = $pembayarans->sum('jumlah_kubik');
         $totalTransaksi = $pembayarans->count();
         
-        // Calculate by kategori
+        // Calculate by kategori (case-insensitive and trim whitespace)
         $pemasukanUmum = $pembayarans->filter(function($p) { 
-            return ($p->pelanggan->kategori ?? 'umum') === 'umum'; 
+            $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
+            return $kategori === 'umum'; 
         })->sum('jumlah_bayar');
         
         $pemasukanSosial = $pembayarans->filter(function($p) { 
-            return ($p->pelanggan->kategori ?? 'umum') === 'sosial'; 
+            $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
+            return $kategori === 'sosial'; 
         })->sum('jumlah_bayar');
         
         $transaksiUmum = $pembayarans->filter(function($p) { 
-            return ($p->pelanggan->kategori ?? 'umum') === 'umum'; 
+            $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
+            return $kategori === 'umum'; 
         })->count();
         
         $transaksiSosial = $pembayarans->filter(function($p) { 
-            return ($p->pelanggan->kategori ?? 'umum') === 'sosial'; 
+            $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
+            return $kategori === 'sosial'; 
         })->count();
         
-        // Hitung jumlah pelanggan/bangunan unik per kategori
-        $pelangganUmum = $pembayarans->filter(function($p) { 
-            return ($p->pelanggan->kategori ?? 'umum') === 'umum'; 
-        })->unique('pelanggan_id')->count();
+        // Hitung jumlah pelanggan/bangunan aktif per kategori (dari semua pelanggan aktif, bukan hanya yang bayar)
+        $allPelangganAktif = Pelanggan::whereIn('id', $pelangganAktifIds)->get();
         
-        $pelangganSosial = $pembayarans->filter(function($p) { 
-            return ($p->pelanggan->kategori ?? 'umum') === 'sosial'; 
-        })->unique('pelanggan_id')->count();
+        $pelangganUmum = $allPelangganAktif->filter(function($p) { 
+            $kategori = strtolower(trim($p->kategori ?? 'umum'));
+            return $kategori === 'umum'; 
+        })->count();
+        
+        $pelangganSosial = $allPelangganAktif->filter(function($p) { 
+            $kategori = strtolower(trim($p->kategori ?? 'umum'));
+            return $kategori === 'sosial'; 
+        })->count();
 
         // Hitung Detail Keuangan
         $tarik20Persen = $totalPemasukan * 0.20;

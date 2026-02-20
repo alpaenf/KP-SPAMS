@@ -156,7 +156,7 @@
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="text-sm font-medium text-gray-900">{{ item.nama_pelanggan }}</div>
-                                        <div v-if="item.kategori === 'sosial'" class="text-xs text-purple-600 font-medium">Kategori Sosial</div>
+                                        <div v-if="(item.kategori || 'umum').toLowerCase().trim() === 'sosial'" class="text-xs text-purple-600 font-medium">Kategori Sosial</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">

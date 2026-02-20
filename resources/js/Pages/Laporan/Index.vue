@@ -422,10 +422,10 @@
                                 </tr>
                                 <tr class="bg-gray-100 font-semibold">
                                     <td class="px-4 py-3 text-sm text-gray-900">TOTAL</td>
-                                    <td class="px-4 py-3 text-sm text-gray-900 text-right">{{ distribusiWilayah.reduce((sum, w) => sum + w.jumlah, 0) }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-900 text-right">{{ distribusiWilayah.reduce((sum, w) => sum + w.sudah_bayar, 0) }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-900 text-right">{{ distribusiWilayah.reduce((sum, w) => sum + w.belum_bayar, 0) }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-900 text-right">{{ distribusiWilayah.reduce((sum, w) => sum + w.tunggakan, 0) }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 text-right">{{ distribusiWilayah.reduce((sum, w) => sum + Number(w.jumlah), 0) }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 text-right">{{ distribusiWilayah.reduce((sum, w) => sum + Number(w.sudah_bayar), 0) }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 text-right">{{ distribusiWilayah.reduce((sum, w) => sum + Number(w.belum_bayar), 0) }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 text-right">{{ distribusiWilayah.reduce((sum, w) => sum + Number(w.tunggakan), 0) }}</td>
                                     <td class="px-4 py-3 text-center">-</td>
                                 </tr>
                             </tbody>
@@ -499,7 +499,7 @@
                                         <span v-if="item.pelanggan?.rw"> / RW {{ item.pelanggan.rw }}</span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span v-if="item.pelanggan?.kategori === 'sosial'" class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Sosial</span>
+                                        <span v-if="(item.pelanggan?.kategori || 'umum').toLowerCase().trim() === 'sosial'" class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Sosial</span>
                                         <span v-else class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Umum</span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
