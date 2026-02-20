@@ -290,11 +290,81 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Statistik Kategori Pelanggan (NEW) -->
+                    <div class="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-sm mt-4 sm:mt-6">
+                        <h4 class="text-sm font-bold text-gray-800 mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            Rincian Pembayaran per Kategori Pelanggan
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Pelanggan Umum -->
+                            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="text-sm font-semibold text-green-900 flex items-center">
+                                        <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                                        Pelanggan UMUM
+                                    </span>
+                                    <span class="px-2 py-1 bg-green-200 text-green-800 text-xs font-bold rounded-full">
+                                        {{ summary.transaksiUmum || 0 }} transaksi
+                                    </span>
+                                </div>
+                                <div class="text-2xl font-bold text-green-800 mb-1">
+                                    {{ formatRupiah(summary.pemasukanUmum || 0) }}
+                                </div>
+                                <div class="text-xs text-green-700">
+                                    {{ ((summary.pemasukanUmum || 0) / (summary.pemasukan || 1) * 100).toFixed(1) }}% dari total pemasukan
+                                </div>
+                            </div>
+                            
+                            <!-- Pelanggan Sosial -->
+                            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="text-sm font-semibold text-blue-900 flex items-center">
+                                        <span class="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                                        Pelanggan SOSIAL
+                                    </span>
+                                    <span class="px-2 py-1 bg-blue-200 text-blue-800 text-xs font-bold rounded-full">
+                                        {{ summary.transaksiSosial || 0 }} transaksi
+                                    </span>
+                                </div>
+                                <div class="text-2xl font-bold text-blue-800 mb-1">
+                                    {{ formatRupiah(summary.pemasukanSosial || 0) }}
+                                </div>
+                                <div class="text-xs text-blue-700">
+                                    {{ ((summary.pemasukanSosial || 0) / (summary.pemasukan || 1) * 100).toFixed(1) }}% dari total pemasukan
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-gray-200">
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-gray-600 font-medium">Total Keseluruhan:</span>
+                                <div class="text-right">
+                                    <div class="font-bold text-gray-900">{{ formatRupiah(summary.pemasukan) }}</div>
+                                    <div class="text-xs text-gray-500">dari {{ summary.transaksi }} transaksi</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                        <h3 class="font-bold text-gray-700">Rincian Transaksi</h3>
-                        <span class="text-xs font-medium text-gray-500 bg-white border border-gray-200 rounded-full px-3 py-1">Menampilkan {{ data.length }} data</span>
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                            <h3 class="font-bold text-gray-700">Rincian Transaksi</h3>
+                            <div class="flex flex-wrap items-center gap-2 text-xs">
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full font-semibold">
+                                    🟢 Umum: {{ summary.transaksiUmum || 0 }}
+                                </span>
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-semibold">
+                                    🔵 Sosial: {{ summary.transaksiSosial || 0 }}
+                                </span>
+                                <span class="bg-white border border-gray-200 text-gray-600 px-2 py-1 rounded-full font-medium">
+                                    Total: {{ data.length }} data
+                                </span>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="overflow-x-auto">

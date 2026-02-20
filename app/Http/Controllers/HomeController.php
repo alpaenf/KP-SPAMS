@@ -483,25 +483,26 @@ class HomeController extends Controller
             });
         
         // Distribusi per Wilayah dengan info tunggakan
+        $bulanIni = now()->format('Y-m');
+        $sqlExpr = WilayahHelper::getSqlExpression();
+        
         $distribusiWilayah = (clone $pelangganQuery)
-            ->select('wilayah')
-            ->selectRaw('count(*) as jumlah')
+            ->selectRaw("MAX(wilayah) as wilayah") // Ambil salah satu nama wilayah sebagai display
+            ->selectRaw("count(*) as jumlah")
+            ->selectRaw("{$sqlExpr} as wilayah_normalized")
             ->whereNotNull('wilayah')
             ->where('wilayah', '!=', '')
             ->where('status_aktif', true)
-            ->groupBy('wilayah')
+            ->groupByRaw($sqlExpr) // Group by wilayah yang sudah dinormalisasi
             ->orderBy('jumlah', 'desc')
             ->get()
-            ->map(function ($item) use ($pelangganQuery) {
-                $bulanIni = now()->format('Y-m');
-                
-                // Get pelanggan IDs di wilayah ini
-                $wilayahNormalized = WilayahHelper::normalize($item->wilayah);
+            ->map(function ($item) use ($bulanIni) {
+                // Get pelanggan IDs di wilayah ini (sudah dinormalisasi)
                 $sqlExpr = WilayahHelper::getSqlExpression();
                 
                 $pelangganIds = Pelanggan::forUser()
                     ->where('status_aktif', true)
-                    ->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized])
+                    ->whereRaw("{$sqlExpr} = ?", [$item->wilayah_normalized])
                     ->pluck('id');
                 
                 // Hitung yang sudah bayar bulan ini
@@ -519,7 +520,7 @@ class HomeController extends Controller
                     ->count();
                 
                 return [
-                    'wilayah' => $item->wilayah,
+                    'wilayah' => ucwords($item->wilayah_normalized), // Capitalize untuk display
                     'jumlah' => $item->jumlah,
                     'sudah_bayar' => $sudahBayar,
                     'belum_bayar' => $belumBayar,
@@ -528,7 +529,6 @@ class HomeController extends Controller
             });
         
         // Stats pembayaran bulan ini
-        $bulanIni = now()->format('Y-m');
         $pelangganAktifIds = (clone $pelangganQuery)->where('status_aktif', true)->pluck('id');
         
         // Pisahkan pembayaran bulan ini dan tunggakan
