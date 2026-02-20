@@ -467,14 +467,14 @@
                                                                         {{ detail.jumlah_bulan }} bulan
                                                                     </span>
                                                                 </td>
-                                                                <td class="px-3 py-2 text-xs text-right font-semibold text-red-700">Rp {{ formatRupiah(detail.total_tunggakan) }}</td>
+                                                                <td class="px-3 py-2 text-xs text-right font-semibold text-red-700"> {{ formatRupiah(detail.total_tunggakan) }}</td>
                                                             </tr>
                                                         </tbody>
                                                         <tfoot class="bg-red-100">
                                                             <tr>
                                                                 <td colspan="4" class="px-3 py-2 text-xs font-bold text-red-900 text-right">TOTAL:</td>
                                                                 <td class="px-3 py-2 text-xs font-bold text-red-900 text-right">
-                                                                    Rp {{ formatRupiah(wilayah.detail_tunggakan.reduce((sum, d) => sum + Number(d.total_tunggakan || 0), 0)) }}
+                                                                     {{ formatRupiah(wilayah.detail_tunggakan.reduce((sum, d) => sum + Number(d.total_tunggakan || 0), 0)) }}
                                                                 </td>
                                                             </tr>
                                                         </tfoot>
