@@ -104,6 +104,28 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithTit
                     $wilayah['belum_bayar'],
                     $wilayah['tunggakan']
                 ]);
+                
+                // Add detail tunggakan if exists
+                if ($wilayah['tunggakan'] > 0 && isset($wilayah['detail_tunggakan']) && count($wilayah['detail_tunggakan']) > 0) {
+                    $rows->push(['', '⤷ Detail Pelanggan yang Menunggak:']);
+                    $rows->push(['', '', 'ID Pelanggan', 'Nama Pelanggan', 'Jumlah Bulan', 'Total Tunggakan']);
+                    
+                    $totalDetailTunggakan = 0;
+                    foreach ($wilayah['detail_tunggakan'] as $detail) {
+                        $rows->push([
+                            '',
+                            '',
+                            $detail['id_pelanggan'],
+                            $detail['nama_pelanggan'],
+                            $detail['jumlah_bulan'] . ' bulan',
+                            'Rp ' . number_format($detail['total_tunggakan'], 0, ',', '.')
+                        ]);
+                        $totalDetailTunggakan += $detail['total_tunggakan'];
+                    }
+                    
+                    $rows->push(['', '', '', '', 'TOTAL:', 'Rp ' . number_format($totalDetailTunggakan, 0, ',', '.')]);
+                    $rows->push(['']);
+                }
             }
             
             $rows->push(['']);

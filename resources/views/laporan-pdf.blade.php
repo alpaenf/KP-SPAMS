@@ -424,6 +424,43 @@
                             @endif
                         </td>
                     </tr>
+                    @if($wilayah['tunggakan'] > 0 && isset($wilayah['detail_tunggakan']) && count($wilayah['detail_tunggakan']) > 0)
+                    <tr>
+                        <td colspan="7" style="padding: 8px; background-color: #fef2f2;">
+                            <div style="margin-left: 20px;">
+                                <strong style="color: #991b1b; font-size: 9px;">Detail Pelanggan yang Menunggak:</strong>
+                                <table style="width: 100%; margin-top: 5px; font-size: 8px;" cellpadding="4">
+                                    <thead style="background-color: #fee2e2;">
+                                        <tr>
+                                            <th style="width: 5%; text-align: left; padding: 4px; border: 1px solid #fecaca;">No</th>
+                                            <th style="width: 15%; text-align: left; padding: 4px; border: 1px solid #fecaca;">ID Pelanggan</th>
+                                            <th style="width: 45%; text-align: left; padding: 4px; border: 1px solid #fecaca;">Nama Pelanggan</th>
+                                            <th style="width: 15%; text-align: right; padding: 4px; border: 1px solid #fecaca;">Jumlah Bulan</th>
+                                            <th style="width: 20%; text-align: right; padding: 4px; border: 1px solid #fecaca;">Total Tunggakan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($wilayah['detail_tunggakan'] as $idx => $detail)
+                                        <tr style="background-color: {{ $idx % 2 == 0 ? '#fff' : '#fef2f2' }};">
+                                            <td style="padding: 3px; border: 1px solid #fecaca; text-align: left;">{{ $idx + 1 }}</td>
+                                            <td style="padding: 3px; border: 1px solid #fecaca; font-weight: bold;">{{ $detail['id_pelanggan'] }}</td>
+                                            <td style="padding: 3px; border: 1px solid #fecaca;">{{ $detail['nama_pelanggan'] }}</td>
+                                            <td style="padding: 3px; border: 1px solid #fecaca; text-align: right;">{{ $detail['jumlah_bulan'] }} bulan</td>
+                                            <td style="padding: 3px; border: 1px solid #fecaca; text-align: right; font-weight: bold; color: #991b1b;">Rp {{ number_format($detail['total_tunggakan'], 0, ',', '.') }}</td>
+                                        </tr>
+                                        @endforeach
+                                        <tr style="background-color: #fee2e2; font-weight: bold;">
+                                            <td colspan="4" style="padding: 4px; border: 1px solid #fecaca; text-align: right;">TOTAL:</td>
+                                            <td style="padding: 4px; border: 1px solid #fecaca; text-align: right; color: #991b1b;">
+                                                Rp {{ number_format(array_sum(array_column($wilayah['detail_tunggakan'], 'total_tunggakan')), 0, ',', '.') }}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                    @endif
                 @endforeach
                 <tr style="background-color: #f1f5f9; font-weight: bold;">
                     <td colspan="2" class="text-right">TOTAL:</td>

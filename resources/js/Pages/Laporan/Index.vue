@@ -385,41 +385,105 @@
                                     <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Belum Bayar</th>
                                     <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Tunggakan</th>
                                     <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
-                                <tr v-for="(wilayah, index) in distribusiWilayah" :key="index" class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ wilayah.wilayah }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-700 text-right">{{ wilayah.jumlah }}</td>
-                                    <td class="px-4 py-3 text-right">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                                            {{ wilayah.sudah_bayar }}
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3 text-right">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
-                                            {{ wilayah.belum_bayar }}
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3 text-right">
-                                        <span :class="[
-                                            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold',
-                                            wilayah.tunggakan > 0 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-600'
-                                        ]">
-                                            {{ wilayah.tunggakan }}
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3 text-center">
-                                        <span :class="[
-                                            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold',
-                                            ((wilayah.sudah_bayar / wilayah.jumlah) * 100) >= 80 ? 'bg-green-100 text-green-800' :
-                                            ((wilayah.sudah_bayar / wilayah.jumlah) * 100) >= 50 ? 'bg-yellow-100 text-yellow-800' :
-                                            'bg-red-100 text-red-800'
-                                        ]">
-                                            {{ ((wilayah.sudah_bayar / wilayah.jumlah) * 100).toFixed(0) }}%
-                                        </span>
-                                    </td>
-                                </tr>
+                                <template v-for="(wilayah, index) in distribusiWilayah" :key="index">
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ wilayah.wilayah }}</td>
+                                        <td class="px-4 py-3 text-sm text-gray-700 text-right">{{ wilayah.jumlah }}</td>
+                                        <td class="px-4 py-3 text-right">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                                                {{ wilayah.sudah_bayar }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-right">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                                                {{ wilayah.belum_bayar }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-right">
+                                            <span :class="[
+                                                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold',
+                                                wilayah.tunggakan > 0 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-600'
+                                            ]">
+                                                {{ wilayah.tunggakan }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            <span :class="[
+                                                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold',
+                                                ((wilayah.sudah_bayar / wilayah.jumlah) * 100) >= 80 ? 'bg-green-100 text-green-800' :
+                                                ((wilayah.sudah_bayar / wilayah.jumlah) * 100) >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-red-100 text-red-800'
+                                            ]">
+                                                {{ ((wilayah.sudah_bayar / wilayah.jumlah) * 100).toFixed(0) }}%
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            <button 
+                                                v-if="wilayah.tunggakan > 0 && wilayah.detail_tunggakan && wilayah.detail_tunggakan.length > 0"
+                                                @click="toggleDetail(wilayah.wilayah)"
+                                                class="inline-flex items-center px-2 py-1 text-xs font-medium rounded hover:bg-gray-100 transition"
+                                                :class="expandedWilayah[wilayah.wilayah] ? 'text-blue-700 bg-blue-50' : 'text-gray-700'"
+                                            >
+                                                <svg :class="['w-4 h-4 transition-transform', expandedWilayah[wilayah.wilayah] ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                </svg>
+                                                <span class="ml-1">Detail</span>
+                                            </button>
+                                            <span v-else class="text-xs text-gray-400">-</span>
+                                        </td>
+                                    </tr>
+                                    <!-- Detail Tunggakan Row (Expandable) -->
+                                    <tr v-if="expandedWilayah[wilayah.wilayah] && wilayah.detail_tunggakan && wilayah.detail_tunggakan.length > 0" class="bg-red-50">
+                                        <td colspan="7" class="px-4 py-4">
+                                            <div class="space-y-2">
+                                                <div class="flex items-center gap-2 mb-3">
+                                                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    </svg>
+                                                    <h4 class="text-sm font-bold text-red-900">Detail Pelanggan yang Menunggak di {{ wilayah.wilayah }}</h4>
+                                                </div>
+                                                <div class="overflow-x-auto">
+                                                    <table class="min-w-full divide-y divide-red-200">
+                                                        <thead class="bg-red-100">
+                                                            <tr>
+                                                                <th class="px-3 py-2 text-left text-xs font-semibold text-red-900">No</th>
+                                                                <th class="px-3 py-2 text-left text-xs font-semibold text-red-900">ID Pelanggan</th>
+                                                                <th class="px-3 py-2 text-left text-xs font-semibold text-red-900">Nama Pelanggan</th>
+                                                                <th class="px-3 py-2 text-right text-xs font-semibold text-red-900">Jumlah Bulan</th>
+                                                                <th class="px-3 py-2 text-right text-xs font-semibold text-red-900">Total Tunggakan</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="divide-y divide-red-100 bg-white">
+                                                            <tr v-for="(detail, idx) in wilayah.detail_tunggakan" :key="idx" class="hover:bg-red-50">
+                                                                <td class="px-3 py-2 text-xs text-gray-700">{{ idx + 1 }}</td>
+                                                                <td class="px-3 py-2 text-xs font-medium text-gray-900">{{ detail.id_pelanggan }}</td>
+                                                                <td class="px-3 py-2 text-xs text-gray-900">{{ detail.nama_pelanggan }}</td>
+                                                                <td class="px-3 py-2 text-xs text-right">
+                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
+                                                                        {{ detail.jumlah_bulan }} bulan
+                                                                    </span>
+                                                                </td>
+                                                                <td class="px-3 py-2 text-xs text-right font-semibold text-red-700">Rp {{ formatRupiah(detail.total_tunggakan) }}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                        <tfoot class="bg-red-100">
+                                                            <tr>
+                                                                <td colspan="4" class="px-3 py-2 text-xs font-bold text-red-900 text-right">TOTAL:</td>
+                                                                <td class="px-3 py-2 text-xs font-bold text-red-900 text-right">
+                                                                    Rp {{ formatRupiah(wilayah.detail_tunggakan.reduce((sum, d) => sum + Number(d.total_tunggakan || 0), 0)) }}
+                                                                </td>
+                                                            </tr>
+                                                        </tfoot>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
                                 <tr class="bg-gray-100 font-semibold">
                                     <td class="px-4 py-3 text-sm text-gray-900">TOTAL</td>
                                     <td class="px-4 py-3 text-sm text-gray-900 text-right">{{ distribusiWilayah.reduce((sum, w) => sum + Number(w.jumlah), 0) }}</td>
@@ -658,6 +722,13 @@ const form = ref({
     bulan: props.filters.bulan,
     wilayah: props.filters.wilayah,
 });
+
+// State untuk expand/collapse detail tunggakan
+const expandedWilayah = ref({});
+
+const toggleDetail = (wilayahName) => {
+    expandedWilayah.value[wilayahName] = !expandedWilayah.value[wilayahName];
+};
 
 // Toggle Akumulasi (untuk menampilkan data bulan sebelumnya juga)
 const showAkumulasi = ref(false);

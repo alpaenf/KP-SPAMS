@@ -232,10 +232,25 @@ class LaporanController extends Controller
                 $belumBayar = $pelangganIds->count() - $sudahBayar;
                 
                 // Hitung tunggakan (bulan sebelumnya yang belum bayar)
-                $tunggakanCount = \App\Models\TagihanBulanan::where('bulan', '<', $bulanFilter)
+                $tunggakanData = \App\Models\TagihanBulanan::where('bulan', '<', $bulanFilter)
                     ->where('status_bayar', 'BELUM_BAYAR')
                     ->whereIn('pelanggan_id', $pelangganIds)
-                    ->count();
+                    ->with('pelanggan:id,id_pelanggan,nama_pelanggan')
+                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw('SUM(total_tagihan) as total_tunggakan'))
+                    ->groupBy('pelanggan_id')
+                    ->get();
+                
+                $tunggakanCount = $tunggakanData->count();
+                
+                // Detail pelanggan yang nunggak
+                $detailTunggakan = $tunggakanData->map(function($t) {
+                    return [
+                        'id_pelanggan' => $t->pelanggan->id_pelanggan ?? 'N/A',
+                        'nama_pelanggan' => $t->pelanggan->nama_pelanggan ?? 'N/A',
+                        'jumlah_bulan' => $t->jumlah_bulan,
+                        'total_tunggakan' => $t->total_tunggakan,
+                    ];
+                })->toArray();
                 
                 return [
                     'wilayah' => ucwords($item->wilayah_normalized),
@@ -243,6 +258,7 @@ class LaporanController extends Controller
                     'sudah_bayar' => $sudahBayar,
                     'belum_bayar' => $belumBayar,
                     'tunggakan' => $tunggakanCount,
+                    'detail_tunggakan' => $detailTunggakan,
                 ];
             });
 
@@ -546,10 +562,26 @@ class LaporanController extends Controller
                 
                 $belumBayar = $pelangganIds->count() - $sudahBayar;
                 
-                $tunggakanCount = \App\Models\TagihanBulanan::where('bulan', '<', $bulanFilter)
+                // Hitung tunggakan (bulan sebelumnya yang belum bayar)
+                $tunggakanData = \App\Models\TagihanBulanan::where('bulan', '<', $bulanFilter)
                     ->where('status_bayar', 'BELUM_BAYAR')
                     ->whereIn('pelanggan_id', $pelangganIds)
-                    ->count();
+                    ->with('pelanggan:id,id_pelanggan,nama_pelanggan')
+                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw('SUM(total_tagihan) as total_tunggakan'))
+                    ->groupBy('pelanggan_id')
+                    ->get();
+                
+                $tunggakanCount = $tunggakanData->count();
+                
+                // Detail pelanggan yang nunggak
+                $detailTunggakan = $tunggakanData->map(function($t) {
+                    return [
+                        'id_pelanggan' => $t->pelanggan->id_pelanggan ?? 'N/A',
+                        'nama_pelanggan' => $t->pelanggan->nama_pelanggan ?? 'N/A',
+                        'jumlah_bulan' => $t->jumlah_bulan,
+                        'total_tunggakan' => $t->total_tunggakan,
+                    ];
+                })->toArray();
                 
                 return [
                     'wilayah' => ucwords($item->wilayah_normalized),
@@ -557,6 +589,7 @@ class LaporanController extends Controller
                     'sudah_bayar' => $sudahBayar,
                     'belum_bayar' => $belumBayar,
                     'tunggakan' => $tunggakanCount,
+                    'detail_tunggakan' => $detailTunggakan,
                 ];
             });
 
