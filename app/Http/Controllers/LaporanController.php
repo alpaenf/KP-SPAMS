@@ -303,7 +303,7 @@ class LaporanController extends Controller
                 $data['summary'],
                 $data['detail'],
                 $data['filters'],
-                $data['distribusiWilayah'] ?? []
+                isset($data['distribusiWilayah']) ? $data['distribusiWilayah']->toArray() : []
             ),
             $fileName
         );
@@ -368,7 +368,7 @@ class LaporanController extends Controller
             'totalPengeluaran' => $totalPengeluaran,
             'saldoAkhir' => $saldoAkhir,
             'totalPelangganAktif' => $totalPelangganAktif,
-            'distribusiWilayah' => $data['distribusiWilayah'] ?? [],
+            'distribusiWilayah' => isset($data['distribusiWilayah']) ? $data['distribusiWilayah']->toArray() : [],
         ];
         
         $pdf = Pdf::loadView('laporan-pdf', $pdfData)
