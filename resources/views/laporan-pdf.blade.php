@@ -269,44 +269,115 @@
     <div class="detail-section">
         <div class="section-title">📥 Detail Pemasukan dari Pembayaran</div>
         
+        @php
+            $pembayaranUmum = $pembayarans->filter(function($p) {
+                return ($p->pelanggan->kategori ?? 'umum') === 'umum';
+            });
+            $pembayaranSosial = $pembayarans->filter(function($p) {
+                return ($p->pelanggan->kategori ?? 'umum') === 'sosial';
+            });
+            $totalUmum = $pembayaranUmum->sum('jumlah_bayar');
+            $totalSosial = $pembayaranSosial->sum('jumlah_bayar');
+        @endphp
+        
         @if(count($pembayarans) > 0)
+            <!-- Ringkasan Per Kategori -->
+            <table style="margin-bottom: 15px;">
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">Kategori</th>
+                        <th style="width: 25%;" class="text-right">Jumlah Transaksi</th>
+                        <th style="width: 25%;" class="text-right">Total Pemasukan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge badge-success">Umum</span></td>
+                        <td class="text-right">{{ $pembayaranUmum->count() }} transaksi</td>
+                        <td class="text-right font-semibold">Rp {{ number_format($totalUmum, 0, ',', '.') }}</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-info">Sosial</span></td>
+                        <td class="text-right">{{ $pembayaranSosial->count() }} transaksi</td>
+                        <td class="text-right font-semibold">Rp {{ number_format($totalSosial, 0, ',', '.') }}</td>
+                    </tr>
+                    <tr style="background-color: #dbeafe; font-weight: bold;">
+                        <td>TOTAL KESELURUHAN</td>
+                        <td class="text-right">{{ $pembayarans->count() }} transaksi</td>
+                        <td class="text-right">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <!-- Tabel Pelanggan Kategori UMUM -->
+            @if($pembayaranUmum->count() > 0)
+            <h4 style="font-size: 12px; font-weight: bold; color: #059669; margin: 15px 0 8px 0;">Pelanggan Kategori UMUM ({{ $pembayaranUmum->count() }} transaksi)</h4>
             <table>
                 <thead>
                     <tr>
                         <th style="width: 5%;">No</th>
-                        <th style="width: 15%;">Tanggal</th>
+                        <th style="width: 12%;">Tanggal</th>
                         <th style="width: 12%;">ID Pelanggan</th>
-                        <th style="width: 25%;">Nama Pelanggan</th>
-                        <th style="width: 13%;">Bulan Bayar</th>
+                        <th style="width: 28%;">Nama Pelanggan</th>
+                        <th style="width: 15%;">Bulan Bayar</th>
+                        <th style="width: 13%;" class="text-right">Pemakaian</th>
                         <th style="width: 15%;" class="text-right">Jumlah</th>
-                        <th style="width: 15%;" class="text-center">Kategori</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($pembayarans as $index => $p)
+                    @foreach($pembayaranUmum as $index => $p)
                         <tr>
                             <td class="text-center">{{ $index + 1 }}</td>
                             <td>{{ \Carbon\Carbon::parse($p->tanggal_bayar)->format('d/m/Y') }}</td>
                             <td>{{ $p->pelanggan->id_pelanggan }}</td>
                             <td>{{ $p->pelanggan->nama_pelanggan }}</td>
                             <td>{{ \Carbon\Carbon::createFromFormat('Y-m', $p->bulan_bayar)->locale('id')->isoFormat('MMMM Y') }}</td>
+                            <td class="text-right">{{ number_format($p->jumlah_kubik ?? 0, 2, ',', '.') }} m³</td>
                             <td class="text-right font-semibold">Rp {{ number_format($p->jumlah_bayar, 0, ',', '.') }}</td>
-                            <td class="text-center">
-                                @if($p->pelanggan->kategori === 'sosial')
-                                    <span class="badge badge-info">Sosial</span>
-                                @else
-                                    <span class="badge badge-success">Umum</span>
-                                @endif
-                            </td>
                         </tr>
                     @endforeach
-                    <tr style="background-color: #dbeafe; font-weight: bold;">
-                        <td colspan="5" class="text-right">TOTAL PEMASUKAN:</td>
-                        <td class="text-right">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</td>
-                        <td></td>
+                    <tr style="background-color: #d1fae5; font-weight: bold;">
+                        <td colspan="6" class="text-right">SUBTOTAL UMUM:</td>
+                        <td class="text-right">Rp {{ number_format($totalUmum, 0, ',', '.') }}</td>
                     </tr>
                 </tbody>
             </table>
+            @endif
+            
+            <!-- Tabel Pelanggan Kategori SOSIAL -->
+            @if($pembayaranSosial->count() > 0)
+            <h4 style="font-size: 12px; font-weight: bold; color: #1e40af; margin: 15px 0 8px 0;">Pelanggan Kategori SOSIAL ({{ $pembayaranSosial->count() }} transaksi)</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">No</th>
+                        <th style="width: 12%;">Tanggal</th>
+                        <th style="width: 12%;">ID Pelanggan</th>
+                        <th style="width: 28%;">Nama Pelanggan</th>
+                        <th style="width: 15%;">Bulan Bayar</th>
+                        <th style="width: 13%;" class="text-right">Pemakaian</th>
+                        <th style="width: 15%;" class="text-right">Jumlah</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($pembayaranSosial as $index => $p)
+                        <tr>
+                            <td class="text-center">{{ $index + 1 }}</td>
+                            <td>{{ \Carbon\Carbon::parse($p->tanggal_bayar)->format('d/m/Y') }}</td>
+                            <td>{{ $p->pelanggan->id_pelanggan }}</td>
+                            <td>{{ $p->pelanggan->nama_pelanggan }}</td>
+                            <td>{{ \Carbon\Carbon::createFromFormat('Y-m', $p->bulan_bayar)->locale('id')->isoFormat('MMMM Y') }}</td>
+                            <td class="text-right">{{ number_format($p->jumlah_kubik ?? 0, 2, ',', '.') }} m³</td>
+                            <td class="text-right font-semibold">Rp {{ number_format($p->jumlah_bayar, 0, ',', '.') }}</td>
+                        </tr>
+                    @endforeach
+                    <tr style="background-color: #dbeafe; font-weight: bold;">
+                        <td colspan="6" class="text-right">SUBTOTAL SOSIAL:</td>
+                        <td class="text-right">Rp {{ number_format($totalSosial, 0, ',', '.') }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            @endif
         @else
             <div class="no-data">Tidak ada data pembayaran untuk periode ini</div>
         @endif

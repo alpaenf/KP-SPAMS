@@ -482,6 +482,51 @@ class HomeController extends Controller
                 ];
             });
         
+        // Distribusi per Wilayah dengan info tunggakan
+        $distribusiWilayah = (clone $pelangganQuery)
+            ->select('wilayah')
+            ->selectRaw('count(*) as jumlah')
+            ->whereNotNull('wilayah')
+            ->where('wilayah', '!=', '')
+            ->where('status_aktif', true)
+            ->groupBy('wilayah')
+            ->orderBy('jumlah', 'desc')
+            ->get()
+            ->map(function ($item) use ($pelangganQuery) {
+                $bulanIni = now()->format('Y-m');
+                
+                // Get pelanggan IDs di wilayah ini
+                $wilayahNormalized = WilayahHelper::normalize($item->wilayah);
+                $sqlExpr = WilayahHelper::getSqlExpression();
+                
+                $pelangganIds = Pelanggan::forUser()
+                    ->where('status_aktif', true)
+                    ->whereRaw("{$sqlExpr} = ?", [$wilayahNormalized])
+                    ->pluck('id');
+                
+                // Hitung yang sudah bayar bulan ini
+                $sudahBayar = Pembayaran::where('bulan_bayar', $bulanIni)
+                    ->whereIn('pelanggan_id', $pelangganIds)
+                    ->distinct('pelanggan_id')
+                    ->count('pelanggan_id');
+                
+                $belumBayar = $pelangganIds->count() - $sudahBayar;
+                
+                // Hitung tunggakan (bulan sebelumnya yang belum bayar)
+                $tunggakanCount = \App\Models\TagihanBulanan::where('bulan', '<', $bulanIni)
+                    ->where('status_bayar', 'BELUM_BAYAR')
+                    ->whereIn('pelanggan_id', $pelangganIds)
+                    ->count();
+                
+                return [
+                    'wilayah' => $item->wilayah,
+                    'jumlah' => $item->jumlah,
+                    'sudah_bayar' => $sudahBayar,
+                    'belum_bayar' => $belumBayar,
+                    'tunggakan' => $tunggakanCount,
+                ];
+            });
+        
         // Stats pembayaran bulan ini
         $bulanIni = now()->format('Y-m');
         $pelangganAktifIds = (clone $pelangganQuery)->where('status_aktif', true)->pluck('id');
@@ -713,6 +758,7 @@ class HomeController extends Controller
             'recentTransactions' => $recentTransactions,
             'pelangganBelumBayar' => $pelangganBelumBayar,
             'distribusiRtRw' => $distribusiRtRw,
+            'distribusiWilayah' => $distribusiWilayah,
             'monthlyData' => $monthlyData,
         ]);
     }

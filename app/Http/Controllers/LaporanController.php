@@ -85,6 +85,23 @@ class LaporanController extends Controller
         $totalPemasukan = $pembayaranBulanIni + $pembayaranTunggakan;
         $totalKubik = $pembayarans->sum('jumlah_kubik');
         $totalTransaksi = $pembayarans->count();
+        
+        // Calculate by kategori
+        $pemasukanUmum = $pembayarans->filter(function($p) { 
+            return ($p->pelanggan->kategori ?? 'umum') === 'umum'; 
+        })->sum('jumlah_bayar');
+        
+        $pemasukanSosial = $pembayarans->filter(function($p) { 
+            return ($p->pelanggan->kategori ?? 'umum') === 'sosial'; 
+        })->sum('jumlah_bayar');
+        
+        $transaksiUmum = $pembayarans->filter(function($p) { 
+            return ($p->pelanggan->kategori ?? 'umum') === 'umum'; 
+        })->count();
+        
+        $transaksiSosial = $pembayarans->filter(function($p) { 
+            return ($p->pelanggan->kategori ?? 'umum') === 'sosial'; 
+        })->count();
 
         // === 2. Hitung Detail Keuangan (Mirip Dashboard) ===
         
@@ -173,6 +190,10 @@ class LaporanController extends Controller
                 'pemasukan' => $totalPemasukan,
                 'kubikasi' => $totalKubik,
                 'transaksi' => $totalTransaksi,
+                'pemasukanUmum' => $pemasukanUmum,
+                'pemasukanSosial' => $pemasukanSosial,
+                'transaksiUmum' => $transaksiUmum,
+                'transaksiSosial' => $transaksiSosial,
             ],
             'detail' => [
                 'totalTarikan' => $totalPemasukan,
@@ -359,6 +380,23 @@ class LaporanController extends Controller
         $totalPemasukan = $pembayaranBulanIni + $pembayaranTunggakan;
         $totalKubik = $pembayarans->sum('jumlah_kubik');
         $totalTransaksi = $pembayarans->count();
+        
+        // Calculate by kategori
+        $pemasukanUmum = $pembayarans->filter(function($p) { 
+            return ($p->pelanggan->kategori ?? 'umum') === 'umum'; 
+        })->sum('jumlah_bayar');
+        
+        $pemasukanSosial = $pembayarans->filter(function($p) { 
+            return ($p->pelanggan->kategori ?? 'umum') === 'sosial'; 
+        })->sum('jumlah_bayar');
+        
+        $transaksiUmum = $pembayarans->filter(function($p) { 
+            return ($p->pelanggan->kategori ?? 'umum') === 'umum'; 
+        })->count();
+        
+        $transaksiSosial = $pembayarans->filter(function($p) { 
+            return ($p->pelanggan->kategori ?? 'umum') === 'sosial'; 
+        })->count();
 
         // Hitung Detail Keuangan
         $tarik20Persen = $totalPemasukan * 0.20;
@@ -401,6 +439,10 @@ class LaporanController extends Controller
                 'pemasukan' => $totalPemasukan,
                 'kubikasi' => $totalKubik,
                 'transaksi' => $totalTransaksi,
+                'pemasukanUmum' => $pemasukanUmum,
+                'pemasukanSosial' => $pemasukanSosial,
+                'transaksiUmum' => $transaksiUmum,
+                'transaksiSosial' => $transaksiSosial,
             ],
             'detail' => [
                 'totalTarikan' => $totalPemasukan,

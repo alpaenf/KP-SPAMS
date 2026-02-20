@@ -114,6 +114,17 @@
                         <p class="text-xs text-blue-100 mt-2 opacity-80">
                             {{ form.bulan !== 'semua' ? 'Bulan ini' : 'Akumulasi Tahun ' + form.tahun }}
                         </p>
+                        <!-- Breakdown Kategori -->
+                        <div class="mt-3 pt-3 border-t border-blue-400 border-opacity-30">
+                            <div class="flex justify-between text-xs text-blue-50 mb-1">
+                                <span>Umum:</span>
+                                <span class="font-semibold">{{ formatRupiah(summary.pemasukanUmum || 0) }}</span>
+                            </div>
+                            <div class="flex justify-between text-xs text-blue-50">
+                                <span>Sosial:</span>
+                                <span class="font-semibold">{{ formatRupiah(summary.pemasukanSosial || 0) }}</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-sm hover:shadow-md transition relative overflow-hidden group">
@@ -130,6 +141,17 @@
                         </div>
                         <h4 class="text-gray-500 font-medium text-xs sm:text-sm uppercase tracking-wider mb-2">Total Transaksi</h4>
                         <p class="text-2xl sm:text-3xl font-bold text-gray-800">{{ summary.transaksi }}</p>
+                        <!-- Breakdown Kategori -->
+                        <div class="mt-2 text-xs text-gray-600">
+                            <div class="flex justify-between mb-1">
+                                <span>Umum:</span>
+                                <span class="font-semibold">{{ summary.transaksiUmum || 0 }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Sosial:</span>
+                                <span class="font-semibold">{{ summary.transaksiSosial || 0 }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -282,6 +304,7 @@
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Bayar</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pelanggan</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Wilayah</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Periode</th>
                                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Pemakaian (m³)</th>
                                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Bayar</th>
@@ -289,7 +312,7 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 <tr v-if="data.length === 0">
-                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                    <td colspan="7" class="px-6 py-12 text-center text-gray-500">
                                         <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                         <p>Tidak ada data pembayaran ditemukan untuk periode ini.</p>
                                     </td>
@@ -305,6 +328,10 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         <span v-if="item.pelanggan?.rt">RT {{ item.pelanggan.rt }}</span>
                                         <span v-if="item.pelanggan?.rw"> / RW {{ item.pelanggan.rw }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span v-if="item.pelanggan?.kategori === 'sosial'" class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Sosial</span>
+                                        <span v-else class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Umum</span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ item.bulan_bayar }}

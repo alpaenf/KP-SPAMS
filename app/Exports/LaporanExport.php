@@ -63,6 +63,12 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithTit
         $rows->push(['Total Transaksi', number_format($this->summary['transaksi'], 0, ',', '.') . ' transaksi']);
         $rows->push(['']);
         
+        // Summary by Kategori
+        $rows->push(['RINGKASAN PER KATEGORI']);
+        $rows->push(['Kategori Umum', 'Rp ' . number_format($this->summary['pemasukanUmum'], 0, ',', '.'), number_format($this->summary['transaksiUmum'], 0, ',', '.') . ' transaksi']);
+        $rows->push(['Kategori Sosial', 'Rp ' . number_format($this->summary['pemasukanSosial'], 0, ',', '.'), number_format($this->summary['transaksiSosial'], 0, ',', '.') . ' transaksi']);
+        $rows->push(['']);
+        
         // Detail Keuangan
         $rows->push(['DETAIL KEUANGAN']);
         $rows->push(['Total Tarikan (Kotor)', 'Rp ' . number_format($this->detail['totalTarikan'], 0, ',', '.')]);
@@ -93,6 +99,7 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithTit
             'Nama',
             'RT/RW',
             'Wilayah',
+            'Kategori',
             'Bulan Bayar',
             'Jumlah Kubik',
             'Tarif/Kubik',
@@ -130,6 +137,7 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithTit
                 $pelanggan->nama_pelanggan,
                 'RT ' . $pelanggan->rt . ' / RW ' . $pelanggan->rw,
                 $pelanggan->wilayah ?? '-',
+                strtoupper($pelanggan->kategori ?? 'UMUM'),
                 \Carbon\Carbon::parse($pembayaran->bulan_bayar)->locale('id')->isoFormat('MMMM Y'),
                 $pembayaran->jumlah_kubik ? number_format($pembayaran->jumlah_kubik, 2, ',', '.') : '0',
                 'Rp ' . number_format($tarifPerKubik, 0, ',', '.'),

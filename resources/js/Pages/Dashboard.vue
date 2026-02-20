@@ -315,8 +315,8 @@
                     </div>
                 </div>
 
-                <!-- Pelanggan Belum Bayar & Distribusi RT/RW -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Pelanggan Belum Bayar & Distribusi RT/RW & Tunggakan per Wilayah -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                     <!-- Pelanggan Belum Bayar -->
                     <div class="bg-white rounded-lg shadow-md p-6">
                         <div class="flex justify-between items-center mb-4">
@@ -380,6 +380,36 @@
                             </div>
                             <div v-if="distribusiRtRw.length === 0" class="text-center text-gray-500 py-8">
                                 Belum ada data distribusi
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tunggakan per Wilayah (NEW) -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Tunggakan per Wilayah</h3>
+                        <div class="space-y-3 max-h-64 overflow-y-auto">
+                            <div v-for="item in distribusiWilayah" :key="item.wilayah" class="border-b border-gray-100 pb-3 last:border-0">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-semibold text-gray-800">{{ item.wilayah }}</span>
+                                    <span class="text-sm font-medium text-gray-600">{{ item.jumlah }} pelanggan</span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 text-xs">
+                                    <div class="bg-green-50 rounded px-2 py-1 text-center">
+                                        <div class="text-green-700 font-semibold">{{ item.sudah_bayar }}</div>
+                                        <div class="text-green-600">Bayar</div>
+                                    </div>
+                                    <div class="bg-yellow-50 rounded px-2 py-1 text-center">
+                                        <div class="text-yellow-700 font-semibold">{{ item.belum_bayar }}</div>
+                                        <div class="text-yellow-600">Belum</div>
+                                    </div>
+                                    <div class="bg-red-50 rounded px-2 py-1 text-center">
+                                        <div class="text-red-700 font-semibold">{{ item.tunggakan }}</div>
+                                        <div class="text-red-600">Tunggakan</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="distribusiWilayah.length === 0" class="text-center text-gray-500 py-8">
+                                Belum ada data wilayah
                             </div>
                         </div>
                     </div>
@@ -758,6 +788,10 @@ const props = defineProps({
         default: () => []
     },
     distribusiRtRw: {
+        type: Array,
+        default: () => []
+    },
+    distribusiWilayah: {
         type: Array,
         default: () => []
     },
