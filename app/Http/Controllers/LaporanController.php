@@ -102,6 +102,15 @@ class LaporanController extends Controller
         $transaksiSosial = $pembayarans->filter(function($p) { 
             return ($p->pelanggan->kategori ?? 'umum') === 'sosial'; 
         })->count();
+        
+        // Hitung jumlah pelanggan/bangunan unik per kategori
+        $pelangganUmum = $pembayarans->filter(function($p) { 
+            return ($p->pelanggan->kategori ?? 'umum') === 'umum'; 
+        })->unique('pelanggan_id')->count();
+        
+        $pelangganSosial = $pembayarans->filter(function($p) { 
+            return ($p->pelanggan->kategori ?? 'umum') === 'sosial'; 
+        })->unique('pelanggan_id')->count();
 
         // === 2. Hitung Detail Keuangan (Mirip Dashboard) ===
         
@@ -184,6 +193,51 @@ class LaporanController extends Controller
             ->values()
             ->toArray();
 
+        // === 5. Distribusi Tunggakan per Wilayah ===
+        $bulanFilter = ($bulan && $bulan !== 'semua') ? $tahun . '-' . $bulan : now()->format('Y-m');
+        $sqlExpr = WilayahHelper::getSqlExpression();
+        
+        $distribusiWilayah = (clone $pelangganQuery)
+            ->selectRaw("MAX(wilayah) as wilayah")
+            ->selectRaw("count(*) as jumlah")
+            ->selectRaw("{$sqlExpr} as wilayah_normalized")
+            ->whereNotNull('wilayah')
+            ->where('wilayah', '!=', '')
+            ->where('status_aktif', true)
+            ->groupByRaw($sqlExpr)
+            ->orderBy('jumlah', 'desc')
+            ->get()
+            ->map(function ($item) use ($bulanFilter) {
+                $sqlExpr = WilayahHelper::getSqlExpression();
+                
+                $pelangganIds = Pelanggan::forUser()
+                    ->where('status_aktif', true)
+                    ->whereRaw("{$sqlExpr} = ?", [$item->wilayah_normalized])
+                    ->pluck('id');
+                
+                // Hitung yang sudah bayar bulan filter
+                $sudahBayar = Pembayaran::where('bulan_bayar', $bulanFilter)
+                    ->whereIn('pelanggan_id', $pelangganIds)
+                    ->distinct('pelanggan_id')
+                    ->count('pelanggan_id');
+                
+                $belumBayar = $pelangganIds->count() - $sudahBayar;
+                
+                // Hitung tunggakan (bulan sebelumnya yang belum bayar)
+                $tunggakanCount = \App\Models\TagihanBulanan::where('bulan', '<', $bulanFilter)
+                    ->where('status_bayar', 'BELUM_BAYAR')
+                    ->whereIn('pelanggan_id', $pelangganIds)
+                    ->count();
+                
+                return [
+                    'wilayah' => ucwords($item->wilayah_normalized),
+                    'jumlah' => $item->jumlah,
+                    'sudah_bayar' => $sudahBayar,
+                    'belum_bayar' => $belumBayar,
+                    'tunggakan' => $tunggakanCount,
+                ];
+            });
+
         return Inertia::render('Laporan/Index', [
             'data' => $pembayarans,
             'summary' => [
@@ -194,6 +248,8 @@ class LaporanController extends Controller
                 'pemasukanSosial' => $pemasukanSosial,
                 'transaksiUmum' => $transaksiUmum,
                 'transaksiSosial' => $transaksiSosial,
+                'pelangganUmum' => $pelangganUmum,
+                'pelangganSosial' => $pelangganSosial,
             ],
             'detail' => [
                 'totalTarikan' => $totalPemasukan,
@@ -218,7 +274,8 @@ class LaporanController extends Controller
             'options' => [
                 'tahun' => array_values(array_unique($tahunOpsi)),
                 'wilayah' => array_values(array_unique($wilayahOpsi)),
-            ]
+            ],
+            'distribusiWilayah' => $distribusiWilayah,
         ]);
     }
 
@@ -237,7 +294,8 @@ class LaporanController extends Controller
                 $data['data'],
                 $data['summary'],
                 $data['detail'],
-                $data['filters']
+                $data['filters'],
+                $data['distribusiWilayah'] ?? []
             ),
             $fileName
         );
@@ -302,6 +360,7 @@ class LaporanController extends Controller
             'totalPengeluaran' => $totalPengeluaran,
             'saldoAkhir' => $saldoAkhir,
             'totalPelangganAktif' => $totalPelangganAktif,
+            'distribusiWilayah' => $data['distribusiWilayah'] ?? [],
         ];
         
         $pdf = Pdf::loadView('laporan-pdf', $pdfData)
@@ -397,6 +456,15 @@ class LaporanController extends Controller
         $transaksiSosial = $pembayarans->filter(function($p) { 
             return ($p->pelanggan->kategori ?? 'umum') === 'sosial'; 
         })->count();
+        
+        // Hitung jumlah pelanggan/bangunan unik per kategori
+        $pelangganUmum = $pembayarans->filter(function($p) { 
+            return ($p->pelanggan->kategori ?? 'umum') === 'umum'; 
+        })->unique('pelanggan_id')->count();
+        
+        $pelangganSosial = $pembayarans->filter(function($p) { 
+            return ($p->pelanggan->kategori ?? 'umum') === 'sosial'; 
+        })->unique('pelanggan_id')->count();
 
         // Hitung Detail Keuangan
         $tarik20Persen = $totalPemasukan * 0.20;
@@ -433,6 +501,49 @@ class LaporanController extends Controller
         $srSudahBayar = $pembayarans->unique('pelanggan_id')->count();
         $srBelumBayar = max(0, $totalSR - $srSudahBayar);
 
+        // Distribusi Tunggakan per Wilayah
+        $bulanFilter = ($bulan && $bulan !== 'semua') ? $tahun . '-' . $bulan : now()->format('Y-m');
+        $sqlExpr = WilayahHelper::getSqlExpression();
+        
+        $distribusiWilayah = (clone $pelangganQuery)
+            ->selectRaw("MAX(wilayah) as wilayah")
+            ->selectRaw("count(*) as jumlah")
+            ->selectRaw("{$sqlExpr} as wilayah_normalized")
+            ->whereNotNull('wilayah')
+            ->where('wilayah', '!=', '')
+            ->where('status_aktif', true)
+            ->groupByRaw($sqlExpr)
+            ->orderBy('jumlah', 'desc')
+            ->get()
+            ->map(function ($item) use ($bulanFilter) {
+                $sqlExpr = WilayahHelper::getSqlExpression();
+                
+                $pelangganIds = Pelanggan::forUser()
+                    ->where('status_aktif', true)
+                    ->whereRaw("{$sqlExpr} = ?", [$item->wilayah_normalized])
+                    ->pluck('id');
+                
+                $sudahBayar = Pembayaran::where('bulan_bayar', $bulanFilter)
+                    ->whereIn('pelanggan_id', $pelangganIds)
+                    ->distinct('pelanggan_id')
+                    ->count('pelanggan_id');
+                
+                $belumBayar = $pelangganIds->count() - $sudahBayar;
+                
+                $tunggakanCount = \App\Models\TagihanBulanan::where('bulan', '<', $bulanFilter)
+                    ->where('status_bayar', 'BELUM_BAYAR')
+                    ->whereIn('pelanggan_id', $pelangganIds)
+                    ->count();
+                
+                return [
+                    'wilayah' => ucwords($item->wilayah_normalized),
+                    'jumlah' => $item->jumlah,
+                    'sudah_bayar' => $sudahBayar,
+                    'belum_bayar' => $belumBayar,
+                    'tunggakan' => $tunggakanCount,
+                ];
+            });
+
         return [
             'data' => $pembayarans,
             'summary' => [
@@ -443,6 +554,8 @@ class LaporanController extends Controller
                 'pemasukanSosial' => $pemasukanSosial,
                 'transaksiUmum' => $transaksiUmum,
                 'transaksiSosial' => $transaksiSosial,
+                'pelangganUmum' => $pelangganUmum,
+                'pelangganSosial' => $pelangganSosial,
             ],
             'detail' => [
                 'totalTarikan' => $totalPemasukan,
@@ -464,6 +577,7 @@ class LaporanController extends Controller
                 'bulan' => $bulan,
                 'wilayah' => $wilayah,
             ],
+            'distribusiWilayah' => $distribusiWilayah,
         ];
     }
 

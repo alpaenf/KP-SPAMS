@@ -21,13 +21,15 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithTit
     protected $detail;
     protected $filters;
     protected $tagihans;
+    protected $distribusiWilayah;
 
-    public function __construct($data, $summary, $detail, $filters)
+    public function __construct($data, $summary, $detail, $filters, $distribusiWilayah = [])
     {
         $this->data = $data;
         $this->summary = $summary;
         $this->detail = $detail;
         $this->filters = $filters;
+        $this->distribusiWilayah = $distribusiWilayah;
         
         // Pre-load all tagihan for better performance (avoid N+1 query)
         $pelangganIds = $data->pluck('pelanggan_id')->unique();
@@ -88,6 +90,24 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithTit
         $rows->push(['SR Sudah Bayar', number_format($this->detail['srSudahBayar'], 0, ',', '.')]);
         $rows->push(['SR Belum Bayar', number_format($this->detail['srBelumBayar'], 0, ',', '.')]);
         $rows->push(['']);
+        
+        // Distribusi Tunggakan per Wilayah
+        if (!empty($this->distribusiWilayah)) {
+            $rows->push(['TUNGGAKAN PER WILAYAH']);
+            $rows->push(['Wilayah', 'Total Pelanggan', 'Sudah Bayar', 'Belum Bayar', 'Tunggakan']);
+            
+            foreach ($this->distribusiWilayah as $wilayah) {
+                $rows->push([
+                    $wilayah['wilayah'],
+                    $wilayah['jumlah'],
+                    $wilayah['sudah_bayar'],
+                    $wilayah['belum_bayar'],
+                    $wilayah['tunggakan']
+                ]);
+            }
+            
+            $rows->push(['']);
+        }
         $rows->push(['']);
         
         // Data Pembayaran Table Header

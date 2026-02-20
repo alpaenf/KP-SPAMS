@@ -383,6 +383,58 @@
         @endif
     </div>
 
+    @if(isset($distribusiWilayah) && count($distribusiWilayah) > 0)
+    <div class="detail-section" style="page-break-before: auto;">
+        <div class="section-title">🗺️ Tunggakan per Wilayah</div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 5%;">No</th>
+                    <th style="width: 25%;">Wilayah</th>
+                    <th style="width: 15%;" class="text-right">Total Pelanggan</th>
+                    <th style="width: 15%;" class="text-right">Sudah Bayar</th>
+                    <th style="width: 15%;" class="text-right">Belum Bayar</th>
+                    <th style="width: 15%;" class="text-right">Tunggakan</th>
+                    <th style="width: 10%;" class="text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($distribusiWilayah as $index => $wilayah)
+                    @php
+                        $persenLunas = $wilayah['jumlah'] > 0 ? round(($wilayah['sudah_bayar'] / $wilayah['jumlah']) * 100) : 0;
+                    @endphp
+                    <tr>
+                        <td class="text-center">{{ $index + 1 }}</td>
+                        <td><strong>{{ $wilayah['wilayah'] }}</strong></td>
+                        <td class="text-right">{{ number_format($wilayah['jumlah'], 0, ',', '.') }}</td>
+                        <td class="text-right"><span class="badge badge-success">{{ number_format($wilayah['sudah_bayar'], 0, ',', '.') }}</span></td>
+                        <td class="text-right"><span class="badge" style="background-color: #fef3c7; color: #92400e;">{{ number_format($wilayah['belum_bayar'], 0, ',', '.') }}</span></td>
+                        <td class="text-right"><span class="badge badge-danger">{{ number_format($wilayah['tunggakan'], 0, ',', '.') }}</span></td>
+                        <td class="text-center">
+                            @if($persenLunas >= 80)
+                                <span class="badge badge-success">{{ $persenLunas }}%</span>
+                            @elseif($persenLunas >= 50)
+                                <span class="badge" style="background-color: #fef3c7; color: #92400e;">{{ $persenLunas }}%</span>
+                            @else
+                                <span class="badge badge-danger">{{ $persenLunas }}%</span>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+                <tr style="background-color: #f1f5f9; font-weight: bold;">
+                    <td colspan="2" class="text-right">TOTAL:</td>
+                    <td class="text-right">{{ number_format(array_sum(array_column($distribusiWilayah, 'jumlah')), 0, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format(array_sum(array_column($distribusiWilayah, 'sudah_bayar')), 0, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format(array_sum(array_column($distribusiWilayah, 'belum_bayar')), 0, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format(array_sum(array_column($distribusiWilayah, 'tunggakan')), 0, ',', '.') }}</td>
+                    <td class="text-center">-</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    @endif
+
     <div class="detail-section">
         <div class="section-title">📤 Detail Pengeluaran Operasional</div>
         

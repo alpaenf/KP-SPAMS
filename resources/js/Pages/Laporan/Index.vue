@@ -308,14 +308,18 @@
                                         Pelanggan UMUM
                                     </span>
                                     <span class="px-2 py-1 bg-green-200 text-green-800 text-xs font-bold rounded-full">
-                                        {{ summary.transaksiUmum || 0 }} transaksi
+                                        {{ summary.pelangganUmum || 0 }} bangunan
                                     </span>
                                 </div>
                                 <div class="text-2xl font-bold text-green-800 mb-1">
                                     {{ formatRupiah(summary.pemasukanUmum || 0) }}
                                 </div>
-                                <div class="text-xs text-green-700">
-                                    {{ ((summary.pemasukanUmum || 0) / (summary.pemasukan || 1) * 100).toFixed(1) }}% dari total pemasukan
+                                <div class="flex justify-between items-center text-xs text-green-700 mb-2">
+                                    <span>{{ ((summary.pemasukanUmum || 0) / (summary.pemasukan || 1) * 100).toFixed(1) }}% dari total</span>
+                                    <span class="font-semibold">{{ summary.transaksiUmum || 0 }} transaksi</span>
+                                </div>
+                                <div class="text-xs text-green-600 bg-green-50 rounded px-2 py-1">
+                                    Rata-rata: {{ formatRupiah((summary.pemasukanUmum || 0) / (summary.pelangganUmum || 1)) }}/bangunan
                                 </div>
                             </div>
                             
@@ -327,38 +331,133 @@
                                         Pelanggan SOSIAL
                                     </span>
                                     <span class="px-2 py-1 bg-blue-200 text-blue-800 text-xs font-bold rounded-full">
-                                        {{ summary.transaksiSosial || 0 }} transaksi
+                                        {{ summary.pelangganSosial || 0 }} bangunan
                                     </span>
                                 </div>
                                 <div class="text-2xl font-bold text-blue-800 mb-1">
                                     {{ formatRupiah(summary.pemasukanSosial || 0) }}
                                 </div>
-                                <div class="text-xs text-blue-700">
-                                    {{ ((summary.pemasukanSosial || 0) / (summary.pemasukan || 1) * 100).toFixed(1) }}% dari total pemasukan
+                                <div class="flex justify-between items-center text-xs text-blue-700 mb-2">
+                                    <span>{{ ((summary.pemasukanSosial || 0) / (summary.pemasukan || 1) * 100).toFixed(1) }}% dari total</span>
+                                    <span class="font-semibold">{{ summary.transaksiSosial || 0 }} transaksi</span>
+                                </div>
+                                <div class="text-xs text-blue-600 bg-blue-50 rounded px-2 py-1">
+                                    Rata-rata: {{ formatRupiah((summary.pemasukanSosial || 0) / (summary.pelangganSosial || 1)) }}/bangunan
                                 </div>
                             </div>
                         </div>
                         <div class="mt-4 pt-4 border-t border-gray-200">
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-gray-600 font-medium">Total Keseluruhan:</span>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div class="text-left">
+                                    <span class="text-gray-600 font-medium">Total Bangunan:</span>
+                                    <div class="font-bold text-gray-900 mt-1">
+                                        {{ (summary.pelangganUmum || 0) + (summary.pelangganSosial || 0) }} bangunan
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        ({{ summary.pelangganUmum || 0 }} umum + {{ summary.pelangganSosial || 0 }} sosial)
+                                    </div>
+                                </div>
                                 <div class="text-right">
-                                    <div class="font-bold text-gray-900">{{ formatRupiah(summary.pemasukan) }}</div>
+                                    <span class="text-gray-600 font-medium">Total Pemasukan:</span>
+                                    <div class="font-bold text-gray-900 mt-1">{{ formatRupiah(summary.pemasukan) }}</div>
                                     <div class="text-xs text-gray-500">dari {{ summary.transaksi }} transaksi</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Distribusi Tunggakan per Wilayah -->
+                <div v-if="distribusiWilayah && distribusiWilayah.length > 0" class="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-sm mt-6">
+                    <h4 class="text-sm font-bold text-gray-800 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                        </svg>
+                        Tunggakan per Wilayah
+                    </h4>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr class="bg-gray-50 border-b border-gray-200">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Wilayah</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Total SR</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Sudah Bayar</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Belum Bayar</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Tunggakan</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr v-for="(wilayah, index) in distribusiWilayah" :key="index" class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ wilayah.wilayah }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-700 text-right">{{ wilayah.jumlah }}</td>
+                                    <td class="px-4 py-3 text-right">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                                            {{ wilayah.sudah_bayar }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                                            {{ wilayah.belum_bayar }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        <span :class="[
+                                            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold',
+                                            wilayah.tunggakan > 0 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-600'
+                                        ]">
+                                            {{ wilayah.tunggakan }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span :class="[
+                                            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold',
+                                            ((wilayah.sudah_bayar / wilayah.jumlah) * 100) >= 80 ? 'bg-green-100 text-green-800' :
+                                            ((wilayah.sudah_bayar / wilayah.jumlah) * 100) >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                                            'bg-red-100 text-red-800'
+                                        ]">
+                                            {{ ((wilayah.sudah_bayar / wilayah.jumlah) * 100).toFixed(0) }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr class="bg-gray-100 font-semibold">
+                                    <td class="px-4 py-3 text-sm text-gray-900">TOTAL</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 text-right">{{ distribusiWilayah.reduce((sum, w) => sum + w.jumlah, 0) }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 text-right">{{ distribusiWilayah.reduce((sum, w) => sum + w.sudah_bayar, 0) }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 text-right">{{ distribusiWilayah.reduce((sum, w) => sum + w.belum_bayar, 0) }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 text-right">{{ distribusiWilayah.reduce((sum, w) => sum + w.tunggakan, 0) }}</td>
+                                    <td class="px-4 py-3 text-center">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div class="text-xs text-blue-800">
+                                <p class="font-semibold mb-1">Keterangan:</p>
+                                <ul class="list-disc list-inside space-y-1 pl-2">
+                                    <li><span class="font-semibold">Sudah Bayar:</span> Pelanggan yang sudah membayar bulan ini</li>
+                                    <li><span class="font-semibold">Belum Bayar:</span> Pelanggan yang belum membayar bulan ini</li>
+                                    <li><span class="font-semibold">Tunggakan:</span> Jumlah tagihan bulan sebelumnya yang belum dibayar</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                             <h3 class="font-bold text-gray-700">Rincian Transaksi</h3>
                             <div class="flex flex-wrap items-center gap-2 text-xs">
                                 <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full font-semibold">
-                                    🟢 Umum: {{ summary.transaksiUmum || 0 }}
+                                    🟢 Umum: {{ summary.pelangganUmum || 0 }} bangunan ({{ summary.transaksiUmum || 0 }}×)
                                 </span>
                                 <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-semibold">
-                                    🔵 Sosial: {{ summary.transaksiSosial || 0 }}
+                                    🔵 Sosial: {{ summary.pelangganSosial || 0 }} bangunan ({{ summary.transaksiSosial || 0 }}×)
                                 </span>
                                 <span class="bg-white border border-gray-200 text-gray-600 px-2 py-1 rounded-full font-medium">
                                     Total: {{ data.length }} data
@@ -551,6 +650,7 @@ const props = defineProps({
     detail: Object,
     filters: Object,
     options: Object,
+    distribusiWilayah: Array,
 });
 
 const form = ref({
