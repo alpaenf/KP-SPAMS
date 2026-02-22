@@ -91,8 +91,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pembayaran/{pembayaran}/print', [PembayaranController::class, 'printReceipt'])->name('pembayaran.print');
     
     // API Tagihan by Pelanggan
-    Route::get('/api/tagihan-bulanan/{pelangganId}/{bulan}', [\App\Http\Controllers\TagihanBulananController::class, 'getByPelangganBulan'])->name('tagihan-bulanan.get-by-pelanggan-bulan');
+    // PENTING: route /tunggakan harus SEBELUM /{bulan} agar wildcard tidak menangkap 'tunggakan' sebagai {bulan}
     Route::get('/api/tagihan-bulanan/{pelangganId}/tunggakan', [\App\Http\Controllers\TagihanBulananController::class, 'getTunggakanByPelanggan'])->name('tagihan-bulanan.get-tunggakan');
+    Route::get('/api/tagihan-bulanan/{pelangganId}/{bulan}', [\App\Http\Controllers\TagihanBulananController::class, 'getByPelangganBulan'])->where('bulan', '[0-9]{4}-[0-9]{2}')->name('tagihan-bulanan.get-by-pelanggan-bulan');
     
     // Tagihan Bulanan & Meteran
     Route::get('/tagihan-bulanan', [\App\Http\Controllers\TagihanBulananController::class, 'index'])->name('tagihan-bulanan.index');

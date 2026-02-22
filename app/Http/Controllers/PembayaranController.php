@@ -444,6 +444,7 @@ class PembayaranController extends Controller
         
         if ($tagihan) {
             $tagihan->status_bayar = 'BELUM_BAYAR';
+            $tagihan->jumlah_terbayar = 0; // Reset terbayar agar sisa_tagihan akurat
             $tagihan->save();
         }
         
