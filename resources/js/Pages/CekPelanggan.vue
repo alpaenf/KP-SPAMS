@@ -1340,11 +1340,22 @@ const showPembayaranModal = async (pelanggan) => {
         const response = await axios.get(`/pelanggan/${pelanggan.id}/pembayaran`);
         pembayaranList.value = response.data.pembayarans;
         
-        // Default ke bulan berjalan (Februari 2026) bukan bulan pertama yang nunggak
-        // Agar history tercatat sebagai "Pembayaran Bulan Ini" yang mencakup tunggakan lalu
-        const bulanTujuan = props.bulanIni || currentMonth;
+        // Cari bulan pertama yang belum dibayar (dari Januari tahun ini sampai bulan sekarang)
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonthNum = today.getMonth() + 1;
+        let bulanTujuan = currentMonth;
         
-        // Reset form dengan bulan berjalan
+        for (let month = 1; month <= currentMonthNum; month++) {
+            const monthStr = `${currentYear}-${String(month).padStart(2, '0')}`;
+            const sudahBayar = pembayaranList.value.some(p => p.bulan_bayar === monthStr);
+            if (!sudahBayar) {
+                bulanTujuan = monthStr;
+                break;
+            }
+        }
+        
+        // Reset form dengan bulan pertama yang belum dibayar agar fleksibel
         pembayaranForm.value = {
             bulan_bayar: bulanTujuan,
             tanggal_bayar: currentDate,
