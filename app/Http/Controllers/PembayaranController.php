@@ -201,10 +201,9 @@ class PembayaranController extends Controller
                     $tagihan->total_tagihan = $validated['jumlah_bayar'];
                 }
             } elseif ($keterangan === 'CICILAN') {
-                // Untuk cicilan, JANGAN overwrite total_tagihan
-                // SET jumlah_terbayar (bukan increment, karena ini create pembayaran baru)
-                $tagihan->status_bayar = 'BELUM_BAYAR';
-                $tagihan->jumlah_terbayar = $validated['jumlah_bayar']; // Pakai = karena ini pembayaran baru, bukan top-up
+                // Untuk cicilan, INCREMENT jumlah_terbayar (bukan overwrite)
+                // Ini memungkinkan cicilan beberapa kali sampai lunas
+                $tagihan->jumlah_terbayar = ($tagihan->jumlah_terbayar ?? 0) + $validated['jumlah_bayar'];
                 
                 // Jika total tagihan masih 0, set berdasarkan perhitungan normal
                 // ATAU jika tidak ada pemakaian_kubik (data lama), preserve total_tagihan existing
@@ -219,6 +218,8 @@ class PembayaranController extends Controller
                 // Cek apakah cicilan sudah lunas
                 if ($tagihan->jumlah_terbayar >= $tagihan->total_tagihan) {
                     $tagihan->status_bayar = 'SUDAH_BAYAR';
+                } else {
+                    $tagihan->status_bayar = 'BELUM_BAYAR'; // Masih ada sisa
                 }
             } elseif ($keterangan === 'LUNAS') {
                 // Eksplisit LUNAS - update total tagihan dan set lunas
