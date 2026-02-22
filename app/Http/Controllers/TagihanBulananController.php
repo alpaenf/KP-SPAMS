@@ -69,6 +69,7 @@ class TagihanBulananController extends Controller
                         'bukti_transfer' => $tagihan->bukti_transfer,
                         'konfirmasi_at' => $tagihan->konfirmasi_at,
                         'catatan_admin' => $tagihan->catatan_admin,
+                        'keterangan' => $pembayaran ? $pembayaran->keterangan : null,
                     ] : null,
                     'tunggakan' => $tunggakan,
                 ];

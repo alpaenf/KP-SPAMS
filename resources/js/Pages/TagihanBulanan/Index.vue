@@ -320,6 +320,15 @@
                                                 </span>
                                             </span>
                                             <span v-else-if="!item.tagihan" class="text-xs text-gray-400">-</span>
+                                            
+                                            <!-- Tampilkan keterangan dari pembayaran -->
+                                            <span v-if="item.tagihan?.keterangan" class="text-xs font-medium" :class="{
+                                                'text-blue-600': item.tagihan.keterangan === 'LUNAS',
+                                                'text-red-600': item.tagihan.keterangan === 'TUNGGAKAN',
+                                                'text-purple-600': item.tagihan.keterangan === 'CICILAN'
+                                            }">
+                                                {{ item.tagihan.keterangan }}
+                                            </span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm">
