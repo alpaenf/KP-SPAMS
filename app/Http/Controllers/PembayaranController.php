@@ -119,7 +119,7 @@ class PembayaranController extends Controller
                     ->first();
 
                 // Tentukan status_tagihan secara dinamis agar UI akurat (anti-mismatch)
-                $statusTagihan = $tagihan?->status_bayar ?? 'SUDAH_BAYAR';
+                $statusTagihan = $tagihan?->status_bayar ?? 'BELUM_BAYAR';
                 $sisa = $tagihan ? ($tagihan->total_tagihan - $tagihan->jumlah_terbayar) : 0;
                 
                 if ($tagihan) {
@@ -289,7 +289,11 @@ class PembayaranController extends Controller
             }
 
             // Tentukan status bayar BERDASARKAN HASIL AKHIR
-            if ($tagihan->jumlah_terbayar >= $tagihan->total_tagihan && $tagihan->total_tagihan > 0) {
+            if ($validated['status_bayar'] === 'TUNGGAKAN' && $jumlahBayarBulanIni <= 0) {
+                // User explicitly chose TUNGGAKAN (no payment) - reset jumlah_terbayar ke 0
+                $tagihan->jumlah_terbayar = 0;
+                $tagihan->status_bayar = 'TUNGGAKAN';
+            } elseif ($tagihan->jumlah_terbayar >= $tagihan->total_tagihan && $tagihan->total_tagihan > 0) {
                 $tagihan->status_bayar = 'SUDAH_BAYAR';
             } elseif ($tagihan->jumlah_terbayar > 0) {
                 $tagihan->status_bayar = 'CICILAN';

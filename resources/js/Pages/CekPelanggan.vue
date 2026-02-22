@@ -1577,7 +1577,7 @@ const submitPembayaran = async () => {
             }
             
             // Update status bayar secara akurat
-            allPelanggan.value[pelangganIndex].status_bayar = response.data.pembayaran.status_tagihan || 'SUDAH_BAYAR';
+            allPelanggan.value[pelangganIndex].status_bayar = response.data.pembayaran.status_tagihan || 'BELUM_BAYAR';
             allPelanggan.value[pelangganIndex].sudah_bayar = (allPelanggan.value[pelangganIndex].status_bayar === 'SUDAH_BAYAR');
             
             // Format tanggal untuk display jika bayar untuk bulan filter/ini
@@ -1590,16 +1590,36 @@ const submitPembayaran = async () => {
             allPelanggan.value[pelangganIndex].jumlah_bayar = response.data.pembayaran.jumlah_bayar;
             
             // Refresh has_tunggakan flag
-            if (response.data.pembayaran.sisa_tunggakan > 0) {
+            if (response.data.pembayaran.status_tagihan === 'TUNGGAKAN') {
+                allPelanggan.value[pelangganIndex].has_tunggakan = true;
+            } else if (response.data.pembayaran.sisa_tunggakan > 0) {
                 allPelanggan.value[pelangganIndex].has_tunggakan = true;
             } else if (payload.bayar_tunggakan && payload.jumlah_bayar_tunggakan >= payload.tunggakan) {
                 allPelanggan.value[pelangganIndex].has_tunggakan = false;
             }
         }
         
-        // Reset form
+        // Reset list tunggakan & tagihan info
+        listTunggakan.value = [];
+        currentTagihan.value = null;
+
+        // Cari bulan berikutnya yang belum dibayar untuk auto-fill
+        const today2 = new Date();
+        const currentYear2 = today2.getFullYear();
+        const currentMonthNum2 = today2.getMonth() + 1;
+        let bulanBerikutnya = props.bulanIni || today2.toISOString().slice(0, 7);
+        for (let month = 1; month <= currentMonthNum2; month++) {
+            const monthStr = `${currentYear2}-${String(month).padStart(2, '0')}`;
+            const sudahBayar = pembayaranList.value.some(p => p.bulan_bayar === monthStr);
+            if (!sudahBayar) {
+                bulanBerikutnya = monthStr;
+                break;
+            }
+        }
+
+        // Reset form dengan bulan berikutnya yang belum dibayar
         pembayaranForm.value = {
-            bulan_bayar: props.bulanIni || '',
+            bulan_bayar: bulanBerikutnya,
             tanggal_bayar: new Date().toISOString().split('T')[0],
             meteran_sebelum: null,
             meteran_sesudah: null,
@@ -1607,17 +1627,33 @@ const submitPembayaran = async () => {
             tunggakan: 0,
             jumlah_kubik: null,
             jumlah_bayar: null,
-            keterangan: '', // Reset catatan kosong
-            status_bayar: 'BELUM_BAYAR', // Reset ke default BELUM_BAYAR
+            keterangan: '',
+            status_bayar: 'BELUM_BAYAR',
             bayar_tunggakan: false,
             jumlah_bayar_tunggakan: 0,
             id_tunggakan: []
         };
-        
-        // Reset list tunggakan
-        listTunggakan.value = [];
-        currentTagihan.value = null;
-        
+
+        // Re-trigger auto-fill untuk bulan berikutnya
+        await fetchMeteranData(bulanBerikutnya);
+
+        // Re-load tunggakan untuk bulan berikutnya
+        try {
+            const responseTunggakan2 = await axios.get(`/api/tagihan-bulanan/${selectedPelanggan.value.id}/tunggakan`);
+            if (responseTunggakan2.data?.tunggakan) {
+                listTunggakan.value = responseTunggakan2.data.tunggakan.filter(t => t.bulan < bulanBerikutnya);
+                const totalTunggakan2 = listTunggakan.value.reduce((sum, t) => sum + (t.sisa_tagihan || 0), 0);
+                if (totalTunggakan2 > 0) {
+                    pembayaranForm.value.tunggakan = totalTunggakan2;
+                    pembayaranForm.value.bayar_tunggakan = true;
+                    pembayaranForm.value.jumlah_bayar_tunggakan = totalTunggakan2;
+                    hitungTagihan();
+                }
+            }
+        } catch (e) {
+            // ignore
+        }
+
         alert('Pembayaran berhasil ditambahkan!');
     } catch (error) {
         if (error.response?.status === 422) {
