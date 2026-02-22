@@ -20,10 +20,12 @@ class PembayaranController extends Controller
         // Base query
         $query = Pembayaran::with('pelanggan');
         
-        // Filter by penarik wilayah if role is penarik
+        // Use WilayahHelper for robust filtering
         if ($user && $user->role === 'penarik' && $user->wilayah) {
-            $query->whereHas('pelanggan', function ($q) use ($user) {
-                $q->where('wilayah', $user->wilayah);
+            $normalizedWilayah = \App\Helpers\WilayahHelper::normalize($user->wilayah);
+            $sqlExpr = \App\Helpers\WilayahHelper::getSqlExpression();
+            $query->whereHas('pelanggan', function ($q) use ($normalizedWilayah, $sqlExpr) {
+                $q->whereRaw("{$sqlExpr} = ?", [$normalizedWilayah]);
             });
         }
         
@@ -31,21 +33,31 @@ class PembayaranController extends Controller
         $pembayaranList = $query->orderBy('tanggal_bayar', 'desc')
             ->get()
             ->map(function ($p) {
+                // Hitung rincian biaya (sama seperti di method index)
+                $abunemenNominal = $p->abunemen ? 3000 : 0; // Tarif abunemen default
+                $tunggakanNominal = (float) ($p->tunggakan ?? 0);
+                $biayaAir = max(0, (float) $p->jumlah_bayar - $abunemenNominal - $tunggakanNominal);
+                $tarifPerKubik = $p->jumlah_kubik > 0 ? round($biayaAir / $p->jumlah_kubik) : 0;
+
                 return [
-                    'id' => $p->id,
-                    'id_pelanggan' => $p->pelanggan->id_pelanggan,
-                    'nama_pelanggan' => $p->pelanggan->nama_pelanggan,
-                    'wilayah' => $p->pelanggan->wilayah,
-                    'kategori' => $p->pelanggan->kategori,
-                    'bulan_bayar' => $p->bulan_bayar,
-                    'tanggal_bayar' => $p->tanggal_bayar->format('Y-m-d'),
-                    'meteran_sebelum' => $p->meteran_sebelum,
-                    'meteran_sesudah' => $p->meteran_sesudah,
-                    'jumlah_kubik' => $p->jumlah_kubik,
-                    'abunemen' => $p->abunemen,
-                    'tunggakan' => $p->tunggakan,
-                    'jumlah_bayar' => $p->jumlah_bayar,
-                    'keterangan' => $p->keterangan,
+                    'id'               => $p->id,
+                    'id_pelanggan'     => $p->pelanggan?->id_pelanggan,
+                    'nama_pelanggan'   => $p->pelanggan?->nama_pelanggan,
+                    'wilayah'          => $p->pelanggan?->wilayah,
+                    'kategori'         => $p->pelanggan?->kategori,
+                    'bulan_bayar'      => $p->bulan_bayar,
+                    'tanggal_bayar'    => $p->tanggal_bayar->format('Y-m-d'),
+                    'created_at'       => $p->created_at?->format('Y-m-d H:i:s'),
+                    'meteran_sebelum'  => $p->meteran_sebelum,
+                    'meteran_sesudah'  => $p->meteran_sesudah,
+                    'jumlah_kubik'     => $p->jumlah_kubik,
+                    'abunemen'         => $p->abunemen,
+                    'abunemen_nominal' => $abunemenNominal,
+                    'tunggakan'        => $tunggakanNominal,
+                    'biaya_air'        => $biayaAir,
+                    'tarif_per_kubik'  => $tarifPerKubik,
+                    'jumlah_bayar'     => $p->jumlah_bayar,
+                    'keterangan'       => $p->keterangan,
                 ];
             });
         
@@ -101,7 +113,7 @@ class PembayaranController extends Controller
             ->get()
             ->map(function ($p) {
                 // Hitung biaya air (jumlah_bayar - abunemen_nominal - tunggakan)
-                $abunemenNominal = $p->abunemen ? 2000 : 0; // Tarif abunemen default
+                $abunemenNominal = $p->abunemen ? 3000 : 0; // Tarif abunemen default
                 $tunggakanNominal = (float) ($p->tunggakan ?? 0);
                 $biayaAir = max(0, (float) $p->jumlah_bayar - $abunemenNominal - $tunggakanNominal);
                 $tarifPerKubik = $p->jumlah_kubik > 0 ? round($biayaAir / $p->jumlah_kubik) : 0;
@@ -447,7 +459,7 @@ class PembayaranController extends Controller
         $meteranSebelum = $pembayaran->meteran_sebelum;
         $meteranSesudah = $pembayaran->meteran_sesudah;
         $jumlahKubik = $pembayaran->jumlah_kubik;
-        $biayaAbunemen = 3000; // Default abonemen wajib
+        $biayaAbunemen = $pembayaran->abunemen ? 3000 : 0; 
         $tarifPerKubik = 2000; // Default tarif per kubik
         
         // Ambil data dari tagihan jika ada

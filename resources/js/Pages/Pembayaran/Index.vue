@@ -121,93 +121,176 @@
                     </div>
                 </div>
 
-                <!-- Table -->
-                <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-blue-800">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Tanggal</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID Pelanggan</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Nama</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Wilayah</th>
-                                    <th class="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">Pemakaian</th>
-                                    <th class="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">Keterangan</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Jumlah Bayar</th>
-                                    <th class="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-if="filteredPembayaranList.length === 0">
-                                    <td colspan="8" class="px-6 py-12 text-center text-gray-500">
-                                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <!-- Cards Container -->
+                <div v-if="filteredPembayaranList.length === 0" class="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 mb-4">
+                        <svg class="h-8 w-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-1">Tidak Ada Data</h3>
+                    <p class="text-gray-500 max-w-xs mx-auto text-sm">Tidak ada data pembayaran ditemukan untuk kriteria pencarian Anda.</p>
+                </div>
+
+                <div v-else class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <div
+                        v-for="item in filteredPembayaranList"
+                        :key="item.id"
+                        class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-blue-200 transition-all duration-300"
+                    >
+                        <!-- Top Header Component -->
+                        <div class="px-5 py-4 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 backdrop-blur-sm border border-white/20">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
                                         </svg>
-                                        <p class="mt-2">Tidak ada data pembayaran ditemukan</p>
-                                    </td>
-                                </tr>
-                                <tr v-for="item in filteredPembayaranList" :key="item.id" class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">{{ formatTanggalPembayaran(item.tanggal_bayar) }}</div>
-                                        <div class="text-xs text-gray-500">{{ formatBulan(item.bulan_bayar) }}</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">{{ item.id_pelanggan }}</div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ item.nama_pelanggan }}</div>
-                                        <div v-if="(item.kategori || 'umum').toLowerCase().trim() === 'sosial'" class="text-xs text-purple-600 font-medium">Kategori Sosial</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                                            {{ item.wilayah || 'N/A' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center">
-                                        <div class="text-sm text-gray-900">{{ item.jumlah_kubik ? item.jumlah_kubik + ' m³' : '-' }}</div>
-                                        <div v-if="item.abunemen" class="text-xs text-blue-600">+ Abunemen</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center">
-                                        <span v-if="item.keterangan === 'LUNAS'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                                            </svg>
-                                            Lunas
-                                        </span>
-                                        <span v-else-if="item.keterangan === 'TUNGGAKAN'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293z" clip-rule="evenodd" />
-                                            </svg>
-                                            Tunggakan
-                                        </span>
-                                        <span v-else-if="item.keterangan === 'CICILAN'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
-                                            </svg>
-                                            Cicilan
-                                        </span>
-                                        <span v-else class="text-xs text-gray-400">-</span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right">
-                                        <div class="text-sm font-semibold text-gray-900">Rp {{ Number(item.jumlah_bayar).toLocaleString('id-ID') }}</div>
-                                        <div v-if="item.tunggakan > 0" class="text-xs text-orange-600">Tunggakan: Rp {{ Number(item.tunggakan).toLocaleString('id-ID') }}</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center">
-                                        <button
-                                            @click="openDetailModal(item)"
-                                            class="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition"
-                                            title="Lihat Detail"
-                                        >
-                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                            </svg>
-                                            Detail
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-white tracking-tight text-lg">{{ formatBulan(item.bulan_bayar) }}</div>
+                                        <div class="flex items-center gap-2 mt-0.5">
+                                            <span class="text-blue-100 text-xs font-medium">Bayar: {{ formatTanggalPembayaran(item.tanggal_bayar) }}</span>
+                                            <span v-if="item.created_at" class="text-blue-200/60 text-[10px]">• {{ item.created_at.split(' ')[1] }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span 
+                                        :class="[
+                                            'px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border',
+                                            item.keterangan === 'LUNAS' ? 'bg-green-400/20 text-green-100 border-green-300/30' :
+                                            item.keterangan === 'CICILAN' ? 'bg-yellow-400/20 text-yellow-100 border-yellow-300/30' :
+                                            item.keterangan === 'TUNGGAKAN' ? 'bg-red-400/20 text-red-100 border-red-300/30' :
+                                            'bg-white/10 text-white border-white/10'
+                                        ]"
+                                    >
+                                        {{ item.keterangan || '-' }}
+                                    </span>
+                                    <div class="bg-black/20 text-white/70 px-2 py-0.5 rounded text-[10px] font-mono border border-white/5">#{{ item.id }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="p-5 space-y-5">
+                            <!-- Section: Pelanggan -->
+                            <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                                <div class="w-12 h-12 flex-shrink-0 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-lg border-2 border-white shadow-sm">
+                                    {{ item.nama_pelanggan ? item.nama_pelanggan.charAt(0) : 'P' }}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-sm font-bold text-gray-900 truncate uppercase">{{ item.nama_pelanggan }}</div>
+                                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                                        <span class="text-xs text-gray-500 font-medium">🚀 ID: {{ item.id_pelanggan }}</span>
+                                        <span class="text-xs text-gray-500">📍 {{ item.wilayah }}</span>
+                                        <span v-if="item.kategori" class="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-600 font-bold border border-purple-100 uppercase">{{ item.kategori }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <!-- Data Meteran Section -->
+                                <div class="space-y-3">
+                                    <div class="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                        Meteran Air
+                                    </div>
+                                    <div class="bg-blue-50/50 rounded-2xl p-4 border border-blue-100/50 relative overflow-hidden group">
+                                        <div class="flex items-center justify-between gap-2 relative z-10">
+                                            <div class="text-center flex-1 bg-white rounded-xl p-2.5 border border-gray-100 shadow-sm">
+                                                <div class="text-[10px] text-gray-400 mb-1 leading-none uppercase tracking-tighter">Awal</div>
+                                                <div class="text-lg font-mono font-bold text-gray-700 leading-none tracking-tight">{{ item.meteran_sebelum !== null ? Number(item.meteran_sebelum).toFixed(1) : '-' }}</div>
+                                            </div>
+                                            
+                                            <div class="flex flex-col items-center flex-shrink-0 -mb-1">
+                                                <svg class="w-4 h-4 text-blue-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                                <div class="text-[10px] font-black text-blue-700 bg-blue-100 rounded-full px-1.5 py-0.5 mt-1 border border-blue-200">+{{ item.jumlah_kubik ? Number(item.jumlah_kubik).toFixed(1) : '0' }}</div>
+                                            </div>
+                                            
+                                            <div class="text-center flex-1 bg-white rounded-xl p-2.5 border border-gray-100 shadow-sm">
+                                                <div class="text-[10px] text-gray-400 mb-1 leading-none uppercase tracking-tighter">Akhir</div>
+                                                <div class="text-lg font-mono font-bold text-gray-700 leading-none tracking-tight">{{ item.meteran_sesudah !== null ? Number(item.meteran_sesudah).toFixed(1) : '-' }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3 bg-blue-600 rounded-lg py-2 px-3 text-center shadow-md shadow-blue-200">
+                                            <span class="text-[10px] text-blue-100 font-semibold uppercase tracking-wider">Pemakaian: </span>
+                                            <span class="text-sm font-black text-white px-1 leading-none">{{ item.jumlah_kubik ? Number(item.jumlah_kubik).toFixed(1) + ' m³' : '0 m³' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Detail Tagihan Section -->
+                                <div class="space-y-3">
+                                    <div class="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                        Rincian Biaya
+                                    </div>
+                                    <div class="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+                                        <div class="border-b border-gray-100 px-3.5 py-2.5 flex justify-between items-center group">
+                                            <div>
+                                                <div class="text-[11px] font-bold text-gray-700 flex items-center gap-1.5 leading-none">
+                                                    <div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Air
+                                                </div>
+                                                <div class="text-[9px] text-gray-400 mt-1 pl-3 leading-none italic" v-if="item.jumlah_kubik && item.tarif_per_kubik">
+                                                    {{ Number(item.jumlah_kubik).toFixed(1) }}m³ × Rp {{ Number(item.tarif_per_kubik).toLocaleString('id-ID') }}
+                                                </div>
+                                            </div>
+                                            <div class="text-[11px] font-bold text-gray-900 leading-none">Rp {{ Number(item.biaya_air || 0).toLocaleString('id-ID') }}</div>
+                                        </div>
+                                        <div class="border-b border-gray-100 px-3.5 py-2.5 flex justify-between items-center bg-white/40">
+                                            <div class="text-[11px] font-bold text-gray-700 flex items-center gap-1.5 leading-none">
+                                                <div class="w-1.5 h-1.5 rounded-full bg-purple-500"></div> Abunemen
+                                            </div>
+                                            <div class="text-[11px] font-bold" :class="item.abunemen ? 'text-gray-900' : 'text-gray-300 italic font-normal'">
+                                                {{ item.abunemen ? 'Rp ' + Number(item.abunemen_nominal || 3000).toLocaleString('id-ID') : 'Tidak Ada' }}
+                                            </div>
+                                        </div>
+                                        <div v-if="item.tunggakan > 0" class="border-b border-red-50 px-3.5 py-2.5 flex justify-between items-center bg-red-50/30">
+                                            <div class="text-[11px] font-bold text-red-700 flex items-center gap-1.5 leading-none">
+                                                <div class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div> Tunggakan
+                                            </div>
+                                            <div class="text-[11px] font-bold text-red-700 leading-none font-mono">Rp {{ Number(item.tunggakan).toLocaleString('id-ID') }}</div>
+                                        </div>
+                                        <div class="px-3.5 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 flex justify-between items-center">
+                                            <span class="text-[10px] font-black text-blue-100 uppercase tracking-widest leading-none">Total</span>
+                                            <span class="text-sm font-black text-white leading-none tracking-tight">Rp {{ Number(item.jumlah_bayar).toLocaleString('id-ID') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Footer: Actions -->
+                        <div class="px-5 py-3.5 bg-gray-50 border-t border-gray-200/50 flex flex-wrap gap-2 items-center justify-between">
+                            <button
+                                @click="openDetailModal(item)"
+                                class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white text-blue-700 text-xs font-bold rounded-xl border border-blue-100 hover:bg-blue-50 hover:border-blue-200 hover:shadow-sm transition-all active:scale-95"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                Detail
+                            </button>
+                            
+                            <div class="flex flex-1 sm:flex-none gap-2">
+                                <button
+                                    @click="downloadPdf(item)"
+                                    class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white text-xs font-bold rounded-xl hover:bg-green-600 hover:shadow-lg hover:shadow-green-100 transition-all active:scale-95"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    PDF
+                                </button>
+                                <button
+                                    @click="sendReceipt(item)"
+                                    class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white text-xs font-bold rounded-xl hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-100 transition-all active:scale-95"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                                    WA
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -360,6 +443,7 @@
 import { ref, computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import axios from 'axios';
 
 const props = defineProps({
     pembayaranList: {
@@ -447,4 +531,27 @@ const closeDetailModal = () => {
     showDetailModal.value = false;
     selectedPembayaran.value = null;
 };
+
+// Receipt functions
+const downloadPdf = (item) => {
+    window.open(`/pembayaran/${item.id}/download-pdf`, '_blank');
+};
+
+const sendReceipt = async (item) => {
+    try {
+        const response = await axios.post(`/pembayaran/${item.id}/send-receipt`);
+        if (response.data.wa_link) {
+            window.open(response.data.wa_link, '_blank');
+            alert(`Struk berhasil digenerate!\n\nPelanggan: ${response.data.pelanggan_nama}\nNo. WhatsApp: ${response.data.no_whatsapp}\n\nJendela WhatsApp akan terbuka.`);
+        }
+    } catch (error) {
+        if (error.response?.status === 422) {
+            alert(error.response.data.message || 'Nomor WhatsApp pelanggan tidak tersedia');
+        } else {
+            console.error('Error sending receipt:', error);
+            alert('Terjadi kesalahan saat mengirim struk.');
+        }
+    }
+};
+
 </script>
