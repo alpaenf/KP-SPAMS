@@ -921,7 +921,7 @@
                                     </div>
                                 </div>
                             </div>
-                         </div> <!-- Penutup "Daftar Pembayaran" div -->
+                         </div> 
                 </div> <!-- Penutup modal body (p-4 overflow-y-auto) -->
             </div> <!-- Penutup modal content container (relative bg-white) -->
         </div> <!-- Penutup modal flex container -->

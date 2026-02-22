@@ -539,13 +539,14 @@
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Wilayah</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Periode</th>
+                                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Pemakaian (m³)</th>
-                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Bayar</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Dibayar</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 <tr v-if="data.length === 0">
-                                    <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                                    <td colspan="8" class="px-6 py-12 text-center text-gray-500">
                                         <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                         <p>Tidak ada data pembayaran ditemukan untuk periode ini.</p>
                                     </td>
@@ -569,11 +570,35 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ item.bulan_bayar }}
                                     </td>
+                                    <!-- Kolom Status -->
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <span
+                                            :class="[
+                                                'px-2.5 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1',
+                                                !item.keterangan || item.keterangan === 'LUNAS'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : item.keterangan === 'CICILAN'
+                                                    ? 'bg-yellow-100 text-yellow-800'
+                                                    : item.keterangan === 'TUNGGAKAN'
+                                                    ? 'bg-red-100 text-red-800'
+                                                    : 'bg-gray-100 text-gray-700'
+                                            ]"
+                                        >
+                                            <span v-if="!item.keterangan || item.keterangan === 'LUNAS'">✓ LUNAS</span>
+                                            <span v-else-if="item.keterangan === 'CICILAN'">⟳ CICILAN</span>
+                                            <span v-else-if="item.keterangan === 'TUNGGAKAN'">⚠ TUNGGAKAN</span>
+                                            <span v-else>{{ item.keterangan }}</span>
+                                        </span>
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
                                         {{ item.jumlah_kubik }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-700 text-right">
-                                        {{ formatRupiah(item.jumlah_bayar) }}
+                                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                                        <div class="text-sm font-bold text-blue-700">{{ formatRupiah(item.jumlah_bayar) }}</div>
+                                        <!-- Sub-detail jika ada tunggakan -->
+                                        <div v-if="Number(item.tunggakan) > 0" class="text-xs text-red-500 mt-0.5">
+                                            incl. tunggakan Rp {{ Number(item.tunggakan).toLocaleString('id-ID') }}
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>
