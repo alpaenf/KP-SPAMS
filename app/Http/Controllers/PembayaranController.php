@@ -125,6 +125,11 @@ class PembayaranController extends Controller
             // Hitung tarif per kubik secara dinamis dari data yang tersimpan
             $tarifPerKubik = $p->jumlah_kubik > 0 ? round($biayaAir / $p->jumlah_kubik) : ($isSosial ? 0 : 2000);
 
+            // Cek status tagihan bulan ini dari tabel TagihanBulanan
+            $tagihan = \App\Models\TagihanBulanan::where('pelanggan_id', $p->pelanggan_id)
+                ->where('bulan', $p->bulan_bayar)
+                ->first();
+
             // Tentukan status_tagihan secara dinamis agar UI akurat (anti-mismatch)
             $statusTagihan = $tagihan?->status_bayar ?? 'SUDAH_BAYAR';
             $sisa = $tagihan ? ($tagihan->total_tagihan - $tagihan->jumlah_terbayar) : 0;
