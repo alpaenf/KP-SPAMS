@@ -171,13 +171,31 @@
                         </div>
                     </div>
 
+                    <!-- Toggle Batch Mode -->
+                    <div class="flex justify-end mb-3">
+                        <button
+                            @click="toggleBatchMode"
+                            :class="[
+                                'flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition border',
+                                batchMode
+                                    ? 'bg-blue-800 text-white border-blue-800 hover:bg-blue-700'
+                                    : 'bg-white text-blue-800 border-blue-800 hover:bg-blue-50'
+                            ]"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            {{ batchMode ? 'Tutup Mode Pilih' : 'Pilih & Simpan Semua' }}
+                        </button>
+                    </div>
+
                     <!-- Tabel Input Meteran -->
                     <div class="bg-white rounded-lg shadow-md overflow-hidden">
                         <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-blue-800">
                                 <tr>
-                                    <th class="px-4 py-3 text-center">
+                                    <th v-if="batchMode" class="px-4 py-3 text-center">
                                         <input
                                             type="checkbox"
                                             @change="toggleSelectAll"
@@ -202,7 +220,7 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 <tr v-for="item in filteredPelangganList" :key="item.id" class="hover:bg-gray-50 transition-colors" :class="{ 'bg-blue-50': selectedForBatch.includes(item.id) }">
-                                    <td class="px-4 py-4 text-center">
+                                    <td v-if="batchMode" class="px-4 py-4 text-center">
                                         <input
                                             type="checkbox"
                                             :value="item.id"
@@ -1184,6 +1202,7 @@ const showTunggakanSection = ref(false); // Toggle collapse tunggakan section
 const selectedForBatch = ref([]);
 const batchInputData = ref({});
 const isBatchSaving = ref(false);
+const batchMode = ref(false);
 
 const generateForm = ref({
     bulan: props.bulan,
@@ -1688,6 +1707,15 @@ const hitungPemakaian = () => {
 };
 
 // ========== BATCH SAVE METERAN ===========
+
+const toggleBatchMode = () => {
+    batchMode.value = !batchMode.value;
+    if (!batchMode.value) {
+        // Reset semua pilihan saat mode ditutup
+        selectedForBatch.value = [];
+        batchInputData.value = {};
+    }
+};
 
 const toggleSelectAll = (event) => {
     if (event.target.checked) {
