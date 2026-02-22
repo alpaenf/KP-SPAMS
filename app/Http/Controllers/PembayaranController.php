@@ -164,17 +164,30 @@ class PembayaranController extends Controller
             ->where('bulan_bayar', $validated['bulan_bayar'])
             ->first();
         
-        // Untuk CICILAN yang sudah ada pembayaran: UPDATE (accumulate), jangan create baru
+        // Allow duplicate untuk:
+        // 1. CICILAN (bayar bertahap)
+        // 2. Bayar tunggakan (update pembayaran bulan ini + update tagihan tunggakan)
+        // Reject duplicate untuk case lainnya
+        
         if ($existing && $validated['status_bayar'] === 'CICILAN') {
-            // Update jumlah_bayar dengan accumulate (tambahkan cicilan baru)
+            // CICILAN: UPDATE accumulate
             $existing->jumlah_bayar = $existing->jumlah_bayar + $validated['jumlah_bayar'];
-            $existing->tanggal_bayar = $validated['tanggal_bayar']; // Update ke tanggal cicilan terakhir
+            $existing->tanggal_bayar = $validated['tanggal_bayar'];
             $existing->keterangan = $validated['keterangan'] ?? $existing->keterangan;
             $existing->save();
             
-            $pembayaran = $existing; // Use existing pembayaran untuk update tagihan nanti
+            $pembayaran = $existing;
+        } elseif ($existing && isset($validated['bayar_tunggakan']) && $validated['bayar_tunggakan']) {
+            // Bayar tunggakan: UPDATE pembayaran bulan ini dengan total (tagihan bulan ini + tunggakan)
+            $existing->jumlah_bayar = $validated['jumlah_bayar'];
+            $existing->tanggal_bayar = $validated['tanggal_bayar'];
+            $existing->keterangan = $validated['keterangan'] ?? $existing->keterangan;
+            $existing->tunggakan = $validated['jumlah_bayar_tunggakan'] ?? 0;
+            $existing->save();
+            
+            $pembayaran = $existing;
         } elseif ($existing) {
-            // Reject duplicate untuk non-cicilan
+            // Reject duplicate untuk case normal
             return response()->json([
                 'message' => 'Pembayaran untuk bulan ini sudah ada. Silakan edit pembayaran yang sudah ada.'
             ], 422);
