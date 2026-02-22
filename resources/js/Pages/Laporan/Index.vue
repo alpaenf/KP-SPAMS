@@ -708,7 +708,7 @@ import { ref, watch, reactive } from 'vue'; // Added reactive
 import { router, usePage } from '@inertiajs/vue3';
 import debounce from 'lodash/debounce';
 
-const { props: $page } = usePage();
+const page = usePage();
 
 const props = defineProps({
     data: Array,
@@ -793,7 +793,7 @@ const submitOperasional = () => {
     processing.value = true;
 
     // Bangun payload — penarik hanya boleh kirim field yang diizinkan
-    const user = $page.props.auth.user;
+    const user = page.props.auth.user;
     const payload = {
         bulan: formOperasional.bulan,
         biaya_operasional_penarik: formOperasional.biaya_operasional_penarik,
