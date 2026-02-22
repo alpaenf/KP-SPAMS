@@ -705,8 +705,10 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, watch, reactive } from 'vue'; // Added reactive
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import debounce from 'lodash/debounce';
+
+const { props: $page } = usePage();
 
 const props = defineProps({
     data: Array,
@@ -789,7 +791,24 @@ const openModalOperasional = () => {
 
 const submitOperasional = () => {
     processing.value = true;
-    router.post('/laporan/update-operasional', formOperasional, {
+
+    // Bangun payload — penarik hanya boleh kirim field yang diizinkan
+    const user = $page.props.auth.user;
+    const payload = {
+        bulan: formOperasional.bulan,
+        biaya_operasional_penarik: formOperasional.biaya_operasional_penarik,
+        biaya_operasional_lapangan: formOperasional.biaya_operasional_lapangan,
+        wilayah: formOperasional.wilayah,
+    };
+
+    // Field sensitif hanya dikirim jika admin
+    if (user.role === 'admin') {
+        payload.biaya_pad_desa = formOperasional.biaya_pad_desa;
+        payload.biaya_lain_lain = formOperasional.biaya_lain_lain;
+        payload.biaya_csr = formOperasional.biaya_csr;
+    }
+
+    router.post('/laporan/update-operasional', payload, {
         preserveScroll: true,
         onSuccess: () => {
             showModalOperasional.value = false;
