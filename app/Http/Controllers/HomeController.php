@@ -340,52 +340,72 @@ class HomeController extends Controller
             }])
             ->orderBy('id_pelanggan', 'asc')
             ->get()
-            ->map(function ($p) use ($bulanIni) {
-            // Cek apakah sudah bayar bulan ini
-            $pembayaranBulanIni = $p->pembayarans->firstWhere('bulan_bayar', $bulanIni);
+            ->map(function ($p) use ($bulanIni, $bulanFilter) {
+            // Ambil data tagihan untuk bulan yang sedang difilter (atau bulan ini jika filter "all")
+        $tagihanBulanCek = $p->tagihanBulanan->where('bulan', $bulanFilter)->first();
+        
+        // Cek apakah ada tunggakan dari bulan-bulan sebelumnya
+        $hasTunggakan = $p->tagihanBulanan()
+            ->where('bulan', '<', $bulanIni)
+            ->whereIn('status_bayar', ['BELUM_BAYAR', 'TUNGGAKAN', 'CICILAN'])
+            ->exists();
             
-            // Cek tagihan bulanan bulan ini
-            $tagihan = $p->tagihanBulanan->firstWhere('bulan', $bulanIni);
+        // Logika untuk kategori sosial: otomatis lunas dengan tarif 0
+        $isSosial = $p->kategori === 'sosial';
+        
+        // Tentukan status bayar utama
+        $statusBayarText = 'BELUM_BAYAR';
+        if ($isSosial) {
+            $statusBayarText = 'SUDAH_BAYAR';
+        } elseif ($tagihanBulanCek) {
+            $statusBayarText = $tagihanBulanCek->status_bayar;
+        } else {
+            // Jika tidak ada record tagihan, cek di pembayarans
+            $pembayaranBulanCek = $p->pembayarans->where('bulan_bayar', $bulanFilter)->first();
+            $statusBayarText = $pembayaranBulanCek ? 'SUDAH_BAYAR' : 'BELUM_BAYAR';
+        }
+        
+        // Jika belum bayar bulan ini tapi nunggak bulan lalu, status jadi MENUNGGAK
+        if ($statusBayarText === 'BELUM_BAYAR' && $hasTunggakan) {
+            $statusBayarText = 'MENUNGGAK';
+        }
+        
+        // Ambil list bulan yang sudah lunas (SUDAH_BAYAR)
+        $bulanLunas = $p->tagihanBulanan()
+            ->where('status_bayar', 'SUDAH_BAYAR')
+            ->pluck('bulan')
+            ->toArray();
             
-            // Logika untuk kategori sosial: otomatis lunas dengan tarif 0
-            $isSosial = $p->kategori === 'sosial';
-            
-            // Tentukan status bayar dari tagihan_bulanan jika ada, jika tidak dari pembayarans
-            if ($tagihan) {
-                $sudahBayar = $tagihan->status_bayar === 'SUDAH_BAYAR';
-                $jumlahTagihan = $tagihan->total_tagihan;
-            } else {
-                $sudahBayar = $isSosial ? true : !is_null($pembayaranBulanIni);
-                $jumlahTagihan = $isSosial ? 0 : ($pembayaranBulanIni?->jumlah_bayar ?? 10000);
-            }
-            
-            // Ambil semua bulan yang sudah dibayar
-            $bulanDibayar = $p->pembayarans->pluck('bulan_bayar')->toArray();
-            
-            return [
-                'id' => $p->id,
-                'id_pelanggan' => $p->id_pelanggan,
-                'nama_pelanggan' => $p->nama_pelanggan,
-                'nik' => $p->nik,
-                'no_whatsapp' => $p->no_whatsapp,
-                'rt' => $p->rt,
-                'rw' => $p->rw,
-                'kategori' => $p->kategori ?? 'umum',
-                'wilayah' => $p->wilayah,
-                'status_aktif' => $p->status_aktif,
-                'has_coordinates' => $p->hasCoordinates(),
-                'google_maps_link' => $p->google_maps_link,
-                'google_maps_url' => $p->google_maps_url,
-                'foto_rumah_url' => $p->foto_rumah_url,
-                'sudah_bayar' => $sudahBayar,
-                'tanggal_bayar' => $isSosial ? '-' : ($pembayaranBulanIni?->tanggal_bayar?->format('d/m/Y')),
-                'jumlah_bayar' => $jumlahTagihan,
-                'bulan_dibayar' => $bulanDibayar,
-                // Info tambahan dari tagihan bulanan
-                'meteran_belum_diinput' => $tagihan && is_null($tagihan->meteran_sesudah),
-                'pemakaian_kubik' => $tagihan?->pemakaian_kubik,
-            ];
-        });
+        // Fallback: Jika di tagihan_bulanan belum lunas tapi di pembayarans ada, anggap lunas untuk UI sederhana (opsional)
+        $pembayaranMonths = $p->pembayarans->pluck('bulan_bayar')->toArray();
+        $bulanDibayar = array_unique(array_merge($bulanLunas, $pembayaranMonths));
+        
+        return [
+            'id' => $p->id,
+            'id_pelanggan' => $p->id_pelanggan,
+            'nama_pelanggan' => $p->nama_pelanggan,
+            'nik' => $p->nik,
+            'no_whatsapp' => $p->no_whatsapp,
+            'rt' => $p->rt,
+            'rw' => $p->rw,
+            'kategori' => $p->kategori ?? 'umum',
+            'wilayah' => $p->wilayah,
+            'status_aktif' => $p->status_aktif,
+            'has_coordinates' => $p->hasCoordinates(),
+            'google_maps_link' => $p->google_maps_link,
+            'google_maps_url' => $p->google_maps_url,
+            'foto_rumah_url' => $p->foto_rumah_url,
+            'status_bayar' => $statusBayarText, // New: status bayar yang lebih akurat
+            'sudah_bayar' => $statusBayarText === 'SUDAH_BAYAR',
+            'tanggal_bayar' => $isSosial ? '-' : ($tagihanBulanCek?->tanggal_bayar?->format('d/m/Y') ?? ($p->pembayarans->where('bulan_bayar', $bulanFilter)->first()?->tanggal_bayar?->format('d/m/Y'))),
+            'jumlah_bayar' => $tagihanBulanCek?->total_tagihan ?? ($p->pembayarans->where('bulan_bayar', $bulanFilter)->first()?->jumlah_bayar ?? 0),
+            'bulan_dibayar' => $bulanDibayar,
+            'has_tunggakan' => $hasTunggakan,
+            // Info tambahan dari tagihan bulanan
+            'meteran_belum_diinput' => $tagihanBulanCek && is_null($tagihanBulanCek->meteran_sesudah),
+            'pemakaian_kubik' => $tagihanBulanCek?->pemakaian_kubik,
+        ];
+    });
         
         // Ambil data pembayaran untuk tab Riwayat Pembayaran
         $pembayaranQuery = \App\Models\Pembayaran::query()
