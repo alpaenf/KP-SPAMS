@@ -450,6 +450,14 @@ class TagihanBulananController extends Controller
                 ->get()
                 ->map(function($t) {
                     $sisaTagihan = $t->total_tagihan - $t->jumlah_terbayar;
+                    
+                    // DATA CLEANUP: Jika sisa_tagihan <= 0 tapi status belum SUDAH_BAYAR, perbaiki otomatis
+                    if ($sisaTagihan <= 0 && $t->total_tagihan > 0) {
+                        $t->status_bayar = 'SUDAH_BAYAR';
+                        $t->save();
+                        return null; // Skip dari list tunggakan
+                    }
+                    
                     return [
                         'id' => $t->id,
                         'bulan' => $t->bulan,
@@ -458,10 +466,7 @@ class TagihanBulananController extends Controller
                         'sisa_tagihan' => $sisaTagihan,
                     ];
                 })
-                ->filter(function($t) {
-                    // Only show tunggakan with sisa > 0
-                    return $t['sisa_tagihan'] > 0;
-                });
+                ->filter(fn($t) => $t !== null && $t['sisa_tagihan'] > 0);
             
             return response()->json([
                 'tunggakan' => $tunggakan->values()->toArray(),

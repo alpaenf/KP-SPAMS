@@ -260,20 +260,16 @@ class PembayaranController extends Controller
         $tagihan = \App\Models\TagihanBulanan::where('pelanggan_id', $pelangganId)
             ->where('bulan', $validated['bulan_bayar'])
             ->first();
-        
+
         if ($tagihan) {
-            // Update data meteran dan tagihan agar sinkron dengan pembayaran
+            // Update data meteran agar sinkron dengan pembayaran
             $tagihan->meteran_sebelum = $validated['meteran_sebelum'] ?? $tagihan->meteran_sebelum;
             $tagihan->meteran_sesudah = $validated['meteran_sesudah'] ?? $tagihan->meteran_sesudah;
             $tagihan->pemakaian_kubik = $validated['jumlah_kubik'] ?? $tagihan->pemakaian_kubik;
             
-            // Jika pembayaran menyertakan abunemen, update juga
             if (isset($validated['abunemen'])) {
                 $tagihan->ada_abunemen = $validated['abunemen'];
             }
-            
-            // SIMPLE: Langsung pakai status_bayar dari form (manual pilih user)
-            $tagihan->status_bayar = $validated['status_bayar'];
             
             // Perbaikan: Pastikan tarif dan abunemen konsisten
             if ($pelanggan->kategori === 'sosial') {
@@ -284,62 +280,39 @@ class PembayaranController extends Controller
                 $tagihan->tarif_per_kubik = 2000;
                 $tagihan->biaya_abunemen = 3000;
             }
+
+            // Hitung total tagihan dulu (agar pembanding akurat)
+            $tagihan->hitungTagihan();
             
-            // Set jumlah_terbayar dan total_tagihan berdasarkan status
-            if ($validated['status_bayar'] === 'SUDAH_BAYAR') {
-                // Lunas penuh
-                $tagihan->jumlah_terbayar = $validated['jumlah_bayar'];
-                $tagihan->total_tagihan = $validated['jumlah_bayar'];
-            } elseif ($validated['status_bayar'] === 'CICILAN') {
-                // Bayar sebagian (cicilan) - ACCUMULATE jika sudah ada pembayaran sebelumnya
+            // Logika Pembayaran: Selalu tambahkan (accumulate) jika ada transaksi
+            if ($validated['jumlah_bayar'] > 0) {
                 if ($existing) {
-                    // Cicilan ke-2, ke-3, dst: tambahkan ke jumlah_terbayar yang sudah ada
-                    $tagihan->jumlah_terbayar = $tagihan->jumlah_terbayar + $validated['jumlah_bayar'];
+                    $tagihan->jumlah_terbayar = ($tagihan->jumlah_terbayar ?? 0) + $validated['jumlah_bayar'];
                 } else {
-                    // Cicilan pertama kali
                     $tagihan->jumlah_terbayar = $validated['jumlah_bayar'];
                 }
-                // Preserve total_tagihan yang ada, atau set dari jumlah_bayar jika kosong
-                if ($tagihan->total_tagihan == 0) {
-                    $tagihan->total_tagihan = $validated['jumlah_bayar'];
-                }
-                
-                // Auto-upgrade ke SUDAH_BAYAR jika sudah lunas
-                if ($tagihan->jumlah_terbayar >= $tagihan->total_tagihan) {
-                    $tagihan->status_bayar = 'SUDAH_BAYAR';
-                }
-            } elseif ($validated['status_bayar'] === 'TUNGGAKAN') {
-                // Tunggakan bulan lalu (belum bayar sama sekali)
-                $tagihan->jumlah_terbayar = 0;
-                // Set total_tagihan dari jumlah_bayar
-                if ($tagihan->total_tagihan == 0) {
-                    $tagihan->total_tagihan = $validated['jumlah_bayar'];
-                }
+            }
+
+            // Tentukan status bayar BERDASARKAN HASIL AKHIR (Auto-calculate)
+            if ($tagihan->jumlah_terbayar >= $tagihan->total_tagihan && $tagihan->total_tagihan > 0) {
+                $tagihan->status_bayar = 'SUDAH_BAYAR';
+            } elseif ($tagihan->jumlah_terbayar > 0) {
+                $tagihan->status_bayar = 'CICILAN';
             } else {
-                // BELUM_BAYAR bulan ini
-                $tagihan->jumlah_terbayar = 0;
-                // Preserve total_tagihan yang ada, atau set dari jumlah_bayar jika kosong
-                if ($tagihan->total_tagihan == 0) {
-                    $tagihan->total_tagihan = $validated['jumlah_bayar'];
-                }
+                $tagihan->status_bayar = $validated['status_bayar'] ?? 'BELUM_BAYAR';
             }
             
             $tagihan->save();
         } else {
             // Jika belum ada tagihan, buat baru
-            // Set jumlah_terbayar berdasarkan status
-            $statusBayar = $validated['status_bayar'];
-            $jumlahTerbayar = $validated['jumlah_bayar'];
+            $jumlahTerbayar = 0;
+            $statusBayar = $validated['status_bayar'] ?? 'BELUM_BAYAR';
             
-            if ($statusBayar === 'BELUM_BAYAR' || $statusBayar === 'TUNGGAKAN') {
-                // BELUM_BAYAR / TUNGGAKAN: belum bayar sama sekali
-                $jumlahTerbayar = 0;
-            } elseif ($statusBayar === 'CICILAN') {
-                // Cicilan: bayar sebagian
+            // Jika ada pembayaran, set jumlah_terbayar dan auto-determine status
+            if ($validated['jumlah_bayar'] > 0) {
                 $jumlahTerbayar = $validated['jumlah_bayar'];
-            } else {
-                // SUDAH_BAYAR: lunas penuh
-                $jumlahTerbayar = $validated['jumlah_bayar'];
+                // Kita asumsi total_tagihan == jumlah_bayar jika baru pertama kali dibuat dari form
+                $statusBayar = 'SUDAH_BAYAR';
             }
             
             \App\Models\TagihanBulanan::create([
