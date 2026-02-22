@@ -719,6 +719,7 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Status Bayar <span class="text-red-500">*</span></label>
                                     <select
                                         v-model="pembayaranForm.status_bayar"
+                                        @change="hitungTagihan"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
                                         required
                                     >
@@ -728,7 +729,10 @@
                                         <option value="TUNGGAKAN">Tunggakan - Input bulan lalu yang nunggak</option>
                                     </select>
                                     <p class="text-xs text-gray-500 mt-1">
-                                        Pilih sesuai kondisi pembayaran
+                                        Pilih sesuai kondisi pembayaran.
+                                        <span v-if="pembayaranForm.status_bayar === 'TUNGGAKAN'" class="text-amber-600 block mt-1 font-medium">
+                                            💡 Status Tunggakan akan mengosongkan jumlah bayar agar tercatat sebagai hutang di bulan berikutnya.
+                                        </span>
                                     </p>
                                 </div>
                                 <div>
@@ -1134,6 +1138,17 @@ const pembayaranForm = ref({
 });
 
 const hitungTagihan = () => {
+    // Jika status TUNGGAKAN, jumlah_bayar harus 0 (karena ini mencatat hutang, bukan uang masuk)
+    if (pembayaranForm.value.status_bayar === 'TUNGGAKAN') {
+        // Tetap hitung pemakaian kubik untuk referensi
+        const meteranSebelum = parseFloat(pembayaranForm.value.meteran_sebelum) || 0;
+        const meteranSesudah = parseFloat(pembayaranForm.value.meteran_sesudah) || 0;
+        const pemakaian = meteranSesudah - meteranSebelum;
+        pembayaranForm.value.jumlah_kubik = pemakaian >= 0 ? pemakaian : 0;
+        pembayaranForm.value.jumlah_bayar = 0;
+        return;
+    }
+
     // Jika status CICILAN, jangan auto-calculate jumlah_bayar
     // Biarkan user input manual berapa yang mau dibayar
     if (pembayaranForm.value.status_bayar === 'CICILAN') {
