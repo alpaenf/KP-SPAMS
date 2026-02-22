@@ -793,7 +793,7 @@
                             <p><strong>Nama:</strong> {{ selectedPelanggan.nama_pelanggan }}</p>
                             <p><strong>Bulan:</strong> {{ formatBulan(selectedBulan) }}</p>
                             <p class="mt-2 text-lg font-bold text-blue-600">
-                                Total Tagihan: {{ formatRupiah(selectedPelanggan.tagihan?.total_tagihan || 0) }}
+                                Total Bayar: Rp {{ formatRupiah(pembayaranForm.jumlah_bayar || 0) }}
                             </p>
                         </div>
                     </div>
@@ -1224,6 +1224,8 @@ const pembayaranForm = ref({
     tanggal_bayar: new Date().toISOString().split('T')[0],
     meteran_sebelum: null,
     meteran_sesudah: null,
+    tarif_per_kubik: 2000, // Sync with backend
+    biaya_abunemen_nominal: 3000, // Sync with backend
     jumlah_kubik: 0,
     abunemen: false,
     jumlah_bayar: 0,
@@ -1544,9 +1546,13 @@ const hitungPemakaianPembayaran = () => {
     if (selectedPelanggan.value?.kategori === 'sosial') {
         pembayaranForm.value.jumlah_bayar = 0;
     } else {
-        const biayaPemakaian = pembayaranForm.value.jumlah_kubik * 2000;
-        const biayaAbunemen = pembayaranForm.value.abunemen ? 3000 : 0;
+        const tarif = parseFloat(pembayaranForm.value.tarif_per_kubik) || 2000;
+        const biaya_abunemen_nominal = parseFloat(pembayaranForm.value.biaya_abunemen_nominal) || 3000;
+        
+        const biayaPemakaian = pembayaranForm.value.jumlah_kubik * tarif;
+        const biayaAbunemen = pembayaranForm.value.abunemen ? biaya_abunemen_nominal : 0;
         const tunggakan = pembayaranForm.value.bayar_tunggakan ? parseFloat(pembayaranForm.value.jumlah_bayar_tunggakan || 0) : 0;
+        
         pembayaranForm.value.jumlah_bayar = biayaPemakaian + biayaAbunemen + tunggakan;
     }
 };

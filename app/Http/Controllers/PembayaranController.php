@@ -262,6 +262,16 @@ class PembayaranController extends Controller
             // SIMPLE: Langsung pakai status_bayar dari form (manual pilih user)
             $tagihan->status_bayar = $validated['status_bayar'];
             
+            // Perbaikan: Pastikan tarif dan abunemen konsisten
+            if ($pelanggan->kategori === 'sosial') {
+                $tagihan->tarif_per_kubik = 0;
+                $tagihan->ada_abunemen = false;
+                $tagihan->biaya_abunemen = 0;
+            } else {
+                $tagihan->tarif_per_kubik = 2000;
+                $tagihan->biaya_abunemen = 3000;
+            }
+            
             // Set jumlah_terbayar dan total_tagihan berdasarkan status
             if ($validated['status_bayar'] === 'SUDAH_BAYAR') {
                 // Lunas penuh
@@ -325,7 +335,9 @@ class PembayaranController extends Controller
                 'meteran_sebelum' => $validated['meteran_sebelum'] ?? 0,
                 'meteran_sesudah' => $validated['meteran_sesudah'] ?? 0,
                 'pemakaian_kubik' => $validated['jumlah_kubik'] ?? 0,
+                'tarif_per_kubik' => $pelanggan->kategori === 'sosial' ? 0 : 2000,
                 'ada_abunemen' => $validated['abunemen'] ?? false,
+                'biaya_abunemen' => ($pelanggan->kategori === 'sosial' || !($validated['abunemen'] ?? false)) ? 0 : 3000,
                 'total_tagihan' => $validated['jumlah_bayar'],
                 'jumlah_terbayar' => $jumlahTerbayar,
                 'status_bayar' => $statusBayar,

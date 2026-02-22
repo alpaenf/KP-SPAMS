@@ -539,6 +539,7 @@
                                     <input
                                         type="checkbox"
                                         v-model="pembayaranForm.bayar_tunggakan"
+                                        @change="toggleBayarTunggakan"
                                         class="mt-0.5 w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-2 focus:ring-amber-500"
                                     />
                                     <div>
@@ -555,6 +556,7 @@
                                     <input
                                         type="number"
                                         v-model="pembayaranForm.jumlah_bayar_tunggakan"
+                                        @input="hitungTagihan"
                                         step="1000"
                                         min="0"
                                         :max="listTunggakan.reduce((sum, t) => sum + t.sisa_tagihan, 0)"
@@ -1078,12 +1080,14 @@ const pembayaranForm = ref({
     tanggal_bayar: new Date().toISOString().split('T')[0],
     meteran_sebelum: null,
     meteran_sesudah: null,
+    tarif_per_kubik: 2000, // Sync with backend
+    biaya_abunemen_nominal: 3000, // Sync with backend
     abunemen: false,
     tunggakan: 0,
-    jumlah_kubik: null,
-    jumlah_bayar: null,
-    keterangan: '', // Catatan bebas (opsional)
-    status_bayar: 'BELUM_BAYAR', // Default BELUM_BAYAR - user pilih manual
+    jumlah_kubik: 0,
+    jumlah_bayar: 0,
+    keterangan: '',
+    status_bayar: 'SUDAH_BAYAR',
     bayar_tunggakan: false, // Apakah mau bayar tunggakan juga
     jumlah_bayar_tunggakan: 0, // Jumlah yang dibayar untuk tunggakan (bisa cicilan)
     id_tunggakan: [] // Array ID tagihan yang mau dibayar
@@ -1116,14 +1120,17 @@ const hitungTagihan = () => {
         if (selectedPelanggan.value?.kategori === 'sosial') {
             pembayaranForm.value.jumlah_bayar = 0;
         } else {
+            const tarif = parseFloat(pembayaranForm.value.tarif_per_kubik) || 2000;
+            const biaya_abunemen_nominal = parseFloat(pembayaranForm.value.biaya_abunemen_nominal) || 3000;
+
             // Hitung biaya pemakaian bulan ini
-            const biayaPemakaian = Math.round(pembayaranForm.value.jumlah_kubik * 2000);
+            const biayaPemakaian = Math.round(pembayaranForm.value.jumlah_kubik * tarif);
             
             // Biaya abunemen bulan ini (Rp 3.000 jika dicentang)
-            const biayaAbunemen = pembayaranForm.value.abunemen ? 3000 : 0;
+            const biayaAbunemen = pembayaranForm.value.abunemen ? biaya_abunemen_nominal : 0;
             
-            // Tunggakan dari bulan sebelumnya (sudah termasuk abunemen bulan sebelumnya)
-            const nominalTunggakan = parseFloat(pembayaranForm.value.tunggakan) || 0;
+            // Tunggakan dari bulan sebelumnya - Hanya tambahkan jika checkbox "Bayar Tunggakan" AKTIF
+            const nominalTunggakan = pembayaranForm.value.bayar_tunggakan ? parseFloat(pembayaranForm.value.jumlah_bayar_tunggakan || 0) : 0;
             
             // Total = Pemakaian bulan ini + Abunemen bulan ini + Tunggakan
             pembayaranForm.value.jumlah_bayar = biayaPemakaian + biayaAbunemen + nominalTunggakan;
@@ -1131,6 +1138,17 @@ const hitungTagihan = () => {
     } else {
         pembayaranForm.value.jumlah_bayar = 0;
     }
+};
+
+const toggleBayarTunggakan = () => {
+    if (pembayaranForm.value.bayar_tunggakan) {
+        // Default: bayar semua tunggakan yang ada
+        const totalTunggakan = listTunggakan.value.reduce((sum, t) => sum + (t.sisa_tagihan || 0), 0);
+        pembayaranForm.value.jumlah_bayar_tunggakan = totalTunggakan;
+    } else {
+        pembayaranForm.value.jumlah_bayar_tunggakan = 0;
+    }
+    hitungTagihan();
 };
 
 const pembayaranErrors = ref({});
