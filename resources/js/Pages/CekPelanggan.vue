@@ -723,10 +723,10 @@
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
                                         required
                                     >
-                                        <option value="BELUM_BAYAR">Belum Bayar - Bulan ini belum dibayar</option>
-                                        <option value="CICILAN">Cicilan - Bayar sebagian dulu</option>
-                                        <option value="SUDAH_BAYAR">Sudah Bayar - Lunas penuh</option>
-                                        <option value="TUNGGAKAN">Tunggakan - Input bulan lalu yang nunggak</option>
+                                        <option value="BELUM_BAYAR">Belum Bayar</option>
+                                        <option value="CICILAN">Cicilan</option>
+                                        <option value="SUDAH_BAYAR">Sudah Bayar</option>
+                                        <option value="TUNGGAKAN">Tunggakan</option>
                                     </select>
                                     <p class="text-xs text-gray-500 mt-1">
                                         Pilih sesuai kondisi pembayaran.
