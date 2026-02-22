@@ -100,17 +100,27 @@ class PembayaranController extends Controller
             ->orderBy('bulan_bayar', 'desc')
             ->get()
             ->map(function ($p) {
+                // Hitung biaya air (jumlah_bayar - abunemen_nominal - tunggakan)
+                $abunemenNominal = $p->abunemen ? 2000 : 0; // Tarif abunemen default
+                $tunggakanNominal = (float) ($p->tunggakan ?? 0);
+                $biayaAir = max(0, (float) $p->jumlah_bayar - $abunemenNominal - $tunggakanNominal);
+                $tarifPerKubik = $p->jumlah_kubik > 0 ? round($biayaAir / $p->jumlah_kubik) : 0;
+
                 return [
-                    'id' => $p->id,
-                    'bulan_bayar' => $p->bulan_bayar,
-                    'tanggal_bayar' => $p->tanggal_bayar->format('Y-m-d'),
-                    'meteran_sebelum' => $p->meteran_sebelum,
-                    'meteran_sesudah' => $p->meteran_sesudah,
-                    'abunemen' => $p->abunemen,
-                    'tunggakan' => $p->tunggakan,
-                    'jumlah_kubik' => $p->jumlah_kubik,
-                    'jumlah_bayar' => $p->jumlah_bayar,
-                    'keterangan' => $p->keterangan,
+                    'id'               => $p->id,
+                    'bulan_bayar'      => $p->bulan_bayar,
+                    'tanggal_bayar'    => $p->tanggal_bayar->format('Y-m-d'),
+                    'created_at'       => $p->created_at?->format('Y-m-d H:i:s'),
+                    'meteran_sebelum'  => $p->meteran_sebelum,
+                    'meteran_sesudah'  => $p->meteran_sesudah,
+                    'abunemen'         => $p->abunemen,
+                    'abunemen_nominal' => $abunemenNominal,
+                    'tunggakan'        => $tunggakanNominal,
+                    'jumlah_kubik'     => $p->jumlah_kubik,
+                    'biaya_air'        => $biayaAir,
+                    'tarif_per_kubik'  => $tarifPerKubik,
+                    'jumlah_bayar'     => $p->jumlah_bayar,
+                    'keterangan'       => $p->keterangan,
                 ];
             });
         

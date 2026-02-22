@@ -727,84 +727,201 @@
                                 </svg>
                                 <p class="mt-2 text-gray-500 text-sm">Belum ada riwayat pembayaran</p>
                             </div>
-                            <div v-else class="overflow-x-auto -mx-3 sm:mx-0">
-                                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                                    <thead class="bg-gray-100">
-                                        <tr>
-                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase">Bulan</th>
-                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase">Tgl Bayar</th>
-                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase hidden sm:table-cell">Meteran Sebelum</th>
-                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase hidden sm:table-cell">Meteran Sesudah</th>
-                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase">Pakai</th>
-                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-center text-xs font-medium text-gray-700 uppercase hidden lg:table-cell">Abunemen</th>
-                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase">Jumlah</th>
-                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase hidden md:table-cell">Ket</th>
-                                            <th class="px-2 sm:px-4 py-2 sm:py-3 text-center text-xs font-medium text-gray-700 uppercase">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white divide-y divide-gray-200">
-                                        <tr v-for="item in pembayaranList" :key="item.id" class="hover:bg-gray-50">
-                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm">{{ formatBulan(item.bulan_bayar) }}</td>
-                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm">{{ formatTanggal(item.tanggal_bayar) }}</td>
-                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">{{ item.meteran_sebelum || '-' }}</td>
-                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">{{ item.meteran_sesudah || '-' }}</td>
-                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600">{{ item.jumlah_kubik ? item.jumlah_kubik + ' m³' : '-' }}</td>
-                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-center hidden lg:table-cell">
-                                                <span v-if="item.abunemen" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            <div v-else>
+                                <!-- Statistik Ringkasan -->
+                                <div class="grid grid-cols-3 gap-3 mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+                                    <div class="text-center">
+                                        <div class="text-xl font-bold text-blue-700">{{ pembayaranList.length }}</div>
+                                        <div class="text-xs text-gray-500 mt-0.5">Total Transaksi</div>
+                                    </div>
+                                    <div class="text-center border-x border-blue-200">
+                                        <div class="text-sm font-bold text-green-700">Rp {{ Number(pembayaranList.reduce((s, p) => s + Number(p.jumlah_bayar || 0), 0)).toLocaleString('id-ID') }}</div>
+                                        <div class="text-xs text-gray-500 mt-0.5">Total Dibayar</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-xl font-bold text-purple-700">{{ pembayaranList.reduce((s, p) => s + Number(p.jumlah_kubik || 0), 0).toFixed(1) }} <span class="text-sm font-normal">m³</span></div>
+                                        <div class="text-xs text-gray-500 mt-0.5">Total Pemakaian</div>
+                                    </div>
+                                </div>
+
+                                <!-- Card per Transaksi -->
+                                <div class="space-y-3">
+                                    <div
+                                        v-for="item in pembayaranList"
+                                        :key="item.id"
+                                        class="border border-gray-200 rounded-xl overflow-hidden hover:border-blue-300 hover:shadow-md transition-all duration-200 bg-white"
+                                    >
+                                        <!-- Header Card -->
+                                        <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
                                                     </svg>
-                                                    Ya
-                                                </span>
-                                                <span v-else class="text-gray-400 text-xs sm:text-sm">-</span>
-                                            </td>
-                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium">Rp {{ Number(item.jumlah_bayar).toLocaleString('id-ID') }}</td>
-                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 hidden md:table-cell">{{ item.keterangan || '-' }}</td>
-                                            <td class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm">
-                                                <div class="flex gap-1 sm:gap-2 justify-center">
-                                                    <button
-                                                        @click="sendReceipt(item.id)"
-                                                        class="p-1.5 sm:p-2 text-blue-600 hover:text-blue-800 active:text-blue-900 hover:bg-blue-50 active:bg-blue-100 rounded transition touch-manipulation"
-                                                        title="Kirim Struk via WhatsApp"
-                                                    >
-                                                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                                        </svg>
-                                                    </button>
-                                                    <button
-                                                        @click="downloadPdf(item.id)"
-                                                        class="p-1.5 sm:p-2 text-green-600 hover:text-green-800 active:text-green-900 hover:bg-green-50 active:bg-green-100 rounded transition touch-manipulation"
-                                                        title="Download PDF"
-                                                    >
-                                                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                        </svg>
-                                                    </button>
-                                                    <button
-                                                        @click="printReceipt(item.id)"
-                                                        class="p-1.5 sm:p-2 text-purple-600 hover:text-purple-800 active:text-purple-900 hover:bg-purple-50 active:bg-purple-100 rounded transition touch-manipulation"
-                                                        title="Cetak Struk"
-                                                    >
-                                                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                                        </svg>
-                                                    </button>
-                                                    <button
-                                                        @click="deletePembayaran(item.id)"
-                                                        class="p-1.5 sm:p-2 text-red-600 hover:text-red-800 active:text-red-900 hover:bg-red-50 active:bg-red-100 rounded transition touch-manipulation"
-                                                        title="Hapus"
-                                                    >
-                                                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                        </svg>
-                                                    </button>
                                                 </div>
-                                            </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                                <div>
+                                                    <div class="font-bold text-base">{{ formatBulan(item.bulan_bayar) }}</div>
+                                                    <div class="text-xs text-blue-200">Tgl Bayar: {{ formatTanggal(item.tanggal_bayar) }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <!-- Badge Keterangan -->
+                                                <span v-if="item.keterangan"
+                                                    :class="[
+                                                        'px-2.5 py-1 rounded-full text-xs font-bold',
+                                                        item.keterangan === 'LUNAS' ? 'bg-green-400/30 text-green-100 border border-green-300/40' :
+                                                        item.keterangan === 'CICILAN' ? 'bg-yellow-400/30 text-yellow-100 border border-yellow-300/40' :
+                                                        item.keterangan === 'TUNGGAKAN' ? 'bg-red-400/30 text-red-100 border border-red-300/40' :
+                                                        'bg-white/20 text-white'
+                                                    ]"
+                                                >
+                                                    {{ item.keterangan === 'LUNAS' ? '✓ LUNAS' : item.keterangan === 'CICILAN' ? '⟳ CICILAN' : item.keterangan === 'TUNGGAKAN' ? '⚠ TUNGGAKAN' : item.keterangan }}
+                                                </span>
+                                                <div class="text-xs text-blue-200 bg-white/10 rounded px-2 py-1">#{{ item.id }}</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Body Card -->
+                                        <div class="p-4">
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                                                <!-- Kiri: Data Meteran -->
+                                                <div>
+                                                    <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                                        Data Meteran Air
+                                                    </div>
+                                                    <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                                                        <!-- Visualisasi Stand Meter -->
+                                                        <div class="flex items-center gap-3 mb-3">
+                                                            <div class="flex-1 text-center bg-white rounded-lg py-2 px-3 border border-slate-200 shadow-sm">
+                                                                <div class="text-xs text-gray-400 mb-0.5">Stand Awal</div>
+                                                                <div class="text-xl font-bold text-gray-700 font-mono tracking-wider">
+                                                                    {{ item.meteran_sebelum !== null ? Number(item.meteran_sebelum).toFixed(1) : '—' }}
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex flex-col items-center gap-1">
+                                                                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                                                <div class="text-xs font-bold text-blue-600 bg-blue-50 rounded-full px-2 py-0.5 border border-blue-200">
+                                                                    {{ item.jumlah_kubik ? '+' + Number(item.jumlah_kubik).toFixed(1) : '—' }}
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex-1 text-center bg-white rounded-lg py-2 px-3 border border-slate-200 shadow-sm">
+                                                                <div class="text-xs text-gray-400 mb-0.5">Stand Akhir</div>
+                                                                <div class="text-xl font-bold text-gray-700 font-mono tracking-wider">
+                                                                    {{ item.meteran_sesudah !== null ? Number(item.meteran_sesudah).toFixed(1) : '—' }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <!-- Volume pemakaian -->
+                                                        <div class="text-center py-1.5 bg-blue-50 rounded-lg border border-blue-100">
+                                                            <span class="text-xs text-blue-600 font-medium">Pemakaian bulan ini: </span>
+                                                            <span class="text-sm font-bold text-blue-800">{{ item.jumlah_kubik ? Number(item.jumlah_kubik).toFixed(1) + ' m³' : '—' }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Waktu input sistem -->
+                                                    <div v-if="item.created_at" class="mt-2 flex items-center gap-1.5 text-xs text-gray-400 pl-1">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                        Diinput sistem: {{ item.created_at }}
+                                                    </div>
+                                                </div>
+
+                                                <!-- Kanan: Breakdown Biaya -->
+                                                <div>
+                                                    <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                                        Rincian Tagihan
+                                                    </div>
+                                                    <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+                                                        <!-- Baris biaya air -->
+                                                        <div class="flex items-center justify-between px-3 py-2.5 border-b border-slate-100">
+                                                            <div>
+                                                                <div class="text-sm text-gray-700 font-medium flex items-center gap-1.5">
+                                                                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
+                                                                    Biaya Pemakaian Air
+                                                                </div>
+                                                                <div v-if="item.jumlah_kubik && item.tarif_per_kubik" class="text-xs text-gray-400 mt-0.5 pl-4">
+                                                                    {{ Number(item.jumlah_kubik).toFixed(1) }} m³ × Rp {{ Number(item.tarif_per_kubik).toLocaleString('id-ID') }}/m³
+                                                                </div>
+                                                            </div>
+                                                            <div class="text-sm font-semibold text-gray-800">Rp {{ Number(item.biaya_air || 0).toLocaleString('id-ID') }}</div>
+                                                        </div>
+                                                        <!-- Baris abunemen -->
+                                                        <div class="flex items-center justify-between px-3 py-2.5 border-b border-slate-100">
+                                                            <div>
+                                                                <div class="text-sm text-gray-700 font-medium flex items-center gap-1.5">
+                                                                    <span class="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block"></span>
+                                                                    Abunemen
+                                                                </div>
+                                                                <div class="text-xs text-gray-400 mt-0.5 pl-4">Iuran tetap bulanan</div>
+                                                            </div>
+                                                            <div class="text-sm font-semibold" :class="item.abunemen ? 'text-gray-800' : 'text-gray-400'">
+                                                                {{ item.abunemen ? 'Rp ' + Number(item.abunemen_nominal || 2000).toLocaleString('id-ID') : '— (Tidak)' }}
+                                                            </div>
+                                                        </div>
+                                                        <!-- Baris tunggakan (jika ada) -->
+                                                        <div v-if="item.tunggakan > 0" class="flex items-center justify-between px-3 py-2.5 border-b border-red-100 bg-red-50">
+                                                            <div>
+                                                                <div class="text-sm text-red-700 font-medium flex items-center gap-1.5">
+                                                                    <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
+                                                                    Pelunasan Tunggakan
+                                                                </div>
+                                                                <div class="text-xs text-red-400 mt-0.5 pl-4">Tagihan dari bulan sebelumnya</div>
+                                                            </div>
+                                                            <div class="text-sm font-semibold text-red-700">Rp {{ Number(item.tunggakan).toLocaleString('id-ID') }}</div>
+                                                        </div>
+                                                        <!-- Total -->
+                                                        <div class="flex items-center justify-between px-3 py-3 bg-gradient-to-r from-blue-600 to-indigo-600">
+                                                            <div class="text-sm font-bold text-white">TOTAL DIBAYAR</div>
+                                                            <div class="text-base font-bold text-white">Rp {{ Number(item.jumlah_bayar).toLocaleString('id-ID') }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Footer Card: Aksi -->
+                                        <div class="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-t border-gray-200">
+                                            <div class="text-xs text-gray-400">ID Transaksi: #{{ item.id }}</div>
+                                            <div class="flex gap-1.5">
+                                                <button
+                                                    @click="sendReceipt(item.id)"
+                                                    class="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg transition border border-blue-100"
+                                                    title="Kirim Struk via WhatsApp"
+                                                >
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                                                    WA
+                                                </button>
+                                                <button
+                                                    @click="downloadPdf(item.id)"
+                                                    class="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-green-50 text-green-700 hover:bg-green-100 rounded-lg transition border border-green-100"
+                                                    title="Download PDF"
+                                                >
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                    PDF
+                                                </button>
+                                                <button
+                                                    @click="printReceipt(item.id)"
+                                                    class="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-lg transition border border-purple-100"
+                                                    title="Cetak Struk"
+                                                >
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                                    Cetak
+                                                </button>
+                                                <button
+                                                    @click="deletePembayaran(item.id)"
+                                                    class="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-red-50 text-red-700 hover:bg-red-100 rounded-lg transition border border-red-100"
+                                                    title="Hapus"
+                                                >
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                    Hapus
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                         </div> <!-- Penutup "Daftar Pembayaran" div -->
                 </div> <!-- Penutup modal body (p-4 overflow-y-auto) -->
             </div> <!-- Penutup modal content container (relative bg-white) -->
         </div> <!-- Penutup modal flex container -->
