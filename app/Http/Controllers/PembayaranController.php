@@ -125,10 +125,15 @@ class PembayaranController extends Controller
             // Hitung tarif per kubik secara dinamis dari data yang tersimpan
             $tarifPerKubik = $p->jumlah_kubik > 0 ? round($biayaAir / $p->jumlah_kubik) : ($isSosial ? 0 : 2000);
 
-            // Cek status tagihan bulan ini dari tabel TagihanBulanan
-            $tagihan = \App\Models\TagihanBulanan::where('pelanggan_id', $p->pelanggan_id)
-                ->where('bulan', $p->bulan_bayar)
-                ->first();
+            // Tentukan status_tagihan secara dinamis agar UI akurat (anti-mismatch)
+            $statusTagihan = $tagihan?->status_bayar ?? 'SUDAH_BAYAR';
+            $sisa = $tagihan ? ($tagihan->total_tagihan - $tagihan->jumlah_terbayar) : 0;
+            
+            if ($tagihan && $sisa <= 0 && $tagihan->total_tagihan > 0) {
+                $statusTagihan = 'SUDAH_BAYAR';
+            } elseif ($tagihan && $sisa > 0 && $tagihan->jumlah_terbayar > 0) {
+                $statusTagihan = 'CICILAN';
+            }
 
             return [
                 'id'               => $p->id,
@@ -144,7 +149,7 @@ class PembayaranController extends Controller
                 'biaya_air'        => $biayaAir,
                 'tarif_per_kubik'  => $tarifPerKubik,
                 'jumlah_bayar'     => $jumlahBayar,
-                'status_tagihan'   => $tagihan?->status_bayar ?? 'SUDAH_BAYAR',
+                'status_tagihan'   => $statusTagihan,
                 'keterangan'       => $p->keterangan,
             ];
         });
@@ -281,19 +286,25 @@ class PembayaranController extends Controller
                 $tagihan->biaya_abunemen = 3000;
             }
 
+            // Hitung berapa bagian yang untuk bulan ini (Exclude tunggakan yang dibayar)
+            $jumlahBayarBulanIni = (float) $validated['jumlah_bayar'];
+            if (isset($validated['bayar_tunggakan']) && $validated['bayar_tunggakan']) {
+                $jumlahBayarBulanIni -= floatval($validated['jumlah_bayar_tunggakan'] ?? 0);
+            }
+
             // Hitung total tagihan dulu (agar pembanding akurat)
             $tagihan->hitungTagihan();
             
-            // Logika Pembayaran: Selalu tambahkan (accumulate) jika ada transaksi
-            if ($validated['jumlah_bayar'] > 0) {
+            // Logika Pembayaran: Selalu tambahkan (accumulate)
+            if ($jumlahBayarBulanIni > 0) {
                 if ($existing) {
-                    $tagihan->jumlah_terbayar = ($tagihan->jumlah_terbayar ?? 0) + $validated['jumlah_bayar'];
+                    $tagihan->jumlah_terbayar = ($tagihan->jumlah_terbayar ?? 0) + $jumlahBayarBulanIni;
                 } else {
-                    $tagihan->jumlah_terbayar = $validated['jumlah_bayar'];
+                    $tagihan->jumlah_terbayar = $jumlahBayarBulanIni;
                 }
             }
 
-            // Tentukan status bayar BERDASARKAN HASIL AKHIR (Auto-calculate)
+            // Tentukan status bayar BERDASARKAN HASIL AKHIR
             if ($tagihan->jumlah_terbayar >= $tagihan->total_tagihan && $tagihan->total_tagihan > 0) {
                 $tagihan->status_bayar = 'SUDAH_BAYAR';
             } elseif ($tagihan->jumlah_terbayar > 0) {
