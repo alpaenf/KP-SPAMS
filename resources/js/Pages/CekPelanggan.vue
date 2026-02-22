@@ -804,17 +804,16 @@
                                                 </div>
                                             </div>
                                             <div class="flex items-center gap-2">
-                                                <!-- Badge Keterangan -->
-                                                <span v-if="item.keterangan"
+                                                <!-- Badge Status Tagihan (LUNAS/CICILAN) -->
+                                                <span 
                                                     :class="[
-                                                        'px-2.5 py-1 rounded-full text-xs font-bold',
-                                                        item.keterangan === 'LUNAS' ? 'bg-green-400/30 text-green-100 border border-green-300/40' :
-                                                        item.keterangan === 'CICILAN' ? 'bg-yellow-400/30 text-yellow-100 border border-yellow-300/40' :
-                                                        item.keterangan === 'TUNGGAKAN' ? 'bg-red-400/30 text-red-100 border border-red-300/40' :
+                                                        'px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider',
+                                                        item.status_tagihan === 'SUDAH_BAYAR' ? 'bg-green-500 text-white shadow-sm' :
+                                                        item.status_tagihan === 'CICILAN' ? 'bg-yellow-400 text-white shadow-sm' :
                                                         'bg-white/20 text-white'
                                                     ]"
                                                 >
-                                                    {{ item.keterangan === 'LUNAS' ? '✓ LUNAS' : item.keterangan === 'CICILAN' ? '⟳ CICILAN' : item.keterangan === 'TUNGGAKAN' ? '⚠ TUNGGAKAN' : item.keterangan }}
+                                                    {{ item.status_tagihan === 'SUDAH_BAYAR' ? '✓ Lunas' : item.status_tagihan === 'CICILAN' ? '⚠ Cicilan' : 'Belum Lunas' }}
                                                 </span>
                                                 <div class="text-xs text-blue-200 bg-white/10 rounded px-2 py-1">#{{ item.id }}</div>
                                             </div>
@@ -895,7 +894,7 @@
                                                                 <div class="text-xs text-gray-400 mt-0.5 pl-4">Iuran tetap bulanan</div>
                                                             </div>
                                                             <div class="text-sm font-semibold" :class="item.abunemen ? 'text-gray-800' : 'text-gray-400'">
-                                                                {{ item.abunemen ? 'Rp ' + Number(item.abunemen_nominal || 2000).toLocaleString('id-ID') : '— (Tidak)' }}
+                                                                {{ item.abunemen ? 'Rp ' + Number(item.abunemen_nominal || 0).toLocaleString('id-ID') : '— (Tidak)' }}
                                                             </div>
                                                         </div>
                                                         <!-- Baris tunggakan (jika ada) -->
