@@ -181,6 +181,82 @@ class TagihanBulananController extends Controller
     }
     
     /**
+     * Batch save multiple tagihan at once
+     */
+    public function batchStore(Request $request)
+    {
+        $validated = $request->validate([
+            'bulan' => 'required|string|max:7',
+            'tagihan_list' => 'required|array|min:1',
+            'tagihan_list.*.pelanggan_id' => 'required|exists:pelanggan,id',
+            'tagihan_list.*.meteran_sebelum' => 'required|numeric|min:0',
+            'tagihan_list.*.meteran_sesudah' => 'required|numeric|min:0',
+            'tagihan_list.*.tarif_per_kubik' => 'nullable|numeric|min:0',
+            'tagihan_list.*.ada_abunemen' => 'nullable|boolean',
+            'tagihan_list.*.biaya_abunemen' => 'nullable|numeric|min:0',
+        ]);
+        
+        $bulan = $validated['bulan'];
+        $tagihanList = $validated['tagihan_list'];
+        
+        $successCount = 0;
+        $failedCount = 0;
+        $errors = [];
+        
+        foreach ($tagihanList as $tagihanData) {
+            try {
+                // Cek pelanggan kategori
+                $pelanggan = Pelanggan::findOrFail($tagihanData['pelanggan_id']);
+                
+                // Set default values
+                if (!isset($tagihanData['tarif_per_kubik'])) {
+                    $tagihanData['tarif_per_kubik'] = 2000;
+                }
+                if (!isset($tagihanData['ada_abunemen'])) {
+                    $tagihanData['ada_abunemen'] = true;
+                }
+                if (!isset($tagihanData['biaya_abunemen'])) {
+                    $tagihanData['biaya_abunemen'] = 3000;
+                }
+                
+                // Override untuk kategori sosial
+                if ($pelanggan->kategori === 'sosial') {
+                    $tagihanData['total_tagihan'] = 0;
+                    $tagihanData['ada_abunemen'] = false;
+                    $tagihanData['tarif_per_kubik'] = 0;
+                    $tagihanData['status_bayar'] = 'SUDAH_BAYAR';
+                }
+                
+                $tagihanData['bulan'] = $bulan;
+                
+                // Update or Create
+                TagihanBulanan::updateOrCreate(
+                    [
+                        'pelanggan_id' => $tagihanData['pelanggan_id'],
+                        'bulan' => $bulan,
+                    ],
+                    $tagihanData
+                );
+                
+                $successCount++;
+            } catch (\Exception $e) {
+                $failedCount++;
+                $errors[] = [
+                    'pelanggan_id' => $tagihanData['pelanggan_id'] ?? 'unknown',
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+        
+        return response()->json([
+            'message' => "Berhasil menyimpan {$successCount} tagihan" . ($failedCount > 0 ? ", {$failedCount} gagal" : ""),
+            'success_count' => $successCount,
+            'failed_count' => $failedCount,
+            'errors' => $errors,
+        ]);
+    }
+    
+    /**
      * Generate tagihan untuk semua pelanggan aktif sekaligus
      */
     public function generateBulk(Request $request)
