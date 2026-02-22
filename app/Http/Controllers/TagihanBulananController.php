@@ -36,12 +36,6 @@ class TagihanBulananController extends Controller
                 // Cek pembayaran bulan ini
                 $pembayaran = $p->pembayarans->firstWhere('bulan_bayar', $bulan);
                 
-                // Auto-fix: Jika ada pembayaran lunas tapi tagihan masih BELUM_BAYAR
-                if ($pembayaran && $tagihan && $tagihan->status_bayar !== 'SUDAH_BAYAR') {
-                    $tagihan->update(['status_bayar' => 'SUDAH_BAYAR']);
-                    $tagihan->status_bayar = 'SUDAH_BAYAR';
-                }
-                
                 // Cek tunggakan bulan sebelumnya
                 $tunggakan = $this->getTunggakanSebelumnya($p->id, $bulan);
                 
