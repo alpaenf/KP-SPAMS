@@ -312,7 +312,7 @@ class PembayaranController extends Controller
                 } else {
                     // Bayar sebagian (cicilan)
                     $tunggakanTagihan->jumlah_terbayar += $sisaPembayaran;
-                    $tunggakanTagihan->status_bayar = 'BELUM_BAYAR'; // Masih ada sisa
+                    $tunggakanTagihan->status_bayar = 'CICILAN'; // Status jadi CICILAN untuk pembayaran bertahap
                     $sisaPembayaran = 0;
                 }
                 
