@@ -69,7 +69,6 @@ class TagihanBulananController extends Controller
                         'bukti_transfer' => $tagihan->bukti_transfer,
                         'konfirmasi_at' => $tagihan->konfirmasi_at,
                         'catatan_admin' => $tagihan->catatan_admin,
-                        'keterangan' => $pembayaran ? $pembayaran->keterangan : null,
                     ] : null,
                     'tunggakan' => $tunggakan,
                 ];
@@ -165,26 +164,6 @@ class TagihanBulananController extends Controller
             $validated
         );
         
-        // AUTO-FIX: Update semua tarif lama dari 2500 ke 2000
-        try {
-            $oldTarifCount = TagihanBulanan::where('tarif_per_kubik', 2500)->count();
-            
-            if ($oldTarifCount > 0) {
-                // Update tarif dan recalculate total_tagihan
-                \DB::statement("
-                    UPDATE tagihan_bulanan 
-                    SET 
-                        tarif_per_kubik = 2000,
-                        total_tagihan = (pemakaian_kubik * 2000) + CASE WHEN ada_abunemen = 1 THEN biaya_abunemen ELSE 0 END
-                    WHERE tarif_per_kubik = 2500
-                ");
-                
-                \Log::info("Auto-fix tarif (store): Updated {$oldTarifCount} tagihan from Rp 2.500 to Rp 2.000");
-            }
-        } catch (\Exception $e) {
-            \Log::error("Auto-fix tarif error (store): " . $e->getMessage());
-        }
-        
         return response()->json([
             'message' => 'Tagihan berhasil disimpan',
             'tagihan' => [
@@ -198,102 +177,6 @@ class TagihanBulananController extends Controller
                 'total_tagihan' => $tagihan->total_tagihan,
                 'status_bayar' => $tagihan->status_bayar,
             ],
-        ]);
-    }
-    
-    /**
-     * Batch save multiple tagihan at once
-     */
-    public function batchStore(Request $request)
-    {
-        $validated = $request->validate([
-            'bulan' => 'required|string|max:7',
-            'tagihan_list' => 'required|array|min:1',
-            'tagihan_list.*.pelanggan_id' => 'required|exists:pelanggan,id',
-            'tagihan_list.*.meteran_sebelum' => 'required|numeric|min:0',
-            'tagihan_list.*.meteran_sesudah' => 'required|numeric|min:0',
-            'tagihan_list.*.tarif_per_kubik' => 'nullable|numeric|min:0',
-            'tagihan_list.*.ada_abunemen' => 'nullable|boolean',
-            'tagihan_list.*.biaya_abunemen' => 'nullable|numeric|min:0',
-        ]);
-        
-        $bulan = $validated['bulan'];
-        $tagihanList = $validated['tagihan_list'];
-        
-        $successCount = 0;
-        $failedCount = 0;
-        $errors = [];
-        
-        foreach ($tagihanList as $tagihanData) {
-            try {
-                // Cek pelanggan kategori
-                $pelanggan = Pelanggan::findOrFail($tagihanData['pelanggan_id']);
-                
-                // Set default values
-                if (!isset($tagihanData['tarif_per_kubik'])) {
-                    $tagihanData['tarif_per_kubik'] = 2000;
-                }
-                if (!isset($tagihanData['ada_abunemen'])) {
-                    $tagihanData['ada_abunemen'] = true;
-                }
-                if (!isset($tagihanData['biaya_abunemen'])) {
-                    $tagihanData['biaya_abunemen'] = 3000;
-                }
-                
-                // Override untuk kategori sosial
-                if ($pelanggan->kategori === 'sosial') {
-                    $tagihanData['total_tagihan'] = 0;
-                    $tagihanData['ada_abunemen'] = false;
-                    $tagihanData['tarif_per_kubik'] = 0;
-                    $tagihanData['status_bayar'] = 'SUDAH_BAYAR';
-                }
-                
-                $tagihanData['bulan'] = $bulan;
-                
-                // Update or Create
-                TagihanBulanan::updateOrCreate(
-                    [
-                        'pelanggan_id' => $tagihanData['pelanggan_id'],
-                        'bulan' => $bulan,
-                    ],
-                    $tagihanData
-                );
-                
-                $successCount++;
-            } catch (\Exception $e) {
-                $failedCount++;
-                $errors[] = [
-                    'pelanggan_id' => $tagihanData['pelanggan_id'] ?? 'unknown',
-                    'error' => $e->getMessage()
-                ];
-            }
-        }
-        
-        // AUTO-FIX: Update semua tarif lama dari 2500 ke 2000
-        try {
-            $oldTarifCount = TagihanBulanan::where('tarif_per_kubik', 2500)->count();
-            
-            if ($oldTarifCount > 0) {
-                // Update tarif dan recalculate total_tagihan
-                \DB::statement("
-                    UPDATE tagihan_bulanan 
-                    SET 
-                        tarif_per_kubik = 2000,
-                        total_tagihan = (pemakaian_kubik * 2000) + CASE WHEN ada_abunemen = 1 THEN biaya_abunemen ELSE 0 END
-                    WHERE tarif_per_kubik = 2500
-                ");
-                
-                \Log::info("Auto-fix tarif: Updated {$oldTarifCount} tagihan from Rp 2.500 to Rp 2.000");
-            }
-        } catch (\Exception $e) {
-            \Log::error("Auto-fix tarif error: " . $e->getMessage());
-        }
-        
-        return response()->json([
-            'message' => "Berhasil menyimpan {$successCount} tagihan" . ($failedCount > 0 ? ", {$failedCount} gagal" : ""),
-            'success_count' => $successCount,
-            'failed_count' => $failedCount,
-            'errors' => $errors,
         ]);
     }
     
@@ -365,26 +248,6 @@ class TagihanBulananController extends Controller
             ]);
             
             $created++;
-        }
-        
-        // AUTO-FIX: Update semua tarif lama dari 2500 ke 2000
-        try {
-            $oldTarifCount = TagihanBulanan::where('tarif_per_kubik', 2500)->count();
-            
-            if ($oldTarifCount > 0) {
-                // Update tarif dan recalculate total_tagihan
-                \DB::statement("
-                    UPDATE tagihan_bulanan 
-                    SET 
-                        tarif_per_kubik = 2000,
-                        total_tagihan = (pemakaian_kubik * 2000) + CASE WHEN ada_abunemen = 1 THEN biaya_abunemen ELSE 0 END
-                    WHERE tarif_per_kubik = 2500
-                ");
-                
-                \Log::info("Auto-fix tarif (generateBulk): Updated {$oldTarifCount} tagihan from Rp 2.500 to Rp 2.000");
-            }
-        } catch (\Exception $e) {
-            \Log::error("Auto-fix tarif error (generateBulk): " . $e->getMessage());
         }
         
         return response()->json([

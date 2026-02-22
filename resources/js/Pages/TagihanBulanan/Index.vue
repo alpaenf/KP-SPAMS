@@ -28,32 +28,19 @@
                             </button>
                         </div>
                     </div>
-                    <!-- Search Box & Filter -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                            </div>
-                            <input
-                                type="text"
-                                v-model="searchQuery"
-                                placeholder="Cari nama pelanggan..."
-                                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-800 focus:border-transparent sm:text-sm"
-                            />
+                    <!-- Search Box -->
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
                         </div>
-                        <div class="relative">
-                            <select
-                                v-model="selectedWilayah"
-                                class="block w-full px-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-transparent sm:text-sm"
-                            >
-                                <option value="">Semua Wilayah</option>
-                                <option v-for="wilayah in uniqueWilayah" :key="wilayah" :value="wilayah">
-                                    {{ wilayah }}
-                                </option>
-                            </select>
-                        </div>
+                        <input
+                            type="text"
+                            v-model="searchQuery"
+                            placeholder="Cari nama pelanggan..."
+                            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-800 focus:border-transparent sm:text-sm"
+                        />
                     </div>
                 </div>
                 
@@ -146,46 +133,12 @@
 
                 <!-- Tagihan Tab -->
                 <div v-show="activeTab === 'tagihan'">
-                    <!-- Batch Action Bar -->
-                    <div v-if="selectedForBatch.length > 0" class="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                            </svg>
-                            <span class="text-blue-800 font-semibold">{{ selectedForBatch.length }} pelanggan dipilih</span>
-                        </div>
-                        <div class="flex gap-2">
-                            <button
-                                @click="selectedForBatch = []"
-                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-400 transition text-sm"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                @click="batchSaveMeteran"
-                                :disabled="isBatchSaving || !isBatchDataValid"
-                                class="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {{ isBatchSaving ? 'Menyimpan...' : 'Simpan Semua (' + selectedForBatch.length + ')' }}
-                            </button>
-                        </div>
-                    </div>
-                    
                     <!-- Tabel Input Meteran -->
                     <div class="bg-white rounded-lg shadow-md overflow-hidden">
                         <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-blue-800">
                                 <tr>
-                                    <th class="px-3 py-3 text-left">
-                                        <input
-                                            type="checkbox"
-                                            @change="toggleSelectAll"
-                                            :checked="selectedForBatch.length === filteredPelangganList.length && filteredPelangganList.length > 0"
-                                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                            title="Pilih Semua"
-                                        />
-                                    </th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Nama Pelanggan</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Wilayah</th>
@@ -202,15 +155,6 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 <tr v-for="item in filteredPelangganList" :key="item.id" class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-3 py-4 whitespace-nowrap">
-                                        <input
-                                            type="checkbox"
-                                            :value="item.id"
-                                            v-model="selectedForBatch"
-                                            @change="initBatchInputData(item)"
-                                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                        />
-                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900">{{ item.id_pelanggan }}</div>
                                     </td>
@@ -237,34 +181,13 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div v-if="selectedForBatch.includes(item.id) && batchInputData[item.id]" class="inline-block">
-                                            <input
-                                                type="number"
-                                                v-model.number="batchInputData[item.id].meteran_sebelum"
-                                                step="0.01"
-                                                placeholder="0.00"
-                                                class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                                            />
-                                        </div>
-                                        <div v-else class="text-sm text-gray-900">{{ item.tagihan?.meteran_sebelum ?? '-' }}</div>
+                                        <div class="text-sm text-gray-900">{{ item.tagihan?.meteran_sebelum ?? '-' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div v-if="selectedForBatch.includes(item.id) && batchInputData[item.id]" class="inline-block">
-                                            <input
-                                                type="number"
-                                                v-model.number="batchInputData[item.id].meteran_sesudah"
-                                                step="0.01"
-                                                placeholder="0.00"
-                                                class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                                            />
-                                        </div>
-                                        <div v-else class="text-sm text-gray-900">{{ item.tagihan?.meteran_sesudah ?? '-' }}</div>
+                                        <div class="text-sm text-gray-900">{{ item.tagihan?.meteran_sesudah ?? '-' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div v-if="selectedForBatch.includes(item.id) && batchInputData[item.id]" class="text-sm font-medium text-blue-600">
-                                            {{ calculatePemakaian(batchInputData[item.id].meteran_sebelum, batchInputData[item.id].meteran_sesudah).toFixed(2) }}
-                                        </div>
-                                        <div v-else class="text-sm font-medium text-gray-900">{{ item.tagihan?.pemakaian_kubik ?? '-' }}</div>
+                                        <div class="text-sm font-medium text-gray-900">{{ item.tagihan?.pemakaian_kubik ?? '-' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div v-if="item.tunggakan && item.tunggakan > 0" class="text-sm font-bold text-red-600">
@@ -320,15 +243,6 @@
                                                 </span>
                                             </span>
                                             <span v-else-if="!item.tagihan" class="text-xs text-gray-400">-</span>
-                                            
-                                            <!-- Tampilkan keterangan dari pembayaran -->
-                                            <span v-if="item.tagihan?.keterangan" class="text-xs font-medium" :class="{
-                                                'text-blue-600': item.tagihan.keterangan === 'LUNAS',
-                                                'text-red-600': item.tagihan.keterangan === 'TUNGGAKAN',
-                                                'text-purple-600': item.tagihan.keterangan === 'CICILAN'
-                                            }">
-                                                {{ item.tagihan.keterangan }}
-                                            </span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -1137,7 +1051,6 @@ const props = defineProps({
 
 const selectedBulan = ref(props.bulan);
 const searchQuery = ref('');
-const selectedWilayah = ref('');
 const showGenerateModal = ref(false);
 const showInputModal = ref(false);
 const showPembayaranModal = ref(false);
@@ -1152,9 +1065,6 @@ const isSubmitting = ref(false);
 const isSubmittingPembayaran = ref(false);
 const isProcessing = ref(false);
 const listTunggakan = ref([]);
-const selectedForBatch = ref([]);
-const batchInputData = ref({});
-const isBatchSaving = ref(false);
 
 const generateForm = ref({
     bulan: props.bulan,
@@ -1216,52 +1126,22 @@ const sudahBayarCount = computed(() => {
 
 const activeTab = ref('tagihan');
 
-const uniqueWilayah = computed(() => {
-    const wilayahSet = new Set();
-    props.pelangganList.forEach(p => {
-        if (p.wilayah) wilayahSet.add(p.wilayah);
-    });
-    return Array.from(wilayahSet).sort();
-});
-
 const filteredPelangganList = computed(() => {
-    let filtered = props.pelangganList;
-    
-    // Filter by search query
-    if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase();
-        filtered = filtered.filter(p => 
-            p.nama_pelanggan.toLowerCase().includes(query) ||
-            p.id_pelanggan.toLowerCase().includes(query)
-        );
-    }
-    
-    // Filter by wilayah
-    if (selectedWilayah.value) {
-        filtered = filtered.filter(p => p.wilayah === selectedWilayah.value);
-    }
-    
-    return filtered;
+    if (!searchQuery.value) return props.pelangganList;
+    const query = searchQuery.value.toLowerCase();
+    return props.pelangganList.filter(p => 
+        p.nama_pelanggan.toLowerCase().includes(query) ||
+        p.id_pelanggan.toLowerCase().includes(query)
+    );
 });
 
 const filteredPembayaranList = computed(() => {
-    let filtered = props.pembayaranList || [];
-    
-    // Filter by search query
-    if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase();
-        filtered = filtered.filter(p => 
-            p.pelanggan.nama_pelanggan.toLowerCase().includes(query) ||
-            p.pelanggan.id_pelanggan.toLowerCase().includes(query)
-        );
-    }
-    
-    // Filter by wilayah
-    if (selectedWilayah.value) {
-        filtered = filtered.filter(p => p.pelanggan.wilayah === selectedWilayah.value);
-    }
-    
-    return filtered;
+    if (!searchQuery.value) return props.pembayaranList || [];
+    const query = searchQuery.value.toLowerCase();
+    return (props.pembayaranList || []).filter(p => 
+        p.pelanggan.nama_pelanggan.toLowerCase().includes(query) ||
+        p.pelanggan.id_pelanggan.toLowerCase().includes(query)
+    );
 });
 
 const pembayaranStats = computed(() => {
@@ -1656,132 +1536,5 @@ const showPembayaranDetail = (pembayaran) => {
 const closePembayaranDetail = () => {
     showPembayaranDetailModal.value = false;
     selectedPembayaran.value = null;
-};
-
-const toggleSelectAll = (event) => {
-    if (event.target.checked) {
-        selectedForBatch.value = filteredPelangganList.value.map(p => p.id);
-        filteredPelangganList.value.forEach(item => {
-            initBatchInputData(item);
-        });
-    } else {
-        selectedForBatch.value = [];
-        batchInputData.value = {};
-    }
-};
-
-const initBatchInputData = async (pelanggan) => {
-    if (!selectedForBatch.value.includes(pelanggan.id)) {
-        // If unchecked, remove from batch data
-        delete batchInputData.value[pelanggan.id];
-        return;
-    }
-    
-    // Initialize with default values first (for immediate reactivity)
-    batchInputData.value[pelanggan.id] = {
-        meteran_sebelum: 0,
-        meteran_sesudah: 0,
-        tarif_per_kubik: pelanggan.kategori === 'sosial' ? 0 : 2000,
-        ada_abunemen: pelanggan.kategori === 'sosial' ? false : true,
-        biaya_abunemen: pelanggan.kategori === 'sosial' ? 0 : 3000,
-    };
-    
-    // Then update with actual data
-    if (pelanggan.tagihan && pelanggan.tagihan.meteran_sesudah !== null) {
-        // Use existing data
-        batchInputData.value[pelanggan.id].meteran_sebelum = pelanggan.tagihan.meteran_sebelum;
-        batchInputData.value[pelanggan.id].meteran_sesudah = pelanggan.tagihan.meteran_sesudah;
-        batchInputData.value[pelanggan.id].tarif_per_kubik = pelanggan.tagihan.tarif_per_kubik || 2000;
-        batchInputData.value[pelanggan.id].ada_abunemen = pelanggan.tagihan.ada_abunemen;
-        batchInputData.value[pelanggan.id].biaya_abunemen = pelanggan.tagihan.biaya_abunemen || 3000;
-    } else {
-        // Try to fetch previous month's data
-        const prevMonth = getPreviousMonth(selectedBulan.value);
-        
-        if (prevMonth) {
-            try {
-                const prevTagihanRes = await axios.get(`/api/tagihan-bulanan/${pelanggan.id}/${prevMonth}`);
-                if (prevTagihanRes.data && prevTagihanRes.data.tagihan && prevTagihanRes.data.tagihan.meteran_sesudah > 0) {
-                    batchInputData.value[pelanggan.id].meteran_sebelum = prevTagihanRes.data.tagihan.meteran_sesudah;
-                }
-            } catch (error) {
-                console.log('No previous data for', pelanggan.nama_pelanggan);
-            }
-        }
-    }
-};
-
-const calculatePemakaian = (sebelum, sesudah) => {
-    const before = parseFloat(sebelum) || 0;
-    const after = parseFloat(sesudah) || 0;
-    return after - before;
-};
-
-const isBatchDataValid = computed(() => {
-    if (selectedForBatch.value.length === 0) return false;
-    
-    return selectedForBatch.value.every(id => {
-        const data = batchInputData.value[id];
-        if (!data) return false;
-        
-        // Minimal harus ada meteran_sesudah
-        const sesudah = parseFloat(data.meteran_sesudah);
-        if (isNaN(sesudah) || sesudah < 0) return false;
-        
-        // Jika ada meteran_sebelum, pastikan sesudah >= sebelum
-        const sebelum = parseFloat(data.meteran_sebelum);
-        if (!isNaN(sebelum) && sebelum > sesudah) return false;
-        
-        return true;
-    });
-});
-
-const batchSaveMeteran = async () => {
-    if (!confirm(`Simpan data meteran untuk ${selectedForBatch.value.length} pelanggan?`)) return;
-    
-    isBatchSaving.value = true;
-    
-    try {
-        const batchData = selectedForBatch.value.map(pelangganId => {
-            const pelanggan = props.pelangganList.find(p => p.id === pelangganId);
-            const inputData = batchInputData.value[pelangganId];
-            
-            // Ensure meteran_sebelum has a value (default to 0 if null/empty)
-            const meteranSebelum = inputData.meteran_sebelum ?? 0;
-            const meteranSesudah = inputData.meteran_sesudah ?? 0;
-            
-            return {
-                pelanggan_id: pelangganId,
-                bulan: selectedBulan.value,
-                meteran_sebelum: parseFloat(meteranSebelum),
-                meteran_sesudah: parseFloat(meteranSesudah),
-                tarif_per_kubik: parseFloat(inputData.tarif_per_kubik),
-                ada_abunemen: inputData.ada_abunemen,
-                biaya_abunemen: parseFloat(inputData.biaya_abunemen),
-            };
-        });
-        
-        const response = await axios.post('/tagihan-bulanan/batch', {
-            bulan: selectedBulan.value,
-            tagihan_list: batchData
-        });
-        
-        alert(response.data.message || 'Batch save berhasil!');
-        selectedForBatch.value = [];
-        batchInputData.value = {};
-        reloadPage();
-    } catch (error) {
-        console.error('Batch save error:', error);
-        const errorMsg = error.response?.data?.message || error.message;
-        const errors = error.response?.data?.errors;
-        
-        if (errors) {
-            alert('Gagal menyimpan batch:\n' + errorMsg + '\n\nDetail errors:\n' + JSON.stringify(errors, null, 2));
-        } else {
-            alert('Gagal menyimpan batch: ' + errorMsg);
-        }
-    } finally {
-        isBatchSaving.value = false;
-    }
 };
 </script>
