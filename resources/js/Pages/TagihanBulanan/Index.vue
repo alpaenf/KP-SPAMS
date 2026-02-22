@@ -1350,7 +1350,8 @@ const openPembayaranModal = async (pelanggan) => {
         jumlah_kubik: 0,
         abunemen: pelanggan.tagihan?.ada_abunemen || false,
         jumlah_bayar: tagihanBulanIni,
-        keterangan: 'LUNAS', // Default LUNAS untuk pembayaran normal
+        keterangan: '', // Catatan bebas kosong (opsional)
+        status_bayar: 'BELUM_BAYAR', // Default BELUM_BAYAR
         catatan: '',
         bayar_tunggakan: false,
         jumlah_bayar_tunggakan: 0,

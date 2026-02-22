@@ -378,7 +378,7 @@ class TagihanBulananController extends Controller
     {
         try {
             $tunggakan = TagihanBulanan::where('pelanggan_id', $pelangganId)
-                ->where('status_bayar', 'BELUM_BAYAR')
+                ->whereIn('status_bayar', ['BELUM_BAYAR', 'TUNGGAKAN', 'CICILAN'])
                 ->orderBy('bulan', 'asc')
                 ->get()
                 ->map(function($t) {

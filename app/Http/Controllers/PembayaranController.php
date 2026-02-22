@@ -164,7 +164,9 @@ class PembayaranController extends Controller
             ->where('bulan_bayar', $validated['bulan_bayar'])
             ->first();
         
-        if ($existing) {
+        // Reject duplicate HANYA jika bukan cicilan
+        // Untuk cicilan, allow multiple payments (pembayaran bertahap)
+        if ($existing && $validated['status_bayar'] !== 'CICILAN') {
             return response()->json([
                 'message' => 'Pembayaran untuk bulan ini sudah ada. Silakan edit pembayaran yang sudah ada.'
             ], 422);
@@ -208,11 +210,22 @@ class PembayaranController extends Controller
                 $tagihan->jumlah_terbayar = $validated['jumlah_bayar'];
                 $tagihan->total_tagihan = $validated['jumlah_bayar'];
             } elseif ($validated['status_bayar'] === 'CICILAN') {
-                // Bayar sebagian (cicilan)
-                $tagihan->jumlah_terbayar = $validated['jumlah_bayar'];
+                // Bayar sebagian (cicilan) - ACCUMULATE jika sudah ada pembayaran sebelumnya
+                if ($existing) {
+                    // Cicilan ke-2, ke-3, dst: tambahkan ke jumlah_terbayar yang sudah ada
+                    $tagihan->jumlah_terbayar = $tagihan->jumlah_terbayar + $validated['jumlah_bayar'];
+                } else {
+                    // Cicilan pertama kali
+                    $tagihan->jumlah_terbayar = $validated['jumlah_bayar'];
+                }
                 // Preserve total_tagihan yang ada, atau set dari jumlah_bayar jika kosong
                 if ($tagihan->total_tagihan == 0) {
                     $tagihan->total_tagihan = $validated['jumlah_bayar'];
+                }
+                
+                // Auto-upgrade ke SUDAH_BAYAR jika sudah lunas
+                if ($tagihan->jumlah_terbayar >= $tagihan->total_tagihan) {
+                    $tagihan->status_bayar = 'SUDAH_BAYAR';
                 }
             } elseif ($validated['status_bayar'] === 'TUNGGAKAN') {
                 // Tunggakan bulan lalu (belum bayar sama sekali)
