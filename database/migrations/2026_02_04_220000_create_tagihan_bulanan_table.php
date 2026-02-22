@@ -22,7 +22,7 @@ return new class extends Migration
             $table->boolean('ada_abunemen')->default(true)->comment('Apakah dikenakan biaya abunemen');
             $table->decimal('biaya_abunemen', 10, 2)->default(3000)->comment('Biaya abunemen (default Rp 3.000)');
             $table->decimal('total_tagihan', 10, 2)->default(0)->comment('Total tagihan bulan ini');
-            $table->enum('status_bayar', ['BELUM_BAYAR', 'SUDAH_BAYAR'])->default('BELUM_BAYAR');
+            $table->enum('status_bayar', ['BELUM_BAYAR', 'SUDAH_BAYAR', 'CICILAN', 'TUNGGAKAN'])->default('BELUM_BAYAR');
             $table->text('keterangan')->nullable();
             $table->timestamps();
             
