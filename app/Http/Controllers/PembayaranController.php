@@ -20,12 +20,10 @@ class PembayaranController extends Controller
         // Base query
         $query = Pembayaran::with('pelanggan');
         
-        // Use WilayahHelper for robust filtering
+        // Filter by penarik wilayah if role is penarik
         if ($user && $user->role === 'penarik' && $user->wilayah) {
-            $normalizedWilayah = \App\Helpers\WilayahHelper::normalize($user->wilayah);
-            $sqlExpr = \App\Helpers\WilayahHelper::getSqlExpression();
-            $query->whereHas('pelanggan', function ($q) use ($normalizedWilayah, $sqlExpr) {
-                $q->whereRaw("{$sqlExpr} = ?", [$normalizedWilayah]);
+            $query->whereHas('pelanggan', function ($q) use ($user) {
+                $q->where('wilayah', $user->wilayah);
             });
         }
         
@@ -33,31 +31,21 @@ class PembayaranController extends Controller
         $pembayaranList = $query->orderBy('tanggal_bayar', 'desc')
             ->get()
             ->map(function ($p) {
-                // Hitung rincian biaya (sama seperti di method index)
-                $abunemenNominal = $p->abunemen ? 3000 : 0; // Tarif abunemen default
-                $tunggakanNominal = (float) ($p->tunggakan ?? 0);
-                $biayaAir = max(0, (float) $p->jumlah_bayar - $abunemenNominal - $tunggakanNominal);
-                $tarifPerKubik = $p->jumlah_kubik > 0 ? round($biayaAir / $p->jumlah_kubik) : 0;
-
                 return [
-                    'id'               => $p->id,
-                    'id_pelanggan'     => $p->pelanggan?->id_pelanggan,
-                    'nama_pelanggan'   => $p->pelanggan?->nama_pelanggan,
-                    'wilayah'          => $p->pelanggan?->wilayah,
-                    'kategori'         => $p->pelanggan?->kategori,
-                    'bulan_bayar'      => $p->bulan_bayar,
-                    'tanggal_bayar'    => $p->tanggal_bayar->format('Y-m-d'),
-                    'created_at'       => $p->created_at?->format('Y-m-d H:i:s'),
-                    'meteran_sebelum'  => $p->meteran_sebelum,
-                    'meteran_sesudah'  => $p->meteran_sesudah,
-                    'jumlah_kubik'     => $p->jumlah_kubik,
-                    'abunemen'         => $p->abunemen,
-                    'abunemen_nominal' => $abunemenNominal,
-                    'tunggakan'        => $tunggakanNominal,
-                    'biaya_air'        => $biayaAir,
-                    'tarif_per_kubik'  => $tarifPerKubik,
-                    'jumlah_bayar'     => $p->jumlah_bayar,
-                    'keterangan'       => $p->keterangan,
+                    'id' => $p->id,
+                    'id_pelanggan' => $p->pelanggan->id_pelanggan,
+                    'nama_pelanggan' => $p->pelanggan->nama_pelanggan,
+                    'wilayah' => $p->pelanggan->wilayah,
+                    'kategori' => $p->pelanggan->kategori,
+                    'bulan_bayar' => $p->bulan_bayar,
+                    'tanggal_bayar' => $p->tanggal_bayar->format('Y-m-d'),
+                    'meteran_sebelum' => $p->meteran_sebelum,
+                    'meteran_sesudah' => $p->meteran_sesudah,
+                    'jumlah_kubik' => $p->jumlah_kubik,
+                    'abunemen' => $p->abunemen,
+                    'tunggakan' => $p->tunggakan,
+                    'jumlah_bayar' => $p->jumlah_bayar,
+                    'keterangan' => $p->keterangan,
                 ];
             });
         
@@ -112,56 +100,56 @@ class PembayaranController extends Controller
             ->orderBy('bulan_bayar', 'desc')
             ->get()
             ->map(function ($p) {
-            // Logika tarif dan abunemen (konsisten dengan PembayaranController@store)
-            $isSosial = ($p->pelanggan?->kategori === 'sosial');
-            $abunemenNominal = $p->abunemen ? ($isSosial ? 0 : 3000) : 0;
-            
-            $tunggakanNominal = (float) ($p->tunggakan ?? 0);
-            $jumlahBayar = (float) $p->jumlah_bayar;
-            
-            // Biaya air adalah sisa setelah dikurangi abunemen dan tunggakan
-            $biayaAir = max(0, $jumlahBayar - $abunemenNominal - $tunggakanNominal);
-            
-            // Hitung tarif per kubik secara dinamis dari data yang tersimpan
-            $tarifPerKubik = $p->jumlah_kubik > 0 ? round($biayaAir / $p->jumlah_kubik) : ($isSosial ? 0 : 2000);
+                // Logika tarif dan abunemen (konsisten dengan PembayaranController@store)
+                $isSosial = ($p->pelanggan?->kategori === 'sosial');
+                $abunemenNominal = $p->abunemen ? ($isSosial ? 0 : 3000) : 0;
+                
+                $tunggakanNominal = (float) ($p->tunggakan ?? 0);
+                $jumlahBayar = (float) $p->jumlah_bayar;
+                
+                // Biaya air adalah sisa setelah dikurangi abunemen dan tunggakan
+                $biayaAir = max(0, $jumlahBayar - $abunemenNominal - $tunggakanNominal);
+                
+                // Hitung tarif per kubik secara dinamis dari data yang tersimpan
+                $tarifPerKubik = $p->jumlah_kubik > 0 ? round($biayaAir / $p->jumlah_kubik) : ($isSosial ? 0 : 2000);
 
-            // Cek status tagihan bulan ini dari tabel TagihanBulanan
-            $tagihan = \App\Models\TagihanBulanan::where('pelanggan_id', $p->pelanggan_id)
-                ->where('bulan', $p->bulan_bayar)
-                ->first();
+                // Cek status tagihan bulan ini dari tabel TagihanBulanan
+                $tagihan = \App\Models\TagihanBulanan::where('pelanggan_id', $p->pelanggan_id)
+                    ->where('bulan', $p->bulan_bayar)
+                    ->first();
 
-            // Tentukan status_tagihan secara dinamis agar UI akurat (anti-mismatch)
-            $statusTagihan = $tagihan?->status_bayar ?? 'SUDAH_BAYAR';
-            $sisa = $tagihan ? ($tagihan->total_tagihan - $tagihan->jumlah_terbayar) : 0;
-            
-            if ($tagihan) {
-                if ($sisa <= 0 && $tagihan->total_tagihan > 0) {
-                    $statusTagihan = 'SUDAH_BAYAR';
-                } elseif ($sisa > 0 && $tagihan->jumlah_terbayar > 0) {
-                    $statusTagihan = 'CICILAN';
-                } elseif ($sisa > 0 && $tagihan->jumlah_terbayar <= 0) {
-                    $statusTagihan = 'TUNGGAKAN';
+                // Tentukan status_tagihan secara dinamis agar UI akurat (anti-mismatch)
+                $statusTagihan = $tagihan?->status_bayar ?? 'SUDAH_BAYAR';
+                $sisa = $tagihan ? ($tagihan->total_tagihan - $tagihan->jumlah_terbayar) : 0;
+                
+                if ($tagihan) {
+                    if ($sisa <= 0 && $tagihan->total_tagihan > 0) {
+                        $statusTagihan = 'SUDAH_BAYAR';
+                    } elseif ($sisa > 0 && $tagihan->jumlah_terbayar > 0) {
+                        $statusTagihan = 'CICILAN';
+                    } elseif ($sisa > 0 && $tagihan->jumlah_terbayar <= 0) {
+                        $statusTagihan = 'TUNGGAKAN';
+                    }
                 }
-            }
 
-            return [
-                'id'               => $p->id,
-                'bulan_bayar'      => $p->bulan_bayar,
-                'tanggal_bayar'    => $p->tanggal_bayar->format('Y-m-d'),
-                'created_at'       => $p->created_at?->format('Y-m-d H:i:s'),
-                'meteran_sebelum'  => $p->meteran_sebelum,
-                'meteran_sesudah'  => $p->meteran_sesudah,
-                'abunemen'         => $p->abunemen,
-                'abunemen_nominal' => $abunemenNominal,
-                'tunggakan'        => $tunggakanNominal,
-                'jumlah_kubik'     => $p->jumlah_kubik,
-                'biaya_air'        => $biayaAir,
-                'tarif_per_kubik'  => $tarifPerKubik,
-                'jumlah_bayar'     => $jumlahBayar,
-                'status_tagihan'   => $statusTagihan,
-                'keterangan'       => $p->keterangan,
-            ];
-        });
+                return [
+                    'id'               => $p->id,
+                    'bulan_bayar'      => $p->bulan_bayar,
+                    'tanggal_bayar'    => $p->tanggal_bayar->format('Y-m-d'),
+                    'created_at'       => $p->created_at?->format('Y-m-d H:i:s'),
+                    'meteran_sebelum'  => $p->meteran_sebelum,
+                    'meteran_sesudah'  => $p->meteran_sesudah,
+                    'abunemen'         => $p->abunemen,
+                    'abunemen_nominal' => $abunemenNominal,
+                    'tunggakan'        => $tunggakanNominal,
+                    'jumlah_kubik'     => $p->jumlah_kubik,
+                    'biaya_air'        => $biayaAir,
+                    'tarif_per_kubik'  => $tarifPerKubik,
+                    'jumlah_bayar'     => $jumlahBayar,
+                    'status_tagihan'   => $statusTagihan,
+                    'keterangan'       => $p->keterangan,
+                ];
+            });
         
         return response()->json([
             'pelanggan' => [
@@ -204,7 +192,6 @@ class PembayaranController extends Controller
             'jumlah_bayar_tunggakan' => 'nullable|numeric|min:0',
             'id_tunggakan' => 'nullable|array',
             'id_tunggakan.*' => 'integer|exists:tagihan_bulanan,id',
-            'lunasi_tunggakan' => 'nullable|boolean', // Flag: sedang melunasi tagihan berstatus TUNGGAKAN
         ]);
 
         $pelanggan = Pelanggan::findOrFail($pelangganId);
@@ -236,19 +223,6 @@ class PembayaranController extends Controller
             $existing->save();
             
             $pembayaran = $existing;
-        } elseif ($existing && isset($validated['lunasi_tunggakan']) && $validated['lunasi_tunggakan']) {
-            // Lunasi tagihan yang berstatus TUNGGAKAN:
-            // Ada pembayaran lama untuk bulan ini (kemungkinan dicatat waktu generate), update ke SUDAH_BAYAR
-            $existing->jumlah_bayar = $validated['jumlah_bayar'];
-            $existing->tanggal_bayar = $validated['tanggal_bayar'];
-            $existing->keterangan = $validated['keterangan'] ?? $existing->keterangan;
-            if (isset($validated['meteran_sebelum'])) $existing->meteran_sebelum = $validated['meteran_sebelum'];
-            if (isset($validated['meteran_sesudah'])) $existing->meteran_sesudah = $validated['meteran_sesudah'];
-            if (isset($validated['jumlah_kubik'])) $existing->jumlah_kubik = $validated['jumlah_kubik'];
-            if (isset($validated['abunemen'])) $existing->abunemen = $validated['abunemen'];
-            $existing->save();
-            
-            $pembayaran = $existing;
         } elseif ($existing) {
             // Reject duplicate untuk case normal
             return response()->json([
@@ -274,13 +248,14 @@ class PembayaranController extends Controller
         $tagihan = \App\Models\TagihanBulanan::where('pelanggan_id', $pelangganId)
             ->where('bulan', $validated['bulan_bayar'])
             ->first();
-
+        
         if ($tagihan) {
-            // Update data meteran agar sinkron dengan pembayaran
+            // Update data meteran dan tagihan agar sinkron dengan pembayaran
             $tagihan->meteran_sebelum = $validated['meteran_sebelum'] ?? $tagihan->meteran_sebelum;
             $tagihan->meteran_sesudah = $validated['meteran_sesudah'] ?? $tagihan->meteran_sesudah;
             $tagihan->pemakaian_kubik = $validated['jumlah_kubik'] ?? $tagihan->pemakaian_kubik;
             
+            // Jika pembayaran menyertakan abunemen, update juga
             if (isset($validated['abunemen'])) {
                 $tagihan->ada_abunemen = $validated['abunemen'];
             }
@@ -325,9 +300,17 @@ class PembayaranController extends Controller
             $tagihan->save();
         } else {
             // Jika belum ada tagihan, buat baru
+            // Jika belum ada tagihan, buat baru
             $jumlahTerbayar = 0;
             if ($validated['jumlah_bayar'] > 0) {
-                $jumlahTerbayar = $validated['jumlah_bayar'];
+                // Jika pembayaran termasuk bayar tunggakan, kita hanya set jumlah_terbayar senilai porsi bulan ini
+                $jumlahBayarBulanIni = (float) $validated['jumlah_bayar'];
+                if (isset($validated['bayar_tunggakan']) && $validated['bayar_tunggakan']) {
+                    $jumlahBayarBulanIni -= floatval($validated['jumlah_bayar_tunggakan'] ?? 0);
+                }
+                if ($jumlahBayarBulanIni > 0) {
+                    $jumlahTerbayar = $jumlahBayarBulanIni;
+                }
             }
             
             $tagihan = \App\Models\TagihanBulanan::create([
@@ -396,37 +379,23 @@ class PembayaranController extends Controller
             }
         }
         
-        // Hitung sisa tunggakan untuk dikembalikan ke frontend
-        $sisaTunggakanSetelahBayar = \App\Models\TagihanBulanan::where('pelanggan_id', $pembayaran->pelanggan_id)
-            ->whereIn('status_bayar', ['BELUM_BAYAR', 'TUNGGAKAN', 'CICILAN'])
-            ->get()
-            ->sum(fn($t) => $t->total_tagihan - $t->jumlah_terbayar);
-
-        // Hitung data untuk response (biaya air & tarif)
-        $isSosial = $pembayaran->pelanggan?->kategori === 'sosial';
-        $abunemenNominal = $pembayaran->abunemen ? ($isSosial ? 0 : 3000) : 0;
-        $tunggakanNominal = (float) ($pembayaran->tunggakan ?? 0);
-        $jumlahBayar = (float) $pembayaran->jumlah_bayar;
-        $biayaAir = max(0, $jumlahBayar - $abunemenNominal - $tunggakanNominal);
-        $tarifPerKubik = $pembayaran->jumlah_kubik > 0 ? round($biayaAir / $pembayaran->jumlah_kubik) : ($isSosial ? 0 : 2000);
-
         return response()->json([
             'message' => 'Pembayaran berhasil ditambahkan',
             'pembayaran' => [
                 'id' => $pembayaran->id,
                 'bulan_bayar' => $pembayaran->bulan_bayar,
                 'tanggal_bayar' => $pembayaran->tanggal_bayar->format('Y-m-d'),
+                'created_at' => $pembayaran->created_at?->format('Y-m-d H:i:s'),
                 'meteran_sebelum' => $pembayaran->meteran_sebelum,
                 'meteran_sesudah' => $pembayaran->meteran_sesudah,
                 'abunemen' => $pembayaran->abunemen,
-                'abunemen_nominal' => $abunemenNominal,
-                'tunggakan' => $tunggakanNominal,
+                'abunemen_nominal' => $tagihan->biaya_abunemen ?? 0,
+                'tunggakan' => $pembayaran->tunggakan,
                 'jumlah_kubik' => $pembayaran->jumlah_kubik,
-                'biaya_air' => $biayaAir,
-                'tarif_per_kubik' => $tarifPerKubik,
-                'jumlah_bayar' => $jumlahBayar,
-                'status_tagihan' => $tagihan ? $tagihan->status_bayar : 'SUDAH_BAYAR',
-                'sisa_tunggakan' => $sisaTunggakanSetelahBayar,
+                'biaya_air' => max(0, $pembayaran->jumlah_bayar - ($tagihan->biaya_abunemen ?? 0) - ($pembayaran->tunggakan ?? 0)),
+                'tarif_per_kubik' => $tagihan->tarif_per_kubik ?? 2000,
+                'jumlah_bayar' => $pembayaran->jumlah_bayar,
+                'status_tagihan' => $tagihan->status_bayar ?? 'BELUM_BAYAR',
                 'keterangan' => $pembayaran->keterangan,
             ],
         ], 201);
@@ -505,7 +474,7 @@ class PembayaranController extends Controller
         $meteranSebelum = $pembayaran->meteran_sebelum;
         $meteranSesudah = $pembayaran->meteran_sesudah;
         $jumlahKubik = $pembayaran->jumlah_kubik;
-        $biayaAbunemen = $pembayaran->abunemen ? 3000 : 0; 
+        $biayaAbunemen = 3000; // Default abonemen wajib
         $tarifPerKubik = 2000; // Default tarif per kubik
         
         // Ambil data dari tagihan jika ada
