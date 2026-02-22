@@ -200,9 +200,14 @@
                                             <div class="text-sm font-bold text-blue-600">
                                                 {{ formatRupiah(item.tagihan.total_tagihan) }}
                                             </div>
-                                            <!-- Tampilkan info cicilan jika ada pembayaran sebagian -->
-                                            <div v-if="item.tagihan.jumlah_terbayar > 0 && item.tagihan.status_bayar === 'BELUM_BAYAR'" class="text-xs text-green-600">
-                                                Terbayar: {{ formatRupiah(item.tagihan.jumlah_terbayar) }}
+                                            <!-- Tampilkan info cicilan jika status CICILAN -->
+                                            <div v-if="item.tagihan.status_bayar === 'CICILAN' && item.tagihan.jumlah_terbayar > 0" class="flex flex-col gap-1">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 w-fit">
+                                                    Cicilan {{ Math.round((item.tagihan.jumlah_terbayar / item.tagihan.total_tagihan) * 100) }}%
+                                                </span>
+                                                <span class="text-xs text-purple-700 font-medium">
+                                                    {{ formatRupiah(item.tagihan.jumlah_terbayar) }} / {{ formatRupiah(item.tagihan.total_tagihan) }}
+                                                </span>
                                             </div>
                                         </div>
                                         <div v-else class="text-sm text-gray-400">Belum ada</div>
@@ -227,20 +232,28 @@
                                                 </svg>
                                                 Nunggak
                                             </span>
-                                            <span v-else-if="item.tagihan && item.tagihan.status_bayar === 'BELUM_BAYAR' && item.tagihan.status_konfirmasi === 'none'" class="inline-flex flex-col items-start gap-1">
-                                                <!-- Badge Utama: Belum Bayar atau Cicilan -->
-                                                <span v-if="item.tagihan.jumlah_terbayar > 0" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                            <span v-else-if="item.tagihan && item.tagihan.status_bayar === 'CICILAN' && item.tagihan.status_konfirmasi === 'none'" class="inline-flex flex-col items-start gap-0.5">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                                     <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
                                                     </svg>
                                                     Cicilan {{ Math.round((item.tagihan.jumlah_terbayar / item.tagihan.total_tagihan) * 100) }}%
                                                 </span>
-                                                <span v-else class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                                    </svg>
-                                                    Belum Bayar
+                                                <span class="text-xs text-purple-700 font-medium ml-1">
+                                                    {{ formatRupiah(item.tagihan.jumlah_terbayar) }} / {{ formatRupiah(item.tagihan.total_tagihan) }}
                                                 </span>
+                                            </span>
+                                            <span v-else-if="item.tagihan && item.tagihan.status_bayar === 'BELUM_BAYAR' && item.tagihan.status_konfirmasi === 'none'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                                </svg>
+                                                Belum Bayar
+                                            </span>
+                                            <span v-else-if="item.tagihan && item.tagihan.status_bayar === 'TUNGGAKAN' && item.tagihan.status_konfirmasi === 'none'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                                                </svg>
+                                                Tunggakan
                                             </span>
                                             <span v-else-if="!item.tagihan" class="text-xs text-gray-400">-</span>
                                         </div>
@@ -271,17 +284,17 @@
                                                 Verifikasi
                                             </button>
                                         </div>
-                                        <!-- Jika belum bayar dan tidak ada pending, tampilkan tombol bayar -->
+                                        <!-- Jika belum bayar/cicilan/tunggakan dan tidak ada pending, tampilkan tombol bayar -->
                                         <button
-                                            v-else-if="item.tagihan && item.tagihan.status_bayar === 'BELUM_BAYAR' && item.tagihan.status_konfirmasi === 'none'"
+                                            v-else-if="item.tagihan && (item.tagihan.status_bayar === 'BELUM_BAYAR' || item.tagihan.status_bayar === 'CICILAN' || item.tagihan.status_bayar === 'TUNGGAKAN') && item.tagihan.status_konfirmasi === 'none'"
                                             @click="openPembayaranModal(item)"
                                             class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700 transition"
-                                            title="Input Pembayaran"
+                                            :title="item.tagihan.status_bayar === 'CICILAN' ? 'Lanjutkan Cicilan' : (item.tagihan.status_bayar === 'TUNGGAKAN' ? 'Bayar Tunggakan' : 'Input Pembayaran')"
                                         >
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                                             </svg>
-                                            Bayar
+                                            {{ item.tagihan.status_bayar === 'CICILAN' ? 'Cicilan' : 'Bayar' }}
                                         </button>
                                         <span v-else-if="item.tagihan?.status_bayar === 'SUDAH_BAYAR'" class="text-xs text-green-600 font-medium">
                                             ✓ Lunas
@@ -815,48 +828,49 @@
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                {{ pembayaranForm.keterangan === 'CICILAN' ? 'Jumlah Cicilan' : 'Jumlah Bayar' }} (Rp)
-                                <span v-if="pembayaranForm.keterangan === 'CICILAN'" class="text-blue-600 text-xs">- Bisa diedit</span>
+                                {{ pembayaranForm.status_bayar === 'CICILAN' ? 'Jumlah Cicilan' : 'Jumlah Bayar' }} (Rp)
+                                <span v-if="pembayaranForm.status_bayar === 'CICILAN'" class="text-blue-600 text-xs">- Bisa diedit</span>
                             </label>
                             <input
                                 type="number"
                                 v-model="pembayaranForm.jumlah_bayar"
                                 :class="[
                                     'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800',
-                                    (pembayaranForm.keterangan === 'CICILAN' || pembayaranForm.bayar_tunggakan) ? 'bg-white' : 'bg-gray-50'
+                                    (pembayaranForm.status_bayar === 'CICILAN' || pembayaranForm.bayar_tunggakan) ? 'bg-white' : 'bg-gray-50'
                                 ]"
                                 step="1000"
                                 min="0"
                                 required
-                                :readonly="pembayaranForm.keterangan !== 'CICILAN' && !pembayaranForm.bayar_tunggakan"
+                                :readonly="pembayaranForm.status_bayar !== 'CICILAN' && !pembayaranForm.bayar_tunggakan"
                             />
-                            <p v-if="pembayaranForm.keterangan === 'CICILAN'" class="text-xs text-blue-600 mt-1">💡 Untuk cicilan, isi jumlah berapa saja (misal: Rp 1.000, Rp 5.000, dll)</p>
+                            <p v-if="pembayaranForm.status_bayar === 'CICILAN'" class="text-xs text-blue-600 mt-1">💡 Untuk cicilan, isi jumlah berapa saja (misal: Rp 1.000, Rp 5.000, dll)</p>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status Bayar <span class="text-red-500">*</span></label>
                             <select
-                                v-model="pembayaranForm.keterangan"
+                                v-model="pembayaranForm.status_bayar"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800"
                                 required
                             >
-                                <option value="LUNAS">Lunas - Bayar penuh tagihan bulan ini</option>
-                                <option value="TUNGGAKAN">Tunggakan - Belum bayar, masuk bulan depan</option>
-                                <option value="CICILAN">Cicilan - Bayar sebagian</option>
+                                <option value="BELUM_BAYAR">⏳ Belum Bayar - Bulan ini belum dibayar</option>
+                                <option value="CICILAN">🔄 Cicilan - Bayar sebagian</option>
+                                <option value="SUDAH_BAYAR">✅ Sudah Bayar - Lunas penuh</option>
+                                <option value="TUNGGAKAN">📌 Tunggakan - Input bulan lalu yang nunggak</option>
                             </select>
                             <p class="text-xs text-gray-500 mt-1">
-                                Lunas = Bayar penuh | Tunggakan = Belum bayar | Cicilan = Bayar sebagian
+                                Pilih status pembayaran pelanggan
                             </p>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Tambahan (Opsional)</label>
-                            <textarea
-                                v-model="pembayaranForm.catatan"
-                                rows="2"
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Catatan</label>
+                            <input
+                                type="text"
+                                v-model="pembayaranForm.keterangan"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800"
-                                placeholder="Catatan pembayaran..."
-                            ></textarea>
+                                placeholder="Catatan bebas (opsional)..."
+                            />
                         </div>
                     </div>
                     
@@ -1089,8 +1103,8 @@ const pembayaranForm = ref({
     jumlah_kubik: 0,
     abunemen: false,
     jumlah_bayar: 0,
-    keterangan: 'LUNAS', // Default LUNAS untuk pembayaran normal
-    catatan: '',
+    keterangan: '', // Catatan bebas (opsional)
+    status_bayar: 'BELUM_BAYAR', // Default BELUM_BAYAR
     bayar_tunggakan: false,
     jumlah_bayar_tunggakan: 0, // Jumlah bayar tunggakan (bisa cicil)
 });
@@ -1367,8 +1381,8 @@ const hitungPemakaianPembayaran = () => {
     const pemakaian = sesudah - sebelum;
     pembayaranForm.value.jumlah_kubik = pemakaian > 0 ? pemakaian : 0;
     
-    // Jika keterangan CICILAN, jangan auto-calculate - biarkan user edit manual
-    if (pembayaranForm.value.keterangan === 'CICILAN') {
+    // Jika status CICILAN, jangan auto-calculate - biarkan user edit manual
+    if (pembayaranForm.value.status_bayar === 'CICILAN') {
         return;
     }
     
@@ -1397,8 +1411,8 @@ const toggleBayarTunggakan = () => {
 const hitungTotalBayar = () => {
     if (!selectedPelanggan.value) return;
     
-    // Jika keterangan CICILAN, jangan auto-calculate - biarkan user edit manual
-    if (pembayaranForm.value.keterangan === 'CICILAN') {
+    // Jika status CICILAN, jangan auto-calculate - biarkan user edit manual
+    if (pembayaranForm.value.status_bayar === 'CICILAN') {
         return;
     }
     
@@ -1482,7 +1496,8 @@ const submitPembayaran = async () => {
             abunemen: pembayaranForm.value.abunemen,
             tunggakan: 0, // Tunggakan di handle via bayar_tunggakan
             jumlah_bayar: pembayaranForm.value.jumlah_bayar,
-            keterangan: pembayaranForm.value.keterangan, // Pure enum: LUNAS, CICILAN, TUNGGAKAN
+            keterangan: pembayaranForm.value.keterangan || '', // Catatan bebas (opsional)
+            status_bayar: pembayaranForm.value.status_bayar, // BELUM_BAYAR, CICILAN, SUDAH_BAYAR, TUNGGAKAN
             bayar_tunggakan: pembayaranForm.value.bayar_tunggakan,
             jumlah_bayar_tunggakan: pembayaranForm.value.jumlah_bayar_tunggakan || 0,
         };

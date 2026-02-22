@@ -671,8 +671,8 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        {{ pembayaranForm.keterangan === 'CICILAN' ? 'Jumlah Cicilan' : 'Total Tagihan' }} (Rp)
-                                        <span v-if="pembayaranForm.keterangan === 'CICILAN'" class="text-blue-600 text-xs">- Bisa diedit</span>
+                                        {{ pembayaranForm.status_bayar === 'CICILAN' ? 'Jumlah Cicilan' : 'Total Tagihan' }} (Rp)
+                                        <span v-if="pembayaranForm.status_bayar === 'CICILAN'" class="text-blue-600 text-xs">- Bisa diedit</span>
                                     </label>
                                     <input
                                         type="number"
@@ -681,26 +681,40 @@
                                         min="0"
                                         :class="[
                                             'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent',
-                                            pembayaranForm.keterangan === 'CICILAN' ? 'bg-white' : 'bg-gray-50'
+                                            pembayaranForm.status_bayar === 'CICILAN' ? 'bg-white' : 'bg-gray-50'
                                         ]"
-                                        :readonly="pembayaranForm.keterangan !== 'CICILAN'"
+                                        :readonly="pembayaranForm.status_bayar !== 'CICILAN'"
                                     />
                                     <p v-if="pembayaranErrors.jumlah_bayar" class="text-red-600 text-sm mt-1">{{ pembayaranErrors.jumlah_bayar }}</p>
-                                    <p v-if="pembayaranForm.keterangan === 'CICILAN'" class="text-xs text-blue-600 mt-1">💡 Untuk cicilan, isi jumlah berapa saja (misal: Rp 1.000, Rp 5.000, dll)</p>
+                                    <p v-if="pembayaranForm.status_bayar === 'CICILAN'" class="text-xs text-blue-600 mt-1">💡 Untuk cicilan, isi jumlah berapa saja (misal: Rp 1.000, Rp 5.000, dll)</p>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan <span class="text-red-500">*</span></label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Status Bayar <span class="text-red-500">*</span></label>
                                     <select
-                                        v-model="pembayaranForm.keterangan"
+                                        v-model="pembayaranForm.status_bayar"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
                                         required
                                     >
-                                        <option value="LUNAS">Lunas - Bayar penuh tagihan bulan ini</option>
-                                        <option value="TUNGGAKAN">Tunggakan - Belum bayar, masuk bulan depan</option>
-                                        <option value="CICILAN">Cicilan - Bayar sebagian</option>
+                                        <option value="BELUM_BAYAR">⏳ Belum Bayar - Bulan ini belum dibayar</option>
+                                        <option value="CICILAN">🔄 Cicilan - Bayar sebagian dulu</option>
+                                        <option value="SUDAH_BAYAR">✅ Sudah Bayar - Lunas penuh</option>
+                                        <option value="TUNGGAKAN">📌 Tunggakan - Input bulan lalu yang nunggak</option>
                                     </select>
                                     <p class="text-xs text-gray-500 mt-1">
-                                        Pilih sesuai kondisi pembayaran pelanggan
+                                        Pilih sesuai kondisi pembayaran
+                                    </p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Catatan</label>
+                                    <input
+                                        type="text"
+                                        v-model="pembayaranForm.keterangan"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-800 focus:border-transparent"
+                                        placeholder="Misal: Bayar di warung, Cicilan ke-2, dll (opsional)"
+                                        maxlength="255"
+                                    />
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        Catatan tambahan (tidak wajib)
                                     </p>
                                 </div>
                             </div>
@@ -963,16 +977,17 @@ const pembayaranForm = ref({
     tunggakan: 0,
     jumlah_kubik: null,
     jumlah_bayar: null,
-    keterangan: 'LUNAS', // Default LUNAS untuk pembayaran normal
+    keterangan: '', // Catatan bebas (opsional)
+    status_bayar: 'BELUM_BAYAR', // Default BELUM_BAYAR - user pilih manual
     bayar_tunggakan: false, // Apakah mau bayar tunggakan juga
     jumlah_bayar_tunggakan: 0, // Jumlah yang dibayar untuk tunggakan (bisa cicilan)
     id_tunggakan: [] // Array ID tagihan yang mau dibayar
 });
 
 const hitungTagihan = () => {
-    // Jika keterangan CICILAN, jangan auto-calculate jumlah_bayar
+    // Jika status CICILAN, jangan auto-calculate jumlah_bayar
     // Biarkan user input manual berapa yang mau dibayar
-    if (pembayaranForm.value.keterangan === 'CICILAN') {
+    if (pembayaranForm.value.status_bayar === 'CICILAN') {
         // Tetap hitung pemakaian kubik untuk referensi
         const meteranSebelum = parseFloat(pembayaranForm.value.meteran_sebelum) || 0;
         const meteranSesudah = parseFloat(pembayaranForm.value.meteran_sesudah) || 0;
@@ -1176,7 +1191,8 @@ const showPembayaranModal = async (pelanggan) => {
             tunggakan: 0,
             jumlah_kubik: 0,
             jumlah_bayar: 0,
-            keterangan: ''
+            keterangan: '',
+            status_bayar: 'BELUM_BAYAR'
         };
         
         // PENTING: Ambil data meteran setelah history pembayaran dimuat
@@ -1390,7 +1406,8 @@ const submitPembayaran = async () => {
             tunggakan: 0,
             jumlah_kubik: null,
             jumlah_bayar: null,
-            keterangan: 'LUNAS', // Reset ke default LUNAS
+            keterangan: '', // Reset catatan kosong
+            status_bayar: 'BELUM_BAYAR', // Reset ke default BELUM_BAYAR
             bayar_tunggakan: false,
             jumlah_bayar_tunggakan: 0,
             id_tunggakan: []
