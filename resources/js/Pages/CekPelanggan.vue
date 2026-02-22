@@ -1340,23 +1340,11 @@ const showPembayaranModal = async (pelanggan) => {
         const response = await axios.get(`/pelanggan/${pelanggan.id}/pembayaran`);
         pembayaranList.value = response.data.pembayarans;
         
-        // Cari bulan pertama yang belum dibayar (dari Januari tahun ini sampai bulan sekarang)
-        const currentYear = today.getFullYear();
-        const currentMonthNum = today.getMonth() + 1; // 1-12
-        let bulanTujuan = currentMonth; // Default ke bulan sekarang
+        // Default ke bulan berjalan (Februari 2026) bukan bulan pertama yang nunggak
+        // Agar history tercatat sebagai "Pembayaran Bulan Ini" yang mencakup tunggakan lalu
+        const bulanTujuan = props.bulanIni || currentMonth;
         
-        // Cek dari Januari sampai bulan sekarang
-        for (let month = 1; month <= currentMonthNum; month++) {
-            const monthStr = `${currentYear}-${String(month).padStart(2, '0')}`;
-            const sudahBayar = pembayaranList.value.some(p => p.bulan_bayar === monthStr);
-            
-            if (!sudahBayar) {
-                bulanTujuan = monthStr;
-                break; // Gunakan bulan pertama yang belum dibayar
-            }
-        }
-        
-        // Reset form dengan bulan yang tepat
+        // Reset form dengan bulan berjalan
         pembayaranForm.value = {
             bulan_bayar: bulanTujuan,
             tanggal_bayar: currentDate,
@@ -1367,7 +1355,8 @@ const showPembayaranModal = async (pelanggan) => {
             jumlah_kubik: 0,
             jumlah_bayar: 0,
             keterangan: '',
-            status_bayar: 'BELUM_BAYAR'
+            status_bayar: 'BELUM_BAYAR',
+            bayar_tunggakan: false // Default false, akan kita auto-check jika ada tunggakan
         };
         
         // PENTING: Ambil data meteran setelah history pembayaran dimuat
@@ -1387,6 +1376,8 @@ const showPembayaranModal = async (pelanggan) => {
                 const totalTunggakan = listTunggakan.value.reduce((sum, t) => sum + (t.sisa_tagihan || 0), 0);
                 if (totalTunggakan > 0) {
                     pembayaranForm.value.tunggakan = totalTunggakan;
+                    pembayaranForm.value.bayar_tunggakan = true; // Auto centang jika ada hutang
+                    pembayaranForm.value.jumlah_bayar_tunggakan = totalTunggakan;
                 }
             }
         } catch (error) {
