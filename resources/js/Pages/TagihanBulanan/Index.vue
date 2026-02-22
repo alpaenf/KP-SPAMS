@@ -1530,8 +1530,16 @@ const submitPembayaran = async () => {
     isSubmittingPembayaran.value = true;
     
     try {
+        // Jika status tagihan TUNGGAKAN, gunakan bulan tagihan (bukan bulan yang dipilih di halaman)
+        // agar backend tahu kita sedang melunasi tunggakan bulan lama tersebut
+        const tagihanStatus = selectedPelanggan.value?.tagihan?.status_bayar;
+        const bulanTagihan = selectedPelanggan.value?.tagihan?.bulan; // bulan dari tagihan aslinya
+        const bulanBayar = (tagihanStatus === 'TUNGGAKAN' && bulanTagihan)
+            ? bulanTagihan
+            : selectedBulan.value;
+
         const payload = {
-            bulan_bayar: selectedBulan.value,
+            bulan_bayar: bulanBayar,
             tanggal_bayar: pembayaranForm.value.tanggal_bayar,
             meteran_sebelum: pembayaranForm.value.meteran_sebelum,
             meteran_sesudah: pembayaranForm.value.meteran_sesudah,
@@ -1543,6 +1551,8 @@ const submitPembayaran = async () => {
             status_bayar: pembayaranForm.value.status_bayar, // BELUM_BAYAR, CICILAN, SUDAH_BAYAR, TUNGGAKAN
             bayar_tunggakan: pembayaranForm.value.bayar_tunggakan,
             jumlah_bayar_tunggakan: pembayaranForm.value.jumlah_bayar_tunggakan || 0,
+            // Flag khusus: sedang melunasi tagihan yang berstatus TUNGGAKAN
+            lunasi_tunggakan: tagihanStatus === 'TUNGGAKAN',
         };
         
         // Tambahkan id tunggakan jika bayar tunggakan

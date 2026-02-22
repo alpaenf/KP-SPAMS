@@ -49,6 +49,7 @@ class TagihanBulananController extends Controller
                     'rw' => $p->rw,
                     'tagihan' => $tagihan ? [
                         'id' => $tagihan->id,
+                        'bulan' => $tagihan->bulan,
                         'meteran_sebelum' => $tagihan->meteran_sebelum,
                         'meteran_sesudah' => $tagihan->meteran_sesudah,
                         'pemakaian_kubik' => $tagihan->pemakaian_kubik,

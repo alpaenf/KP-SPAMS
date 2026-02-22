@@ -155,6 +155,7 @@ class PembayaranController extends Controller
             'jumlah_bayar_tunggakan' => 'nullable|numeric|min:0',
             'id_tunggakan' => 'nullable|array',
             'id_tunggakan.*' => 'integer|exists:tagihan_bulanan,id',
+            'lunasi_tunggakan' => 'nullable|boolean', // Flag: sedang melunasi tagihan berstatus TUNGGAKAN
         ]);
 
         $pelanggan = Pelanggan::findOrFail($pelangganId);
@@ -183,6 +184,19 @@ class PembayaranController extends Controller
             $existing->tanggal_bayar = $validated['tanggal_bayar'];
             $existing->keterangan = $validated['keterangan'] ?? $existing->keterangan;
             $existing->tunggakan = $validated['jumlah_bayar_tunggakan'] ?? 0;
+            $existing->save();
+            
+            $pembayaran = $existing;
+        } elseif ($existing && isset($validated['lunasi_tunggakan']) && $validated['lunasi_tunggakan']) {
+            // Lunasi tagihan yang berstatus TUNGGAKAN:
+            // Ada pembayaran lama untuk bulan ini (kemungkinan dicatat waktu generate), update ke SUDAH_BAYAR
+            $existing->jumlah_bayar = $validated['jumlah_bayar'];
+            $existing->tanggal_bayar = $validated['tanggal_bayar'];
+            $existing->keterangan = $validated['keterangan'] ?? $existing->keterangan;
+            if (isset($validated['meteran_sebelum'])) $existing->meteran_sebelum = $validated['meteran_sebelum'];
+            if (isset($validated['meteran_sesudah'])) $existing->meteran_sesudah = $validated['meteran_sesudah'];
+            if (isset($validated['jumlah_kubik'])) $existing->jumlah_kubik = $validated['jumlah_kubik'];
+            if (isset($validated['abunemen'])) $existing->abunemen = $validated['abunemen'];
             $existing->save();
             
             $pembayaran = $existing;
