@@ -237,10 +237,10 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div v-if="selectedForBatch.includes(item.id)" class="inline-block">
+                                        <div v-if="selectedForBatch.includes(item.id) && batchInputData[item.id]" class="inline-block">
                                             <input
                                                 type="number"
-                                                v-model="batchInputData[item.id].meteran_sebelum"
+                                                v-model.number="batchInputData[item.id].meteran_sebelum"
                                                 step="0.01"
                                                 placeholder="0.00"
                                                 class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
@@ -249,10 +249,10 @@
                                         <div v-else class="text-sm text-gray-900">{{ item.tagihan?.meteran_sebelum ?? '-' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div v-if="selectedForBatch.includes(item.id)" class="inline-block">
+                                        <div v-if="selectedForBatch.includes(item.id) && batchInputData[item.id]" class="inline-block">
                                             <input
                                                 type="number"
-                                                v-model="batchInputData[item.id].meteran_sesudah"
+                                                v-model.number="batchInputData[item.id].meteran_sesudah"
                                                 step="0.01"
                                                 placeholder="0.00"
                                                 class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
@@ -1668,39 +1668,37 @@ const initBatchInputData = async (pelanggan) => {
         return;
     }
     
-    // Initialize batch input data for this pelanggan
+    // Initialize with default values first (for immediate reactivity)
+    batchInputData.value[pelanggan.id] = {
+        meteran_sebelum: 0,
+        meteran_sesudah: 0,
+        tarif_per_kubik: pelanggan.kategori === 'sosial' ? 0 : 2000,
+        ada_abunemen: pelanggan.kategori === 'sosial' ? false : true,
+        biaya_abunemen: pelanggan.kategori === 'sosial' ? 0 : 3000,
+    };
+    
+    // Then update with actual data
     if (pelanggan.tagihan && pelanggan.tagihan.meteran_sesudah !== null) {
         // Use existing data
-        batchInputData.value[pelanggan.id] = {
-            meteran_sebelum: pelanggan.tagihan.meteran_sebelum,
-            meteran_sesudah: pelanggan.tagihan.meteran_sesudah,
-            tarif_per_kubik: pelanggan.tagihan.tarif_per_kubik || 2000,
-            ada_abunemen: pelanggan.tagihan.ada_abunemen,
-            biaya_abunemen: pelanggan.tagihan.biaya_abunemen || 3000,
-        };
+        batchInputData.value[pelanggan.id].meteran_sebelum = pelanggan.tagihan.meteran_sebelum;
+        batchInputData.value[pelanggan.id].meteran_sesudah = pelanggan.tagihan.meteran_sesudah;
+        batchInputData.value[pelanggan.id].tarif_per_kubik = pelanggan.tagihan.tarif_per_kubik || 2000;
+        batchInputData.value[pelanggan.id].ada_abunemen = pelanggan.tagihan.ada_abunemen;
+        batchInputData.value[pelanggan.id].biaya_abunemen = pelanggan.tagihan.biaya_abunemen || 3000;
     } else {
         // Try to fetch previous month's data
         const prevMonth = getPreviousMonth(selectedBulan.value);
-        let meteranSebelum = null;
         
         if (prevMonth) {
             try {
                 const prevTagihanRes = await axios.get(`/api/tagihan-bulanan/${pelanggan.id}/${prevMonth}`);
                 if (prevTagihanRes.data && prevTagihanRes.data.tagihan && prevTagihanRes.data.tagihan.meteran_sesudah > 0) {
-                    meteranSebelum = prevTagihanRes.data.tagihan.meteran_sesudah;
+                    batchInputData.value[pelanggan.id].meteran_sebelum = prevTagihanRes.data.tagihan.meteran_sesudah;
                 }
             } catch (error) {
                 console.log('No previous data for', pelanggan.nama_pelanggan);
             }
         }
-        
-        batchInputData.value[pelanggan.id] = {
-            meteran_sebelum: meteranSebelum,
-            meteran_sesudah: null,
-            tarif_per_kubik: pelanggan.kategori === 'sosial' ? 0 : 2000,
-            ada_abunemen: pelanggan.kategori === 'sosial' ? false : true,
-            biaya_abunemen: pelanggan.kategori === 'sosial' ? 0 : 3000,
-        };
     }
 };
 
@@ -1711,12 +1709,21 @@ const calculatePemakaian = (sebelum, sesudah) => {
 };
 
 const isBatchDataValid = computed(() => {
+    if (selectedForBatch.value.length === 0) return false;
+    
     return selectedForBatch.value.every(id => {
         const data = batchInputData.value[id];
-        return data && 
-               data.meteran_sebelum !== null && 
-               data.meteran_sesudah !== null && 
-               parseFloat(data.meteran_sesudah) >= parseFloat(data.meteran_sebelum);
+        if (!data) return false;
+        
+        // Minimal harus ada meteran_sesudah
+        const sesudah = parseFloat(data.meteran_sesudah);
+        if (isNaN(sesudah) || sesudah < 0) return false;
+        
+        // Jika ada meteran_sebelum, pastikan sesudah >= sebelum
+        const sebelum = parseFloat(data.meteran_sebelum);
+        if (!isNaN(sebelum) && sebelum > sesudah) return false;
+        
+        return true;
     });
 });
 
@@ -1730,14 +1737,18 @@ const batchSaveMeteran = async () => {
             const pelanggan = props.pelangganList.find(p => p.id === pelangganId);
             const inputData = batchInputData.value[pelangganId];
             
+            // Ensure meteran_sebelum has a value (default to 0 if null/empty)
+            const meteranSebelum = inputData.meteran_sebelum ?? 0;
+            const meteranSesudah = inputData.meteran_sesudah ?? 0;
+            
             return {
                 pelanggan_id: pelangganId,
                 bulan: selectedBulan.value,
-                meteran_sebelum: inputData.meteran_sebelum,
-                meteran_sesudah: inputData.meteran_sesudah,
-                tarif_per_kubik: inputData.tarif_per_kubik,
+                meteran_sebelum: parseFloat(meteranSebelum),
+                meteran_sesudah: parseFloat(meteranSesudah),
+                tarif_per_kubik: parseFloat(inputData.tarif_per_kubik),
                 ada_abunemen: inputData.ada_abunemen,
-                biaya_abunemen: inputData.biaya_abunemen,
+                biaya_abunemen: parseFloat(inputData.biaya_abunemen),
             };
         });
         
@@ -1751,7 +1762,15 @@ const batchSaveMeteran = async () => {
         batchInputData.value = {};
         reloadPage();
     } catch (error) {
-        alert('Gagal menyimpan batch: ' + (error.response?.data?.message || error.message));
+        console.error('Batch save error:', error);
+        const errorMsg = error.response?.data?.message || error.message;
+        const errors = error.response?.data?.errors;
+        
+        if (errors) {
+            alert('Gagal menyimpan batch:\n' + errorMsg + '\n\nDetail errors:\n' + JSON.stringify(errors, null, 2));
+        } else {
+            alert('Gagal menyimpan batch: ' + errorMsg);
+        }
     } finally {
         isBatchSaving.value = false;
     }
