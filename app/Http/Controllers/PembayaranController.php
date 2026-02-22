@@ -134,10 +134,14 @@ class PembayaranController extends Controller
             $statusTagihan = $tagihan?->status_bayar ?? 'SUDAH_BAYAR';
             $sisa = $tagihan ? ($tagihan->total_tagihan - $tagihan->jumlah_terbayar) : 0;
             
-            if ($tagihan && $sisa <= 0 && $tagihan->total_tagihan > 0) {
-                $statusTagihan = 'SUDAH_BAYAR';
-            } elseif ($tagihan && $sisa > 0 && $tagihan->jumlah_terbayar > 0) {
-                $statusTagihan = 'CICILAN';
+            if ($tagihan) {
+                if ($sisa <= 0 && $tagihan->total_tagihan > 0) {
+                    $statusTagihan = 'SUDAH_BAYAR';
+                } elseif ($sisa > 0 && $tagihan->jumlah_terbayar > 0) {
+                    $statusTagihan = 'CICILAN';
+                } elseif ($sisa > 0 && $tagihan->jumlah_terbayar <= 0) {
+                    $statusTagihan = 'TUNGGAKAN';
+                }
             }
 
             return [
@@ -322,16 +326,11 @@ class PembayaranController extends Controller
         } else {
             // Jika belum ada tagihan, buat baru
             $jumlahTerbayar = 0;
-            $statusBayar = $validated['status_bayar'] ?? 'BELUM_BAYAR';
-            
-            // Jika ada pembayaran, set jumlah_terbayar dan auto-determine status
             if ($validated['jumlah_bayar'] > 0) {
                 $jumlahTerbayar = $validated['jumlah_bayar'];
-                // Kita asumsi total_tagihan == jumlah_bayar jika baru pertama kali dibuat dari form
-                $statusBayar = 'SUDAH_BAYAR';
             }
             
-            \App\Models\TagihanBulanan::create([
+            $tagihan = \App\Models\TagihanBulanan::create([
                 'pelanggan_id' => $pelangganId,
                 'bulan' => $validated['bulan_bayar'],
                 'meteran_sebelum' => $validated['meteran_sebelum'] ?? 0,
@@ -340,11 +339,25 @@ class PembayaranController extends Controller
                 'tarif_per_kubik' => $pelanggan->kategori === 'sosial' ? 0 : 2000,
                 'ada_abunemen' => $validated['abunemen'] ?? false,
                 'biaya_abunemen' => ($pelanggan->kategori === 'sosial' || !($validated['abunemen'] ?? false)) ? 0 : 3000,
-                'total_tagihan' => $validated['jumlah_bayar'],
+                'total_tagihan' => 0, // Akan dihitung oleh hitungTagihan()
                 'jumlah_terbayar' => $jumlahTerbayar,
-                'status_bayar' => $statusBayar,
+                'status_bayar' => $validated['status_bayar'] ?? 'BELUM_BAYAR',
                 'tanggal_bayar' => $validated['tanggal_bayar'],
             ]);
+
+            // PENTING: Hitung total tagihan dari meteran yang diinput
+            $tagihan->hitungTagihan();
+            
+            // Re-determine status berdasarkan hasil hitung
+            if ($tagihan->jumlah_terbayar >= $tagihan->total_tagihan && $tagihan->total_tagihan > 0) {
+                $tagihan->status_bayar = 'SUDAH_BAYAR';
+            } elseif ($tagihan->jumlah_terbayar > 0) {
+                $tagihan->status_bayar = 'CICILAN';
+            } else {
+                $tagihan->status_bayar = $validated['status_bayar'] ?? 'TUNGGAKAN';
+            }
+            
+            $tagihan->save();
         }
         
         // Jika bayar tunggakan, distribusikan pembayaran ke tunggakan terlama dulu (FIFO)
