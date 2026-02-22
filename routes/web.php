@@ -97,6 +97,7 @@ Route::middleware(['auth'])->group(function () {
     // Tagihan Bulanan & Meteran
     Route::get('/tagihan-bulanan', [\App\Http\Controllers\TagihanBulananController::class, 'index'])->name('tagihan-bulanan.index');
     Route::post('/tagihan-bulanan', [\App\Http\Controllers\TagihanBulananController::class, 'store'])->name('tagihan-bulanan.store');
+    Route::post('/tagihan-bulanan/batch-save', [\App\Http\Controllers\TagihanBulananController::class, 'batchSave'])->name('tagihan-bulanan.batch-save');
     Route::post('/tagihan-bulanan/generate-bulk', [\App\Http\Controllers\TagihanBulananController::class, 'generateBulk'])->name('tagihan-bulanan.generate-bulk');
     Route::post('/tagihan-bulanan/{id}/approve-konfirmasi', [\App\Http\Controllers\TagihanBulananController::class, 'approveKonfirmasi'])->name('tagihan-bulanan.approve');
     Route::post('/tagihan-bulanan/{id}/reject-konfirmasi', [\App\Http\Controllers\TagihanBulananController::class, 'rejectKonfirmasi'])->name('tagihan-bulanan.reject');

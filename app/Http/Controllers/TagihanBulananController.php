@@ -252,6 +252,72 @@ class TagihanBulananController extends Controller
         ]);
     }
 
+    /**
+     * Batch save meteran untuk banyak pelanggan sekaligus
+     */
+    public function batchSave(Request $request)
+    {
+        $validated = $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.pelanggan_id' => 'required|exists:pelanggan,id',
+            'items.*.bulan' => 'required|string|max:7',
+            'items.*.meteran_sebelum' => 'required|numeric|min:0',
+            'items.*.meteran_sesudah' => 'required|numeric|min:0',
+            'items.*.tarif_per_kubik' => 'nullable|numeric|min:0',
+            'items.*.ada_abunemen' => 'nullable|boolean',
+            'items.*.biaya_abunemen' => 'nullable|numeric|min:0',
+        ]);
+
+        $saved = 0;
+        $errors = [];
+
+        foreach ($validated['items'] as $item) {
+            try {
+                $pelanggan = Pelanggan::findOrFail($item['pelanggan_id']);
+
+                $meteranSebelum = floatval($item['meteran_sebelum'] ?? 0);
+                $meteranSesudah = floatval($item['meteran_sesudah'] ?? 0);
+                $pemakaian = max(0, $meteranSesudah - $meteranSebelum);
+
+                $tarifPerKubik = $pelanggan->kategori === 'sosial' ? 0 : floatval($item['tarif_per_kubik'] ?? 2000);
+                $adaAbunemen = $pelanggan->kategori === 'sosial' ? false : ($item['ada_abunemen'] ?? true);
+                $biayaAbunemen = ($adaAbunemen && $pelanggan->kategori !== 'sosial') ? floatval($item['biaya_abunemen'] ?? 3000) : 0;
+
+                $biayaPemakaian = $pemakaian * $tarifPerKubik;
+                $totalTagihan = $biayaPemakaian + $biayaAbunemen;
+
+                $statusBayar = $pelanggan->kategori === 'sosial' ? 'SUDAH_BAYAR' : 'BELUM_BAYAR';
+
+                TagihanBulanan::updateOrCreate(
+                    [
+                        'pelanggan_id' => $item['pelanggan_id'],
+                        'bulan' => $item['bulan'],
+                    ],
+                    [
+                        'meteran_sebelum' => $meteranSebelum,
+                        'meteran_sesudah' => $meteranSesudah,
+                        'pemakaian_kubik' => $pemakaian,
+                        'tarif_per_kubik' => $tarifPerKubik,
+                        'ada_abunemen' => $adaAbunemen,
+                        'biaya_abunemen' => $biayaAbunemen,
+                        'total_tagihan' => $totalTagihan,
+                        'status_bayar' => $statusBayar,
+                    ]
+                );
+
+                $saved++;
+            } catch (\Exception $e) {
+                $errors[] = "Pelanggan ID {$item['pelanggan_id']}: " . $e->getMessage();
+            }
+        }
+
+        return response()->json([
+            'message' => "Berhasil menyimpan {$saved} data meteran" . (count($errors) > 0 ? '. Beberapa gagal: ' . implode('; ', $errors) : ''),
+            'saved' => $saved,
+            'errors' => $errors,
+        ]);
+    }
+
     public function approveKonfirmasi($id)
     {
         $tagihan = TagihanBulanan::findOrFail($id);
