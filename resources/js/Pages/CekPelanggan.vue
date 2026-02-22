@@ -804,16 +804,20 @@
                                                 </div>
                                             </div>
                                             <div class="flex items-center gap-2">
-                                                <!-- Badge Status Tagihan (LUNAS/CICILAN) -->
+                                                <!-- Badge Status Tagihan (Sesuai 4 Status Standard) -->
                                                 <span 
                                                     :class="[
-                                                        'px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider',
-                                                        item.status_tagihan === 'SUDAH_BAYAR' ? 'bg-green-500 text-white shadow-sm' :
-                                                        item.status_tagihan === 'CICILAN' ? 'bg-yellow-400 text-white shadow-sm' :
-                                                        'bg-white/20 text-white'
+                                                        'px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-sm',
+                                                        item.status_tagihan === 'SUDAH_BAYAR' ? 'bg-green-500 text-white' :
+                                                        item.status_tagihan === 'CICILAN' ? 'bg-yellow-400 text-white' :
+                                                        item.status_tagihan === 'TUNGGAKAN' ? 'bg-red-500 text-white' :
+                                                        'bg-gray-400 text-white'
                                                     ]"
                                                 >
-                                                    {{ item.status_tagihan === 'SUDAH_BAYAR' ? '✓ Lunas' : item.status_tagihan === 'CICILAN' ? '⚠ Cicilan' : 'Belum Lunas' }}
+                                                    <template v-if="item.status_tagihan === 'SUDAH_BAYAR'">✓ Sudah Bayar</template>
+                                                    <template v-else-if="item.status_tagihan === 'CICILAN'">⚠ Cicilan</template>
+                                                    <template v-else-if="item.status_tagihan === 'TUNGGAKAN'">✖ Tunggakan</template>
+                                                    <template v-else>○ Belum Bayar</template>
                                                 </span>
                                                 <div class="text-xs text-blue-200 bg-white/10 rounded px-2 py-1">#{{ item.id }}</div>
                                             </div>
