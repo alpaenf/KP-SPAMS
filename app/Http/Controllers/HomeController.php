@@ -360,12 +360,22 @@ class HomeController extends Controller
             $statusBayarText = 'BELUM_BAYAR';
             if ($isSosial) {
                 $statusBayarText = 'SUDAH_BAYAR';
-            } elseif ($tagihanBulanCek) {
-                $statusBayarText = $tagihanBulanCek->status_bayar;
             } else {
-                // Jika tidak ada record tagihan, cek di pembayarans
+                // Cek data pembayaran riil dulu (fallback utama)
                 $pembayaranBulanCek = $p->pembayarans->where('bulan_bayar', $bulanTarget)->first();
-                $statusBayarText = $pembayaranBulanCek ? 'SUDAH_BAYAR' : 'BELUM_BAYAR';
+                
+                if ($tagihanBulanCek) {
+                    // Gunakan status dari tagihan_bulanan jika ada
+                    $statusBayarText = $tagihanBulanCek->status_bayar;
+                    
+                    // Namun jika di tagihan_bulanan 'BELUM_BAYAR' tapi di pembayarans ada data, anggap lunas/cicilan
+                    if ($statusBayarText === 'BELUM_BAYAR' && $pembayaranBulanCek) {
+                        $statusBayarText = 'SUDAH_BAYAR';
+                    }
+                } else {
+                    // Jika tidak ada record tagihan, cek di pembayarans
+                    $statusBayarText = $pembayaranBulanCek ? 'SUDAH_BAYAR' : 'BELUM_BAYAR';
+                }
             }
         
             // Jika belum bayar pada bulan target tapi ada tunggakan masa lalu, status jadi MENUNGGAK

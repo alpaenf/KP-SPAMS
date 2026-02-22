@@ -685,9 +685,10 @@
                                         <div>
                                             <span class="text-sm font-medium text-gray-700">Bayar Tunggakan</span>
                                             <p class="text-xs text-amber-600 font-medium">
-                                                {{ listTunggakan.length > 0 
-                                                    ? 'Otomatis: Rp ' + Number(listTunggakan.reduce((sum, t) => sum + (t.sisa_tagihan || 0), 0)).toLocaleString('id-ID') 
-                                                    : 'Tidak ada (Rp 0)' 
+                                                {{ 
+                                                    listTunggakan.length > 0 
+                                                        ? 'Total: Rp ' + Number(listTunggakan.reduce((sum, t) => sum + (t.sisa_tagihan || 0), 0)).toLocaleString('id-ID') 
+                                                        : '(Rp 0 - Tidak Ada Tunggakan)' 
                                                 }}
                                             </p>
                                         </div>
@@ -898,15 +899,15 @@
                                                             </div>
                                                         </div>
                                                         <!-- Baris tunggakan (jika ada) -->
-                                                        <div v-if="item.tunggakan > 0" class="flex items-center justify-between px-3 py-2.5 border-b border-red-100 bg-red-50">
+                                                        <div v-if="item.tunggakan > 0" class="flex items-center justify-between px-3 py-2.5 border-b border-red-100 bg-red-100">
                                                             <div>
-                                                                <div class="text-sm text-red-700 font-medium flex items-center gap-1.5">
-                                                                    <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
+                                                                <div class="text-sm text-red-700 font-bold flex items-center gap-1.5">
+                                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
                                                                     Pelunasan Tunggakan
                                                                 </div>
-                                                                <div class="text-xs text-red-400 mt-0.5 pl-4">Tagihan dari bulan sebelumnya</div>
+                                                                <div class="text-[10px] text-red-500 mt-0.5 pl-5 font-medium italic">Tagihan dari bulan-bulan sebelumnya</div>
                                                             </div>
-                                                            <div class="text-sm font-semibold text-red-700">Rp {{ Number(item.tunggakan).toLocaleString('id-ID') }}</div>
+                                                            <div class="text-sm font-bold text-red-700">Rp {{ Number(item.tunggakan).toLocaleString('id-ID') }}</div>
                                                         </div>
                                                         <!-- Total -->
                                                         <div class="flex items-center justify-between px-3 py-3 bg-gradient-to-r from-blue-600 to-indigo-600">
@@ -1555,17 +1556,24 @@ const submitPembayaran = async () => {
                 allPelanggan.value[pelangganIndex].bulan_dibayar.push(response.data.pembayaran.bulan_bayar);
             }
             
-            // Update status bayar jika bayar bulan ini
-            if (response.data.pembayaran.bulan_bayar === props.bulanIni) {
-                allPelanggan.value[pelangganIndex].sudah_bayar = true;
-                // Format tanggal untuk display
-                const date = new Date(response.data.pembayaran.tanggal_bayar);
-                allPelanggan.value[pelangganIndex].tanggal_bayar = date.toLocaleDateString('id-ID', { 
-                    day: '2-digit', 
-                    month: '2-digit', 
-                    year: 'numeric' 
-                });
-                allPelanggan.value[pelangganIndex].jumlah_bayar = response.data.pembayaran.jumlah_bayar;
+            // Update status bayar secara akurat
+            allPelanggan.value[pelangganIndex].status_bayar = response.data.pembayaran.status_tagihan || 'SUDAH_BAYAR';
+            allPelanggan.value[pelangganIndex].sudah_bayar = (allPelanggan.value[pelangganIndex].status_bayar === 'SUDAH_BAYAR');
+            
+            // Format tanggal untuk display jika bayar untuk bulan filter/ini
+            const date = new Date(response.data.pembayaran.tanggal_bayar);
+            allPelanggan.value[pelangganIndex].tanggal_bayar = date.toLocaleDateString('id-ID', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric' 
+            });
+            allPelanggan.value[pelangganIndex].jumlah_bayar = response.data.pembayaran.jumlah_bayar;
+            
+            // Refresh has_tunggakan flag
+            if (response.data.pembayaran.sisa_tunggakan > 0) {
+                allPelanggan.value[pelangganIndex].has_tunggakan = true;
+            } else if (payload.bayar_tunggakan && payload.jumlah_bayar_tunggakan >= payload.tunggakan) {
+                allPelanggan.value[pelangganIndex].has_tunggakan = false;
             }
         }
         

@@ -381,6 +381,12 @@ class PembayaranController extends Controller
             }
         }
         
+        // Hitung sisa tunggakan untuk dikembalikan ke frontend
+        $sisaTunggakanSetelahBayar = \App\Models\TagihanBulanan::where('pelanggan_id', $pembayaran->pelanggan_id)
+            ->whereIn('status_bayar', ['BELUM_BAYAR', 'TUNGGAKAN', 'CICILAN'])
+            ->get()
+            ->sum(fn($t) => $t->total_tagihan - $t->jumlah_terbayar);
+
         return response()->json([
             'message' => 'Pembayaran berhasil ditambahkan',
             'pembayaran' => [
@@ -393,6 +399,8 @@ class PembayaranController extends Controller
                 'tunggakan' => $pembayaran->tunggakan,
                 'jumlah_kubik' => $pembayaran->jumlah_kubik,
                 'jumlah_bayar' => $pembayaran->jumlah_bayar,
+                'status_tagihan' => $tagihan ? $tagihan->status_bayar : 'SUDAH_BAYAR',
+                'sisa_tunggakan' => $sisaTunggakanSetelahBayar,
                 'keterangan' => $pembayaran->keterangan,
             ],
         ], 201);
