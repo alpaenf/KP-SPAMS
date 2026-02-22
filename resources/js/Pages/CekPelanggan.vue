@@ -563,21 +563,9 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Checkbox opsional untuk bayar tunggakan -->
-                                <label class="flex items-start gap-2 cursor-pointer p-2 rounded-lg hover:bg-amber-100 transition">
-                                    <input
-                                        type="checkbox"
-                                        v-model="pembayaranForm.bayar_tunggakan"
-                                        @change="toggleBayarTunggakan"
-                                        class="mt-0.5 w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-2 focus:ring-amber-500"
-                                    />
-                                    <div>
-                                        <span class="text-sm font-medium text-amber-800">Bayar tunggakan sekaligus? <span class="font-normal text-amber-600">(opsional)</span></span>
-                                        <p class="text-xs text-amber-600 mt-0.5">Centang jika pelanggan ingin melunasi sebagian atau semua tunggakan bersamaan dengan pembayaran bulan ini.</p>
-                                    </div>
-                                </label>
-                                    
-                                <div v-if="pembayaranForm.bayar_tunggakan" class="ml-6 mt-2">
+                                <!-- Catatan: Checkbox sekarang ada di bawah bersama Abunemen agar selalu muncul -->
+                                
+                                <div v-if="pembayaranForm.bayar_tunggakan && listTunggakan.length > 0" class="mt-2 pt-2 border-t border-amber-200">
                                     <label class="block text-sm font-medium text-amber-800 mb-1">
                                         Jumlah Tunggakan yang Dibayar (Rp)
                                         <span class="text-amber-600 text-xs font-normal">— Bisa dicicil</span>
@@ -683,6 +671,25 @@
                                         <div>
                                             <span class="text-sm font-medium text-gray-700">Abunemen</span>
                                             <p class="text-xs text-gray-500">Biaya tambahan: Rp 3.000</p>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div>
+                                    <label class="flex items-center space-x-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            v-model="pembayaranForm.bayar_tunggakan"
+                                            @change="toggleBayarTunggakan"
+                                            class="w-5 h-5 text-amber-600 border-gray-300 rounded focus:ring-2 focus:ring-amber-500"
+                                        />
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-700">Bayar Tunggakan</span>
+                                            <p class="text-xs text-amber-600 font-medium">
+                                                {{ listTunggakan.length > 0 
+                                                    ? 'Otomatis: Rp ' + Number(listTunggakan.reduce((sum, t) => sum + (t.sisa_tagihan || 0), 0)).toLocaleString('id-ID') 
+                                                    : 'Tidak ada (Rp 0)' 
+                                                }}
+                                            </p>
                                         </div>
                                     </label>
                                 </div>
