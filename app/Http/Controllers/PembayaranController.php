@@ -164,26 +164,35 @@ class PembayaranController extends Controller
             ->where('bulan_bayar', $validated['bulan_bayar'])
             ->first();
         
-        // Reject duplicate HANYA jika bukan cicilan
-        // Untuk cicilan, allow multiple payments (pembayaran bertahap)
-        if ($existing && $validated['status_bayar'] !== 'CICILAN') {
+        // Untuk CICILAN yang sudah ada pembayaran: UPDATE (accumulate), jangan create baru
+        if ($existing && $validated['status_bayar'] === 'CICILAN') {
+            // Update jumlah_bayar dengan accumulate (tambahkan cicilan baru)
+            $existing->jumlah_bayar = $existing->jumlah_bayar + $validated['jumlah_bayar'];
+            $existing->tanggal_bayar = $validated['tanggal_bayar']; // Update ke tanggal cicilan terakhir
+            $existing->keterangan = $validated['keterangan'] ?? $existing->keterangan;
+            $existing->save();
+            
+            $pembayaran = $existing; // Use existing pembayaran untuk update tagihan nanti
+        } elseif ($existing) {
+            // Reject duplicate untuk non-cicilan
             return response()->json([
                 'message' => 'Pembayaran untuk bulan ini sudah ada. Silakan edit pembayaran yang sudah ada.'
             ], 422);
-        }
-
-        $pembayaran = Pembayaran::create([
-            'pelanggan_id' => $pelangganId,
-            'bulan_bayar' => $validated['bulan_bayar'],
-            'tanggal_bayar' => $validated['tanggal_bayar'],
-            'meteran_sebelum' => $validated['meteran_sebelum'] ?? null,
-            'meteran_sesudah' => $validated['meteran_sesudah'] ?? null,
-            'abunemen' => $validated['abunemen'] ?? false,
-            'tunggakan' => $validated['tunggakan'] ?? 0,
-            'jumlah_kubik' => $validated['jumlah_kubik'] ?? 0,
-            'jumlah_bayar' => $validated['jumlah_bayar'],
-            'keterangan' => $validated['keterangan'] ?? null,
-        ]);        
+        } else {
+            // Create pembayaran baru (cicilan pertama kali atau pembayaran umum)
+            $pembayaran = Pembayaran::create([
+                'pelanggan_id' => $pelangganId,
+                'bulan_bayar' => $validated['bulan_bayar'],
+                'tanggal_bayar' => $validated['tanggal_bayar'],
+                'meteran_sebelum' => $validated['meteran_sebelum'] ?? null,
+                'meteran_sesudah' => $validated['meteran_sesudah'] ?? null,
+                'abunemen' => $validated['abunemen'] ?? false,
+                'tunggakan' => $validated['tunggakan'] ?? 0,
+                'jumlah_kubik' => $validated['jumlah_kubik'] ?? 0,
+                'jumlah_bayar' => $validated['jumlah_bayar'],
+                'keterangan' => $validated['keterangan'] ?? null,
+            ]);
+        }        
         
         // Update atau create tagihan_bulanan
         $tagihan = \App\Models\TagihanBulanan::where('pelanggan_id', $pelangganId)
