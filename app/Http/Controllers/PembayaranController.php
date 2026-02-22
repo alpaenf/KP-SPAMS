@@ -126,6 +126,13 @@ class PembayaranController extends Controller
 
     public function store(Request $request, $pelangganId)
     {
+        // Normalize keterangan jadi uppercase sebelum validation
+        if ($request->has('keterangan')) {
+            $request->merge([
+                'keterangan' => strtoupper(trim($request->input('keterangan')))
+            ]);
+        }
+        
         $validated = $request->validate([
             'bulan_bayar' => 'required|string|max:7',
             'tanggal_bayar' => 'required|date',
@@ -184,8 +191,8 @@ class PembayaranController extends Controller
                 $tagihan->ada_abunemen = $validated['abunemen'];
             }
             
-            // Trim dan uppercase keterangan untuk konsistensi
-            $keterangan = trim(strtoupper($validated['keterangan'] ?? ''));
+            // Keterangan sudah di-uppercase di awal (sebelum validation)
+            $keterangan = $validated['keterangan'];
             
             // Logika status bayar berdasarkan keterangan:
             // - TUNGGAKAN: tetap BELUM_BAYAR (belum dibayar sama sekali)
@@ -242,7 +249,8 @@ class PembayaranController extends Controller
             $tagihan->save();
         } else {
             // Jika belum ada tagihan, buat baru
-            $keterangan = trim(strtoupper($validated['keterangan'] ?? ''));
+            // Keterangan sudah di-uppercase di awal (sebelum validation)
+            $keterangan = $validated['keterangan'];
             
             // Logika status bayar:
             // - TUNGGAKAN: BELUM_BAYAR (belum dibayar)
