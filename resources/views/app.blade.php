@@ -12,6 +12,10 @@
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <meta name="apple-mobile-web-app-title" content="PAMSIMAS">
         <link rel="manifest" href="/manifest.webmanifest">
+        <link rel="shortcut icon" href="/images/icon-32x32.png" type="image/png">
+        <link rel="icon" type="image/png" sizes="64x64" href="/images/icon-64x64.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/images/icon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/images/icon-16x16.png">
         <link rel="apple-touch-icon" href="/images/icon-192x192.png">
         
         <title inertia>{{ config('app.name', 'KP-SPAMS') }}</title>
