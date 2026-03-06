@@ -140,7 +140,7 @@
 
     <!-- ===== CONTROL PANEL ===== -->
     <div class="control-panel">
-        <h3>⚙️ Pilih Ukuran Kertas</h3>
+        <h3>Pilih Ukuran Kertas</h3>
         <div class="size-pills">
             <div class="size-pill" data-size="58" onclick="setSize('58')">
                 58mm <span class="sub">(thermal kecil)</span>
@@ -154,13 +154,13 @@
         </div>
         <div class="btn-row">
             <button class="print-button btn-print" onclick="window.print()">
-                🖨️ Cetak Struk
+                Cetak Struk
             </button>
             <button class="print-button btn-bt" id="bt-print-btn" onclick="printViaBluetooth()">
-                🔵 Print Bluetooth
+                Print Bluetooth
             </button>
             <button class="print-button btn-close" onclick="window.close()">
-                ✖️ Tutup
+                Tutup
             </button>
         </div>
         <div id="bt-status"></div>
@@ -260,6 +260,13 @@
                 </div>
                 @endif
 
+                @if($pembayaran['keterangan'])
+                <div class="total-row">
+                    <div class="total-label">Keterangan</div>
+                    <div class="total-value">{{ $pembayaran['keterangan'] }}</div>
+                </div>
+                @endif
+
                 <!-- Grand Total -->
                 <div class="grand-total">
                     <div class="total-row">
@@ -269,19 +276,11 @@
                 </div>
             </div>
 
-            @if($pembayaran['keterangan'])
-            <div class="divider"></div>
-            <div class="info-row">
-                <div class="info-label">Keterangan</div>
-                <div class="info-value">: {{ $pembayaran['keterangan'] }}</div>
-            </div>
-            @endif
-
             <div class="divider"></div>
 
             <!-- Status -->
             <div style="text-align: center; margin: 15px 0;">
-                <span class="status-badge">✓ LUNAS</span>
+                <span class="status-badge">LUNAS</span>
             </div>
 
             <!-- Footer -->
@@ -330,7 +329,7 @@ async function printViaBluetooth() {
 
     if (!navigator.bluetooth) {
         statusEl.style.color = '#c62828';
-        statusEl.textContent = '❌ Browser tidak mendukung Bluetooth. Gunakan Chrome/Edge versi terbaru.';
+        statusEl.textContent = 'Browser tidak mendukung Bluetooth. Gunakan Chrome/Edge versi terbaru.';
         return;
     }
 
@@ -349,7 +348,7 @@ async function printViaBluetooth() {
 
     btnEl.disabled       = true;
     statusEl.style.color = '#1565c0';
-    statusEl.textContent = '🔍 Mencari printer Bluetooth... (pilih printer di dialog browser)';
+    statusEl.textContent = 'Mencari printer Bluetooth... (pilih printer di dialog browser)';
 
     let device;
     try {
@@ -360,12 +359,12 @@ async function printViaBluetooth() {
     } catch (err) {
         btnEl.disabled       = false;
         statusEl.style.color = '#c62828';
-        statusEl.textContent = err.name === 'NotFoundError' ? '❌ Tidak ada printer dipilih.' : '❌ ' + err.message;
+        statusEl.textContent = err.name === 'NotFoundError' ? 'Tidak ada printer dipilih.' : 'Error: ' + err.message;
         return;
     }
 
     try {
-        statusEl.textContent = '⚡ Menghubungkan ke "' + device.name + '"...';
+        statusEl.textContent = 'Menghubungkan ke "' + device.name + '"...';
         const server = await device.gatt.connect();
 
         let characteristic = null;
@@ -391,7 +390,7 @@ async function printViaBluetooth() {
             throw new Error('Karakteristik write printer tidak ditemukan. Pastikan printer ESC/POS kompatibel.');
         }
 
-        statusEl.textContent = '🖨️ Mengirim data ke printer...';
+        statusEl.textContent = 'Mengirim data ke printer...';
 
         const data  = buildEscPosData(PAGE_CONFIG[currentSize].btCols);
         const CHUNK = 512;
@@ -407,12 +406,12 @@ async function printViaBluetooth() {
 
         device.gatt.disconnect();
         statusEl.style.color = '#2e7d32';
-        statusEl.textContent = '✅ Berhasil dicetak via Bluetooth!';
+        statusEl.textContent = 'Berhasil dicetak via Bluetooth!';
 
     } catch (err) {
         if (device && device.gatt.connected) device.gatt.disconnect();
         statusEl.style.color = '#c62828';
-        statusEl.textContent = '❌ ' + err.message;
+        statusEl.textContent = 'Error: ' + err.message;
     } finally {
         btnEl.disabled = false;
     }
@@ -480,16 +479,15 @@ function buildEscPosData(cols = 42) {
     @if($pembayaran['tunggakan'] > 0)
     row2('Tunggakan', 'Rp {{ number_format($pembayaran['tunggakan'], 0, ',', '.') }}');
     @endif
+    @if($pembayaran['keterangan'])
+    line('Keterangan: {{ $pembayaran['keterangan'] }}');
+    @endif
     dash('=');
     cmd(ESC, 0x45, 0x01);
     cmd(GS, 0x21, 0x01);       // Double height for total
     row2('TOTAL BAYAR', 'Rp {{ number_format($pembayaran['jumlah_bayar'], 0, ',', '.') }}');
     cmd(GS, 0x21, 0x00);
     cmd(ESC, 0x45, 0x00);
-    @if($pembayaran['keterangan'])
-    line();
-    line('Keterangan: {{ $pembayaran['keterangan'] }}');
-    @endif
     line();
     cmd(ESC, 0x61, 0x01);
     dash('=');
