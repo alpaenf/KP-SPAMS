@@ -60,6 +60,14 @@
               <svg v-else-if="tab.icon === 'chat-alt-2'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
               </svg>
+              <!-- Question Icon -->
+              <svg v-else-if="tab.icon === 'question'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <!-- Currency Icon -->
+              <svg v-else-if="tab.icon === 'currency'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
               <span>{{ tab.label }}</span>
             </button>
           </div>
@@ -579,6 +587,182 @@
             </button>
           </form>
         </div>
+
+        <!-- FAQ Tab -->
+        <div v-if="activeTab === 'faq'" class="space-y-6">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900">Pertanyaan Umum (FAQ)</h2>
+              <p class="text-sm text-gray-500 mt-1">Atur pertanyaan dan jawaban yang sering ditanyakan</p>
+            </div>
+            <button @click="openFaqModal()" class="w-full sm:w-auto bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 transition">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+              Tambah FAQ
+            </button>
+          </div>
+          <div v-if="faqs.length > 0" class="space-y-4">
+            <div v-for="(faq, index) in faqs" :key="faq.id" class="bg-white rounded-xl shadow-md p-4 sm:p-6">
+              <div class="flex flex-col sm:flex-row justify-between gap-4">
+                <div class="flex-1">
+                  <div class="flex items-start gap-3 mb-2">
+                    <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm">{{ index + 1 }}</div>
+                    <div class="flex-1">
+                      <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ faq.pertanyaan }}</h3>
+                      <p class="text-gray-600 text-sm leading-relaxed">{{ faq.jawaban }}</p>
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap gap-2 mt-2">
+                    <span class="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600">Urutan: {{ faq.urutan }}</span>
+                    <span :class="faq.is_active ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'" class="text-xs px-3 py-1 rounded-full">{{ faq.is_active ? 'Aktif' : 'Nonaktif' }}</span>
+                  </div>
+                </div>
+                <div class="flex sm:flex-col gap-2">
+                  <button @click="openFaqModal(faq)" class="flex-1 sm:flex-none bg-yellow-500 text-white px-3 py-2 rounded-lg hover:bg-yellow-600 transition text-sm">Edit</button>
+                  <button @click="deleteFaq(faq)" class="flex-1 sm:flex-none bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition text-sm">Hapus</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="bg-white rounded-xl shadow p-12 text-center text-gray-400">
+            Belum ada FAQ. Klik "Tambah FAQ" untuk menambahkan.
+          </div>
+          <Teleport to="body">
+            <div v-if="showFaqModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="closeFaqModal">
+              <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                  <h3 class="text-xl font-bold text-gray-800 mb-5">{{ editingFaq ? 'Edit FAQ' : 'Tambah FAQ Baru' }}</h3>
+                  <form @submit.prevent="submitFaq" class="space-y-4">
+                    <div>
+                      <label class="block text-sm font-semibold text-gray-700 mb-2">Pertanyaan *</label>
+                      <input v-model="faqForm.pertanyaan" type="text" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Pertanyaan yang sering ditanyakan..." />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-gray-700 mb-2">Jawaban *</label>
+                      <textarea v-model="faqForm.jawaban" required rows="5" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" placeholder="Jawaban lengkap..."></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Urutan</label>
+                        <input v-model.number="faqForm.urutan" type="number" min="0" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                      </div>
+                      <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                        <select v-model="faqForm.is_active" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                          <option :value="true">Aktif</option>
+                          <option :value="false">Nonaktif</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="flex gap-3 pt-2">
+                      <button type="button" @click="closeFaqModal" class="flex-1 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium">Batal</button>
+                      <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">{{ editingFaq ? 'Perbarui' : 'Simpan' }}</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </Teleport>
+        </div>
+
+        <!-- Informasi Tarif Tab -->
+        <div v-if="activeTab === 'tarif'" class="space-y-6">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900">Informasi Tarif</h2>
+              <p class="text-sm text-gray-500 mt-1">Atur informasi harga dan biaya layanan</p>
+            </div>
+            <button @click="openTarifModal()" class="w-full sm:w-auto bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 transition">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+              Tambah Tarif
+            </button>
+          </div>
+          <div v-if="tarifs.length > 0" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div v-for="tarif in tarifs" :key="tarif.id" class="bg-gradient-to-br from-blue-50 to-white rounded-xl shadow-md hover:shadow-xl transition-all">
+              <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                  <div class="flex-1">
+                    <h3 class="text-xl font-bold text-gray-800 mb-1">{{ tarif.judul }}</h3>
+                    <p v-if="tarif.deskripsi" class="text-sm text-gray-600">{{ tarif.deskripsi }}</p>
+                  </div>
+                  <span :class="tarif.is_active ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'" class="text-xs px-2 py-1 rounded-full flex-shrink-0">{{ tarif.is_active ? 'Aktif' : 'Nonaktif' }}</span>
+                </div>
+                <div class="bg-white rounded-lg p-4 mb-4 border-l-4 border-blue-500">
+                  <div class="flex items-baseline gap-2">
+                    <span class="text-2xl font-bold text-blue-600">Rp {{ formatRupiah(tarif.harga) }}</span>
+                    <span class="text-gray-600 text-sm">/ {{ tarif.satuan }}</span>
+                  </div>
+                </div>
+                <div class="flex flex-wrap gap-2 mb-4">
+                  <span class="text-xs px-3 py-1 rounded-full bg-purple-100 text-purple-600">{{ tarif.kategori }}</span>
+                  <span class="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600">Urutan: {{ tarif.urutan }}</span>
+                </div>
+                <div class="flex gap-2">
+                  <button @click="openTarifModal(tarif)" class="flex-1 bg-yellow-500 text-white px-3 py-2 rounded-lg hover:bg-yellow-600 transition text-sm font-medium">Edit</button>
+                  <button @click="deleteTarif(tarif)" class="flex-1 bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition text-sm font-medium">Hapus</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="bg-white rounded-xl shadow p-12 text-center text-gray-400">
+            Belum ada informasi tarif. Klik "Tambah Tarif" untuk menambahkan.
+          </div>
+          <Teleport to="body">
+            <div v-if="showTarifModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="closeTarifModal">
+              <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                  <h3 class="text-xl font-bold text-gray-800 mb-5">{{ editingTarif ? 'Edit Informasi Tarif' : 'Tambah Informasi Tarif' }}</h3>
+                  <form @submit.prevent="submitTarif" class="space-y-4">
+                    <div>
+                      <label class="block text-sm font-semibold text-gray-700 mb-2">Judul *</label>
+                      <input v-model="tarifForm.judul" type="text" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Contoh: Tarif Pemakaian Normal" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold text-gray-700 mb-2">Deskripsi</label>
+                      <textarea v-model="tarifForm.deskripsi" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" placeholder="Deskripsi singkat (opsional)"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Harga *</label>
+                        <input v-model.number="tarifForm.harga" type="number" step="0.01" min="0" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                      </div>
+                      <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Satuan</label>
+                        <input v-model="tarifForm.satuan" type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="m³, bulan, unit" />
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                      <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Kategori</label>
+                        <select v-model="tarifForm.kategori" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                          <option value="tarif">Tarif</option>
+                          <option value="biaya">Biaya</option>
+                          <option value="retribusi">Retribusi</option>
+                          <option value="lainnya">Lainnya</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Urutan</label>
+                        <input v-model.number="tarifForm.urutan" type="number" min="0" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                      </div>
+                      <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                        <select v-model="tarifForm.is_active" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                          <option :value="true">Aktif</option>
+                          <option :value="false">Nonaktif</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="flex gap-3 pt-2">
+                      <button type="button" @click="closeTarifModal" class="flex-1 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium">Batal</button>
+                      <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">{{ editingTarif ? 'Perbarui' : 'Simpan' }}</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </Teleport>
+        </div>
+
       </div>
     </div>
   </AppLayout>
@@ -599,6 +783,8 @@ const tabs = [
   { id: 'galeri', label: 'Galeri', icon: 'photograph' },
   { id: 'sejarah', label: 'Sejarah', icon: 'book-open' },
   { id: 'testimoni', label: 'Testimoni', icon: 'chat-alt-2' },
+  { id: 'faq', label: 'FAQ', icon: 'question' },
+  { id: 'tarif', label: 'Informasi Tarif', icon: 'currency' },
 ];
 
 // Visi Misi
@@ -644,6 +830,8 @@ onMounted(() => {
 });
 
 const loadAllData = async () => {
+  loadFaqs();
+  loadTarifs();
   try {
     const timestamp = Date.now();
     const [visiMisiRes, layananRes, beritaRes, galeriRes, sejarahRes] = await Promise.all([
@@ -904,6 +1092,88 @@ const deleteTestimoni = async (id) => {
     });
   } catch (error) {
     console.error('Error deleting testimoni:', error);
+  }
+};
+
+// ===== FAQ =====
+const faqs = ref([]);
+const showFaqModal = ref(false);
+const editingFaq = ref(null);
+const faqForm = ref({ pertanyaan: '', jawaban: '', urutan: 0, is_active: true });
+
+const loadFaqs = async () => {
+  try {
+    const res = await fetch('/api/admin/faqs');
+    faqs.value = await res.json();
+  } catch (e) { console.error('Error loading faqs:', e); }
+};
+
+const openFaqModal = (faq = null) => {
+  editingFaq.value = faq;
+  faqForm.value = faq
+    ? { pertanyaan: faq.pertanyaan, jawaban: faq.jawaban, urutan: faq.urutan, is_active: faq.is_active }
+    : { pertanyaan: '', jawaban: '', urutan: 0, is_active: true };
+  showFaqModal.value = true;
+};
+const closeFaqModal = () => { showFaqModal.value = false; editingFaq.value = null; };
+
+const submitFaq = () => {
+  if (editingFaq.value) {
+    router.put(`/faqs/${editingFaq.value.id}`, faqForm.value, {
+      onSuccess: () => { closeFaqModal(); loadFaqs(); }
+    });
+  } else {
+    router.post('/faqs', faqForm.value, {
+      onSuccess: () => { closeFaqModal(); loadFaqs(); }
+    });
+  }
+};
+
+const deleteFaq = (faq) => {
+  if (confirm(`Hapus FAQ "${faq.pertanyaan}"?`)) {
+    router.delete(`/faqs/${faq.id}`, { onSuccess: () => loadFaqs() });
+  }
+};
+
+// ===== INFORMASI TARIF =====
+const tarifs = ref([]);
+const showTarifModal = ref(false);
+const editingTarif = ref(null);
+const tarifForm = ref({ judul: '', deskripsi: '', harga: 0, satuan: 'm³', kategori: 'tarif', urutan: 0, is_active: true });
+
+const formatRupiah = (v) => new Intl.NumberFormat('id-ID').format(v);
+
+const loadTarifs = async () => {
+  try {
+    const res = await fetch('/api/admin/informasi-tarif');
+    tarifs.value = await res.json();
+  } catch (e) { console.error('Error loading tarifs:', e); }
+};
+
+const openTarifModal = (tarif = null) => {
+  editingTarif.value = tarif;
+  tarifForm.value = tarif
+    ? { judul: tarif.judul, deskripsi: tarif.deskripsi || '', harga: parseFloat(tarif.harga), satuan: tarif.satuan, kategori: tarif.kategori, urutan: tarif.urutan, is_active: tarif.is_active }
+    : { judul: '', deskripsi: '', harga: 0, satuan: 'm³', kategori: 'tarif', urutan: 0, is_active: true };
+  showTarifModal.value = true;
+};
+const closeTarifModal = () => { showTarifModal.value = false; editingTarif.value = null; };
+
+const submitTarif = () => {
+  if (editingTarif.value) {
+    router.put(`/informasi-tarif/${editingTarif.value.id}`, tarifForm.value, {
+      onSuccess: () => { closeTarifModal(); loadTarifs(); }
+    });
+  } else {
+    router.post('/informasi-tarif', tarifForm.value, {
+      onSuccess: () => { closeTarifModal(); loadTarifs(); }
+    });
+  }
+};
+
+const deleteTarif = (tarif) => {
+  if (confirm(`Hapus tarif "${tarif.judul}"?`)) {
+    router.delete(`/informasi-tarif/${tarif.id}`, { onSuccess: () => loadTarifs() });
   }
 };
 </script>

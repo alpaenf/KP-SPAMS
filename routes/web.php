@@ -148,15 +148,21 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/map-settings/{mapSetting}', [\App\Http\Controllers\Admin\MapSettingController::class, 'update'])->name('map-settings.update');
     Route::delete('/map-settings/{mapSetting}', [\App\Http\Controllers\Admin\MapSettingController::class, 'destroy'])->name('map-settings.destroy');
     
-    // FAQ Management
-    Route::get('/admin/faqs', [\App\Http\Controllers\Admin\FaqController::class, 'index'])->name('admin.faqs');
+    // FAQ Management (merged into Landing Page)
+    Route::get('/admin/faqs', function () {
+        return redirect('/admin/landing-page');
+    })->name('admin.faqs');
+    Route::get('/api/admin/faqs', [\App\Http\Controllers\Admin\FaqController::class, 'getAll'])->name('admin.faqs.all');
     Route::post('/faqs', [\App\Http\Controllers\Admin\FaqController::class, 'store'])->name('faqs.store');
     Route::put('/faqs/{faq}', [\App\Http\Controllers\Admin\FaqController::class, 'update'])->name('faqs.update');
     Route::delete('/faqs/{faq}', [\App\Http\Controllers\Admin\FaqController::class, 'destroy'])->name('faqs.destroy');
     Route::post('/faqs/reorder', [\App\Http\Controllers\Admin\FaqController::class, 'reorder'])->name('faqs.reorder');
     
-    // Informasi Tarif Management
-    Route::get('/admin/informasi-tarif', [\App\Http\Controllers\Admin\InformasiTarifController::class, 'index'])->name('admin.informasi-tarif');
+    // Informasi Tarif Management (merged into Landing Page)
+    Route::get('/admin/informasi-tarif', function () {
+        return redirect('/admin/landing-page');
+    })->name('admin.informasi-tarif');
+    Route::get('/api/admin/informasi-tarif', [\App\Http\Controllers\Admin\InformasiTarifController::class, 'getAll'])->name('admin.informasi-tarif.all');
     Route::post('/informasi-tarif', [\App\Http\Controllers\Admin\InformasiTarifController::class, 'store'])->name('informasi-tarif.store');
     Route::put('/informasi-tarif/{informasiTarif}', [\App\Http\Controllers\Admin\InformasiTarifController::class, 'update'])->name('informasi-tarif.update');
     Route::delete('/informasi-tarif/{informasiTarif}', [\App\Http\Controllers\Admin\InformasiTarifController::class, 'destroy'])->name('informasi-tarif.destroy');

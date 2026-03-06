@@ -100,12 +100,6 @@
                                         <Link href="/admin/map-settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800 transition">
                                             Pengaturan Peta
                                         </Link>
-                                        <Link href="/admin/faqs" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800 transition">
-                                            Kelola FAQ
-                                        </Link>
-                                        <Link href="/admin/informasi-tarif" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800 transition">
-                                            Kelola Informasi Tarif
-                                        </Link>
                                         <Link href="/admin/pengelola" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800 transition">
                                             Manajemen Pengelola
                                         </Link>
@@ -270,18 +264,6 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                                     </svg>
                                     Pengaturan Peta
-                                </Link>
-                                <Link href="/admin/faqs" @click="mobileMenuOpen = false" class="flex items-center px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition">
-                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Kelola FAQ
-                                </Link>
-                                <Link href="/admin/informasi-tarif" @click="mobileMenuOpen = false" class="flex items-center px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition">
-                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    </svg>
-                                    Kelola Informasi Tarif
                                 </Link>
                                 <Link href="/admin/pengelola" @click="mobileMenuOpen = false" class="flex items-center px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition">
                                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -192,7 +192,13 @@ class PembayaranController extends Controller
             'jumlah_bayar_tunggakan' => 'nullable|numeric|min:0',
             'id_tunggakan' => 'nullable|array',
             'id_tunggakan.*' => 'integer|exists:tagihan_bulanan,id',
+            'foto_meteran' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
+
+        // Handle foto meteran upload
+        if ($request->hasFile('foto_meteran')) {
+            $validated['foto_meteran'] = $request->file('foto_meteran')->store('foto-meteran', 'public');
+        }
 
         $pelanggan = Pelanggan::findOrFail($pelangganId);
         
@@ -211,6 +217,9 @@ class PembayaranController extends Controller
             $existing->jumlah_bayar = $existing->jumlah_bayar + $validated['jumlah_bayar'];
             $existing->tanggal_bayar = $validated['tanggal_bayar'];
             $existing->keterangan = $validated['keterangan'] ?? $existing->keterangan;
+            if (isset($validated['foto_meteran'])) {
+                $existing->foto_meteran = $validated['foto_meteran'];
+            }
             $existing->save();
             
             $pembayaran = $existing;
@@ -220,6 +229,9 @@ class PembayaranController extends Controller
             $existing->tanggal_bayar = $validated['tanggal_bayar'];
             $existing->keterangan = $validated['keterangan'] ?? $existing->keterangan;
             $existing->tunggakan = $validated['jumlah_bayar_tunggakan'] ?? 0;
+            if (isset($validated['foto_meteran'])) {
+                $existing->foto_meteran = $validated['foto_meteran'];
+            }
             $existing->save();
             
             $pembayaran = $existing;
@@ -241,6 +253,7 @@ class PembayaranController extends Controller
                 'jumlah_kubik' => $validated['jumlah_kubik'] ?? 0,
                 'jumlah_bayar' => $validated['jumlah_bayar'],
                 'keterangan' => $validated['keterangan'] ?? null,
+                'foto_meteran' => $validated['foto_meteran'] ?? null,
             ]);
         }        
         

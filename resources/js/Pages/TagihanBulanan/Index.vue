@@ -894,6 +894,26 @@
                                 placeholder="Catatan bebas (opsional)..."
                             />
                         </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Foto Bukti Meteran <span class="text-gray-400 font-normal">(opsional)</span></label>
+                            <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                @change="onFotoMeteranChange"
+                                class="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-800 hover:file:bg-blue-100 cursor-pointer border border-gray-300 rounded-lg"
+                            />
+                            <p class="text-xs text-gray-400 mt-1">Format: JPG, PNG, WebP. Maks 5MB.</p>
+                            <div v-if="fotoMeteranPreview" class="mt-2 relative inline-block">
+                                <img :src="fotoMeteranPreview" class="h-28 w-auto rounded-lg border border-gray-200 object-cover shadow-sm" alt="Preview foto meteran" />
+                                <button
+                                    type="button"
+                                    @click="clearFotoMeteran"
+                                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                                    title="Hapus foto"
+                                >x</button>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="mt-6 flex gap-3">
@@ -1055,6 +1075,20 @@
                                 <label class="text-sm font-medium text-gray-500">Catatan</label>
                                 <p class="text-base text-gray-900">{{ selectedPembayaran.catatan }}</p>
                             </div>
+
+                            <div v-if="selectedPembayaran.foto_meteran">
+                                <label class="text-sm font-medium text-gray-500">Foto Bukti Meteran</label>
+                                <div class="mt-2">
+                                    <a :href="'/storage/' + selectedPembayaran.foto_meteran" target="_blank" rel="noopener">
+                                        <img
+                                            :src="'/storage/' + selectedPembayaran.foto_meteran"
+                                            class="h-40 w-auto rounded-lg border border-gray-200 object-cover shadow-sm hover:opacity-90 transition"
+                                            alt="Foto meteran"
+                                        />
+                                    </a>
+                                    <p class="text-xs text-gray-400 mt-1">Klik foto untuk membuka ukuran penuh</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -1131,6 +1165,9 @@ const pembayaranForm = ref({
     bayar_tunggakan: false,
     jumlah_bayar_tunggakan: 0, // Jumlah bayar tunggakan (bisa cicil)
 });
+
+const fotoMeteran = ref(null);
+const fotoMeteranPreview = ref(null);
 
 const pemakaianKubik = computed(() => {
     const sebelum = parseFloat(inputForm.value.meteran_sebelum) || 0;
@@ -1469,6 +1506,20 @@ const closePembayaranModal = () => {
     showPembayaranModal.value = false;
     selectedPelanggan.value = null;
     listTunggakan.value = [];
+    fotoMeteran.value = null;
+    fotoMeteranPreview.value = null;
+};
+
+const onFotoMeteranChange = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    fotoMeteran.value = file;
+    fotoMeteranPreview.value = URL.createObjectURL(file);
+};
+
+const clearFotoMeteran = () => {
+    fotoMeteran.value = null;
+    fotoMeteranPreview.value = null;
 };
 
 const openKonfirmasiModal = (pelanggan) => {
@@ -1530,27 +1581,33 @@ const submitPembayaran = async () => {
     isSubmittingPembayaran.value = true;
     
     try {
-        const payload = {
-            bulan_bayar: selectedBulan.value,
-            tanggal_bayar: pembayaranForm.value.tanggal_bayar,
-            meteran_sebelum: pembayaranForm.value.meteran_sebelum,
-            meteran_sesudah: pembayaranForm.value.meteran_sesudah,
-            jumlah_kubik: pembayaranForm.value.jumlah_kubik,
-            abunemen: pembayaranForm.value.abunemen,
-            tunggakan: 0, // Tunggakan di handle via bayar_tunggakan
-            jumlah_bayar: pembayaranForm.value.jumlah_bayar,
-            keterangan: pembayaranForm.value.keterangan || '', // Catatan bebas (opsional)
-            status_bayar: pembayaranForm.value.status_bayar, // BELUM_BAYAR, CICILAN, SUDAH_BAYAR, TUNGGAKAN
-            bayar_tunggakan: pembayaranForm.value.bayar_tunggakan,
-            jumlah_bayar_tunggakan: pembayaranForm.value.jumlah_bayar_tunggakan || 0,
-        };
-        
+        const formData = new FormData();
+        formData.append('bulan_bayar', selectedBulan.value);
+        formData.append('tanggal_bayar', pembayaranForm.value.tanggal_bayar);
+        formData.append('meteran_sebelum', pembayaranForm.value.meteran_sebelum ?? '');
+        formData.append('meteran_sesudah', pembayaranForm.value.meteran_sesudah ?? '');
+        formData.append('jumlah_kubik', pembayaranForm.value.jumlah_kubik);
+        formData.append('abunemen', pembayaranForm.value.abunemen ? '1' : '0');
+        formData.append('tunggakan', '0');
+        formData.append('jumlah_bayar', pembayaranForm.value.jumlah_bayar);
+        formData.append('keterangan', pembayaranForm.value.keterangan || '');
+        formData.append('status_bayar', pembayaranForm.value.status_bayar);
+        formData.append('bayar_tunggakan', pembayaranForm.value.bayar_tunggakan ? '1' : '0');
+        formData.append('jumlah_bayar_tunggakan', pembayaranForm.value.jumlah_bayar_tunggakan || 0);
+
         // Tambahkan id tunggakan jika bayar tunggakan
         if (pembayaranForm.value.bayar_tunggakan && listTunggakan.value.length > 0) {
-            payload.id_tunggakan = listTunggakan.value.map(t => t.id);
+            listTunggakan.value.forEach(t => formData.append('id_tunggakan[]', t.id));
+        }
+
+        // Lampirkan foto meteran jika ada
+        if (fotoMeteran.value) {
+            formData.append('foto_meteran', fotoMeteran.value);
         }
         
-        await axios.post(`/pelanggan/${selectedPelanggan.value.id}/pembayaran`, payload);
+        await axios.post(`/pelanggan/${selectedPelanggan.value.id}/pembayaran`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
         
         alert('Pembayaran berhasil disimpan!');
         closePembayaranModal();

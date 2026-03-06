@@ -18,6 +18,13 @@ class FaqController extends Controller
         ]);
     }
 
+    public function getAll()
+    {
+        return Faq::orderBy('urutan')
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
     public function getActive()
     {
         return Faq::where('is_active', true)

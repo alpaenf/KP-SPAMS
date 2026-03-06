@@ -18,6 +18,13 @@ class InformasiTarifController extends Controller
         ]);
     }
 
+    public function getAll()
+    {
+        return InformasiTarif::orderBy('urutan')
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
     public function getActive()
     {
         return InformasiTarif::where('is_active', true)
