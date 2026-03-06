@@ -126,22 +126,20 @@
         .total-row   { display: table; width: 100%; margin-bottom: .45em; }
         .total-label { display: table-cell; font-weight: 700; }
         .total-value { display: table-cell; text-align: right; font-weight: 900; }
-        .grand-total { font-weight: 900; margin-top: .8em; padding-top: .7em; border-top: 3px solid #000; background: #000; color: #fff; margin-left: -.8em; margin-right: -.8em; padding-left: .8em; padding-right: .8em; border-radius: 0 0 4px 4px; }
-        .grand-total .total-label { font-size: 1.15em; font-weight: 900; letter-spacing: .03em; }
-        .grand-total .total-value { font-size: 1.2em; font-weight: 900; }
+        .grand-total { font-weight: 900; margin-top: .8em; padding-top: .7em; border-top: 4px double #000; border-bottom: 4px double #000; }
+        .grand-total .total-label { font-size: 1.2em; font-weight: 900; letter-spacing: .03em; }
+        .grand-total .total-value { font-size: 1.25em; font-weight: 900; }
         .footer { text-align: center; margin-top: 1.2em; padding-top: .8em; border-top: 3px solid #000; }
         .footer p { margin: .25em 0; font-weight: 700; }
-        .status-badge { display: inline-block; padding: .3em 1.2em; border-radius: 4px; font-weight: 900; color: white; background: #1b7c35; font-size: 1.2em; letter-spacing: .05em; }
+        .status-badge { display: inline-block; padding: .3em 1.2em; border-radius: 4px; font-weight: 900; color: #000; background: transparent; border: 3px solid #000; font-size: 1.2em; letter-spacing: .1em; }
         .info-box { background: #f0f0f0; border: 2px solid #bbb; padding: .8em; margin: .6em 0; border-radius: 4px; }
 
         /* ===== PRINT MEDIA ===== */
         @media print {
-            body { background: white; padding: 0; }
-            .control-panel { display: none; }
-            .print-container { box-shadow: none; padding: 0; max-width: 100% !important; font-size: inherit !important; font-weight: 700; }
+            body { background: white !important; padding: 0 !important; }
+            .control-panel { display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; }
+            .print-container { box-shadow: none !important; padding: 0 !important; max-width: 100% !important; font-size: inherit !important; font-weight: 700; }
             .struk-container { border: 2px solid #000; }
-            .grand-total { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .status-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
 
