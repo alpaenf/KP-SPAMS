@@ -749,6 +749,28 @@
                                     </p>
                                 </div>
                             </div>
+
+                            <!-- Foto Bukti Meteran (full width) -->
+                            <div class="mt-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Foto Bukti Meteran <span class="text-gray-400 font-normal">(opsional)</span></label>
+                                <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    @change="onFotoMeteranChange"
+                                    class="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-800 hover:file:bg-blue-100 cursor-pointer border border-gray-300 rounded-lg"
+                                />
+                                <p class="text-xs text-gray-400 mt-1">Format: JPG, PNG, WebP. Maks 5MB.</p>
+                                <div v-if="fotoMeteranPreview" class="mt-2 relative inline-block">
+                                    <img :src="fotoMeteranPreview" class="h-28 w-auto rounded-lg border border-gray-200 object-cover shadow-sm" alt="Preview foto meteran" />
+                                    <button
+                                        type="button"
+                                        @click="clearFotoMeteran"
+                                        class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                                        title="Hapus foto"
+                                    >x</button>
+                                </div>
+                            </div>
+
                             <button
                                 @click="submitPembayaran"
                                 :disabled="isSubmitting"
@@ -1540,6 +1562,18 @@ const closeModal = () => {
     pembayaranErrors.value = {};
 };
 
+const onFotoMeteranChange = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    fotoMeteran.value = file;
+    fotoMeteranPreview.value = URL.createObjectURL(file);
+};
+
+const clearFotoMeteran = () => {
+    fotoMeteran.value = null;
+    fotoMeteranPreview.value = null;
+};
+
 const submitPembayaran = async () => {
     if (!selectedPelanggan.value) return;
     
@@ -1547,19 +1581,36 @@ const submitPembayaran = async () => {
     isSubmitting.value = true;
     
     try {
-        // Prepare payload dengan id_tunggakan jika bayar tunggakan
-        const payload = {
-            ...pembayaranForm.value
-        };
-        
+        // Prepare FormData untuk mendukung upload foto
+        const formData = new FormData();
+        const form = pembayaranForm.value;
+        formData.append('bulan_bayar', form.bulan_bayar);
+        formData.append('tanggal_bayar', form.tanggal_bayar);
+        formData.append('meteran_sebelum', form.meteran_sebelum ?? '');
+        formData.append('meteran_sesudah', form.meteran_sesudah ?? '');
+        formData.append('abunemen', form.abunemen ? '1' : '0');
+        formData.append('tunggakan', form.tunggakan ?? 0);
+        formData.append('jumlah_kubik', form.jumlah_kubik ?? 0);
+        formData.append('jumlah_bayar', form.jumlah_bayar ?? 0);
+        formData.append('keterangan', form.keterangan || '');
+        formData.append('status_bayar', form.status_bayar);
+        formData.append('bayar_tunggakan', form.bayar_tunggakan ? '1' : '0');
+        formData.append('jumlah_bayar_tunggakan', form.jumlah_bayar_tunggakan ?? 0);
+
         // Jika bayar tunggakan, kirim ID semua tunggakan untuk FIFO distribution
-        if (pembayaranForm.value.bayar_tunggakan && listTunggakan.value.length > 0) {
-            payload.id_tunggakan = listTunggakan.value.map(t => t.id);
+        if (form.bayar_tunggakan && listTunggakan.value.length > 0) {
+            listTunggakan.value.forEach(t => formData.append('id_tunggakan[]', t.id));
+        }
+
+        // Lampirkan foto meteran jika ada
+        if (fotoMeteran.value) {
+            formData.append('foto_meteran', fotoMeteran.value);
         }
         
         const response = await axios.post(
             `/pelanggan/${selectedPelanggan.value.id}/pembayaran`,
-            payload
+            formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
         );
         
         // Add to list
@@ -1618,6 +1669,9 @@ const submitPembayaran = async () => {
         }
 
         // Reset form dengan bulan berikutnya yang belum dibayar
+        fotoMeteran.value = null;
+        fotoMeteranPreview.value = null;
+
         pembayaranForm.value = {
             bulan_bayar: bulanBerikutnya,
             tanggal_bayar: new Date().toISOString().split('T')[0],
