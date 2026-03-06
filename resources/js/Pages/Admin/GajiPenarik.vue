@@ -4,9 +4,10 @@ import { router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 
 const props = defineProps({
-    data:   { type: Array, default: () => [] },
-    bulan:  { type: String, default: '' },
-    totals: { type: Object, default: () => ({}) },
+    data:           { type: Array,  default: () => [] },
+    bulan:          { type: String, default: '' },
+    totals:         { type: Object, default: () => ({}) },
+    availableBulan: { type: Array,  default: () => [] },
 });
 
 const selectedBulan = ref(props.bulan);
@@ -15,22 +16,30 @@ const filterBulan = () => {
     router.get('/admin/gaji-penarik', { bulan: selectedBulan.value }, { preserveState: true });
 };
 
-// Generate 24 bulan options
+// Bulan options: combine available DB months + 12 generated months so picker is never empty
 const bulanOptions = computed(() => {
-    const opts = [];
     const names = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const fmt = (val) => {
+        const [y, m] = val.split('-');
+        return `${names[parseInt(m)-1]} ${y}`;
+    };
+    // Start with DB months
+    const opts = props.availableBulan.map(v => ({ value: v, label: fmt(v) + ' (ada data)' }));
+    // Add generated months that aren't already in the list
+    const existing = new Set(props.availableBulan);
     const now = new Date();
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < 12; i++) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        opts.push({
-            value: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`,
-            label: `${names[d.getMonth()]} ${d.getFullYear()}`,
-        });
+        const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        if (!existing.has(val)) {
+            opts.push({ value: val, label: fmt(val) });
+        }
     }
     return opts;
 });
 
 const bulanLabel = computed(() => {
+    if (!selectedBulan.value) return '';
     const names = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
     const [y, m] = selectedBulan.value.split('-');
     return `${names[parseInt(m)-1]} ${y}`;

@@ -16,7 +16,9 @@ class GajiPenarikController extends Controller
 {
     public function index(Request $request)
     {
-        $bulan = $request->input('bulan', Carbon::now()->format('Y-m'));
+        // Default ke bulan paling terakhir yang punya data pembayaran
+        $latestBulan = Pembayaran::max('bulan_bayar') ?? Carbon::now()->format('Y-m');
+        $bulan = $request->input('bulan', $latestBulan);
 
         // Daftar semua wilayah yang dikenali
         $wilayahList = ['dawuhan', 'kubangsari_kulon', 'kubangsari_wetan', 'sokarame', 'tiparjaya'];
@@ -80,10 +82,16 @@ class GajiPenarikController extends Controller
             'biaya_ops_lapangan' => array_sum(array_column($data, 'biaya_ops_lapangan')),
         ];
 
+        // Ambil daftar bulan yang ada datanya untuk dropdown
+        $availableBulan = Pembayaran::selectRaw('DISTINCT bulan_bayar')
+            ->orderBy('bulan_bayar', 'desc')
+            ->pluck('bulan_bayar');
+
         return Inertia::render('Admin/GajiPenarik', [
-            'data'  => $data,
-            'bulan' => $bulan,
-            'totals'=> $totals,
+            'data'           => $data,
+            'bulan'          => $bulan,
+            'totals'         => $totals,
+            'availableBulan' => $availableBulan,
         ]);
     }
 }
