@@ -97,9 +97,18 @@
         }
 
         /* ===== PAPER SIZE VARIANTS (screen preview) ===== */
-        body.size-58  .print-container { max-width: 220px;  font-size: 10px; }
-        body.size-80  .print-container { max-width: 304px;  font-size: 12px; }
-        body.size-a4  .print-container { max-width: 210mm;  font-size: 14px; }
+        /* --- Normal --- */
+        body.font-normal.size-58  .print-container { max-width: 220px;  font-size: 11px; }
+        body.font-normal.size-80  .print-container { max-width: 304px;  font-size: 13px; }
+        body.font-normal.size-a4  .print-container { max-width: 210mm;  font-size: 16px; }
+        /* --- Besar (default untuk lansia) --- */
+        body.font-besar.size-58   .print-container { max-width: 220px;  font-size: 14px; }
+        body.font-besar.size-80   .print-container { max-width: 304px;  font-size: 16px; }
+        body.font-besar.size-a4   .print-container { max-width: 210mm;  font-size: 20px; }
+
+        /* ===== FONT SIZE TOGGLE PILLS ===== */
+        .font-size-pill.active { background: #6a1b9a; color: #fff; border-color: #6a1b9a; font-weight: bold; }
+        .font-size-pill:hover  { border-color: #6a1b9a; color: #6a1b9a; }
 
         /* ===== INNER ELEMENTS (em-based so they scale with container font-size) ===== */
         .header { text-align: center; margin-bottom: 1em; border-bottom: 2px solid #000; padding-bottom: .7em; }
@@ -136,7 +145,7 @@
         @page { size: 80mm auto; margin: 4mm; }
     </style>
 </head>
-<body class="size-80">
+<body class="size-80 font-besar">
 
     <!-- ===== CONTROL PANEL ===== -->
     <div class="control-panel">
@@ -150,6 +159,15 @@
             </div>
             <div class="size-pill" data-size="a4" onclick="setSize('a4')">
                 A4 <span class="sub">(printer biasa)</span>
+            </div>
+        </div>
+        <h3 style="margin-top:10px;">Ukuran Huruf</h3>
+        <div class="size-pills">
+            <div class="size-pill font-size-pill" data-font="normal" onclick="setFontSize('normal')">
+                Normal <span class="sub">(standar)</span>
+            </div>
+            <div class="size-pill font-size-pill active" data-font="besar" onclick="setFontSize('besar')">
+                Besar <span class="sub">(lansia)</span>
             </div>
         </div>
         <div class="btn-row">
@@ -288,7 +306,7 @@
                 <p><strong>Terima kasih atas pembayaran Anda!</strong></p>
                 <p>Struk ini adalah bukti pembayaran yang sah</p>
                 <p>Simpan struk ini dengan baik</p>
-                <p style="margin-top: 10px; font-size: 10px;">
+                <p style="margin-top: 10px; font-size: .85em; opacity: .75;">
                     Dicetak pada: {{ now()->format('d/m/Y H:i') }} WIB
                 </p>
             </div>
@@ -304,19 +322,26 @@ const PAGE_CONFIG = {
     'a4':  { pageSize: 'A4',         margin: '15mm', btCols: 48 },
 };
 let currentSize = '80';
+let currentFont = 'besar';
 
 function setSize(size) {
     currentSize = size;
-    // update body class
     document.body.classList.remove('size-58', 'size-80', 'size-a4');
     document.body.classList.add('size-' + size);
-    // update @page rule
     const cfg = PAGE_CONFIG[size];
     document.getElementById('page-style').textContent =
         `@page { size: ${cfg.pageSize}; margin: ${cfg.margin}; }`;
-    // update pills
-    document.querySelectorAll('.size-pill').forEach(el => {
+    document.querySelectorAll('.size-pill:not(.font-size-pill)').forEach(el => {
         el.classList.toggle('active', el.dataset.size === size);
+    });
+}
+
+function setFontSize(size) {
+    currentFont = size;
+    document.body.classList.remove('font-normal', 'font-besar');
+    document.body.classList.add('font-' + size);
+    document.querySelectorAll('.font-size-pill').forEach(el => {
+        el.classList.toggle('active', el.dataset.font === size);
     });
 }
 
