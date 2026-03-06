@@ -110,33 +110,38 @@
         .font-size-pill.active { background: #6a1b9a; color: #fff; border-color: #6a1b9a; font-weight: bold; }
         .font-size-pill:hover  { border-color: #6a1b9a; color: #6a1b9a; }
 
+        /* ===== BASE TYPOGRAPHY — tebal & kontras tinggi untuk lansia ===== */
+        .print-container { font-weight: 700; letter-spacing: .01em; line-height: 1.65; }
+
         /* ===== INNER ELEMENTS (em-based so they scale with container font-size) ===== */
-        .header { text-align: center; margin-bottom: 1em; border-bottom: 2px solid #000; padding-bottom: .7em; }
-        .header h1 { font-size: 1.45em; font-weight: bold; margin-bottom: .3em; }
-        .header p  { font-size: .9em; margin: .15em 0; }
-        .struk-title { text-align: center; font-size: 1.2em; font-weight: bold; margin: 1em 0; text-transform: uppercase; }
-        .info-row    { display: table; width: 100%; margin-bottom: .35em; }
-        .info-label  { display: table-cell; width: 42%; font-weight: bold; }
-        .info-value  { display: table-cell; width: 58%; }
-        .divider     { border-bottom: 1px dashed #555; margin: .6em 0; }
-        .total-section { background: #f5f5f5; padding: .7em; margin: .8em 0; border-radius: 4px; }
-        .total-row   { display: table; width: 100%; margin-bottom: .3em; }
-        .total-label { display: table-cell; }
-        .total-value { display: table-cell; text-align: right; }
-        .grand-total { font-weight: bold; margin-top: .7em; padding-top: .6em; border-top: 2px solid #000; }
-        .grand-total .total-label { font-size: 1.1em; }
-        .grand-total .total-value { font-size: 1.15em; }
-        .footer { text-align: center; margin-top: 1.2em; padding-top: .8em; border-top: 2px solid #000; }
-        .footer p { margin: .2em 0; }
-        .status-badge { display: inline-block; padding: .2em .8em; border-radius: 3px; font-weight: bold; color: white; background: #2aa64c; }
-        .info-box { background: #fafafa; border: 1px solid #ddd; padding: .7em; margin: .6em 0; border-radius: 4px; }
+        .header { text-align: center; margin-bottom: 1em; border-bottom: 3px solid #000; padding-bottom: .7em; }
+        .header h1 { font-size: 1.5em; font-weight: 900; margin-bottom: .3em; letter-spacing: .03em; }
+        .header p  { font-size: .95em; margin: .2em 0; font-weight: 700; }
+        .struk-title { text-align: center; font-size: 1.25em; font-weight: 900; margin: 1em 0; text-transform: uppercase; letter-spacing: .05em; }
+        .info-row    { display: table; width: 100%; margin-bottom: .45em; }
+        .info-label  { display: table-cell; width: 42%; font-weight: 900; }
+        .info-value  { display: table-cell; width: 58%; font-weight: 700; }
+        .divider     { border-bottom: 2px dashed #222; margin: .7em 0; }
+        .total-section { background: #efefef; padding: .8em; margin: .8em 0; border-radius: 4px; border: 1px solid #bbb; }
+        .total-row   { display: table; width: 100%; margin-bottom: .45em; }
+        .total-label { display: table-cell; font-weight: 700; }
+        .total-value { display: table-cell; text-align: right; font-weight: 900; }
+        .grand-total { font-weight: 900; margin-top: .8em; padding-top: .7em; border-top: 3px solid #000; background: #000; color: #fff; margin-left: -.8em; margin-right: -.8em; padding-left: .8em; padding-right: .8em; border-radius: 0 0 4px 4px; }
+        .grand-total .total-label { font-size: 1.15em; font-weight: 900; letter-spacing: .03em; }
+        .grand-total .total-value { font-size: 1.2em; font-weight: 900; }
+        .footer { text-align: center; margin-top: 1.2em; padding-top: .8em; border-top: 3px solid #000; }
+        .footer p { margin: .25em 0; font-weight: 700; }
+        .status-badge { display: inline-block; padding: .3em 1.2em; border-radius: 4px; font-weight: 900; color: white; background: #1b7c35; font-size: 1.2em; letter-spacing: .05em; }
+        .info-box { background: #f0f0f0; border: 2px solid #bbb; padding: .8em; margin: .6em 0; border-radius: 4px; }
 
         /* ===== PRINT MEDIA ===== */
         @media print {
             body { background: white; padding: 0; }
             .control-panel { display: none; }
-            .print-container { box-shadow: none; padding: 0; max-width: 100% !important; font-size: inherit !important; }
-            .struk-container { border: 1px solid #333; }
+            .print-container { box-shadow: none; padding: 0; max-width: 100% !important; font-size: inherit !important; font-weight: 700; }
+            .struk-container { border: 2px solid #000; }
+            .grand-total { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .status-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
 
