@@ -3,17 +3,17 @@
     <div class="min-h-screen bg-gray-50">
       <!-- Header -->
       <div class="bg-gradient-to-r from-blue-700 to-blue-800 shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="max-w-7xl mx-auto px-4 py-6 sm:py-8">
           <div class="flex items-center justify-between gap-3 mb-2">
             <div class="flex items-center gap-3">
-              <div class="bg-white/20 p-2 rounded-lg">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="bg-white/20 p-2 rounded-lg shrink-0">
+                <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </div>
               <div>
-                <h1 class="text-3xl font-bold text-white">Kelola Landing Page</h1>
-                <p class="text-blue-100 mt-1">Manage semua konten landing page dari satu dashboard terpadu</p>
+                <h1 class="text-xl sm:text-3xl font-bold text-white">Kelola Landing Page</h1>
+                <p class="text-blue-100 mt-1 text-xs sm:text-sm hidden sm:block">Manage semua konten landing page dari satu dashboard terpadu</p>
               </div>
             </div>
             <InstallPWAButton />
@@ -24,51 +24,51 @@
       <!-- Tabs Navigation -->
       <div class="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
         <div class="max-w-7xl mx-auto px-4">
-          <div class="flex overflow-x-auto">
+          <div class="flex overflow-x-auto" style="-ms-overflow-style:none;scrollbar-width:none;">
             <button
               v-for="tab in tabs"
               :key="tab.id"
               @click="activeTab = tab.id"
               :class="{
-                'flex items-center gap-2 py-4 px-6 border-b-2 font-medium text-sm transition-all whitespace-nowrap': true,
+                'flex items-center justify-center gap-1.5 py-3 px-3 sm:py-4 sm:px-6 border-b-2 font-medium text-sm transition-all whitespace-nowrap': true,
                 'border-blue-600 text-blue-700 bg-blue-50': activeTab === tab.id,
                 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50': activeTab !== tab.id,
               }"
             >
               <!-- Document Text Icon -->
-              <svg v-if="tab.icon === 'document-text'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-if="tab.icon === 'document-text'" class="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <!-- Cog Icon -->
-              <svg v-else-if="tab.icon === 'cog'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-else-if="tab.icon === 'cog'" class="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <!-- Newspaper Icon -->
-              <svg v-else-if="tab.icon === 'newspaper'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-else-if="tab.icon === 'newspaper'" class="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
               </svg>
               <!-- Photograph Icon -->
-              <svg v-else-if="tab.icon === 'photograph'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-else-if="tab.icon === 'photograph'" class="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <!-- Book Open Icon -->
-              <svg v-else-if="tab.icon === 'book-open'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-else-if="tab.icon === 'book-open'" class="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
               <!-- Chat Alt 2 Icon -->
-              <svg v-else-if="tab.icon === 'chat-alt-2'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-else-if="tab.icon === 'chat-alt-2'" class="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
               </svg>
               <!-- Question Icon -->
-              <svg v-else-if="tab.icon === 'question'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-else-if="tab.icon === 'question'" class="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <!-- Currency Icon -->
-              <svg v-else-if="tab.icon === 'currency'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-else-if="tab.icon === 'currency'" class="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-              <span>{{ tab.label }}</span>
+              <span class="hidden sm:inline">{{ tab.label }}</span>
             </button>
           </div>
         </div>
@@ -510,7 +510,7 @@
                     class="flex-1 sm:flex-none px-3 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 active:bg-blue-700 transition touch-manipulation"
                     title="Setujui"
                   >
-                    ✓
+                    <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                   </button>
                   <button
                     v-if="testimoni.status !== 'rejected'"
@@ -518,14 +518,14 @@
                     class="flex-1 sm:flex-none px-3 py-2 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 active:bg-yellow-700 transition touch-manipulation"
                     title="Tolak"
                   >
-                    ✗
+                    <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
                   <button
                     @click="deleteTestimoni(testimoni.id)"
                     class="flex-1 sm:flex-none px-3 py-2 bg-red-500 text-white text-sm rounded hover:bg-red-600 active:bg-red-700 transition touch-manipulation"
                     title="Hapus"
                   >
-                    🗑
+                    <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                   </button>
                 </div>
               </div>
