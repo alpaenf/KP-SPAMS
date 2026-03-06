@@ -148,6 +148,9 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/map-settings/{mapSetting}', [\App\Http\Controllers\Admin\MapSettingController::class, 'update'])->name('map-settings.update');
     Route::delete('/map-settings/{mapSetting}', [\App\Http\Controllers\Admin\MapSettingController::class, 'destroy'])->name('map-settings.destroy');
     
+    // Gaji Penarik
+    Route::get('/admin/gaji-penarik', [\App\Http\Controllers\Admin\GajiPenarikController::class, 'index'])->name('admin.gaji-penarik');
+
     // FAQ Management (merged into Landing Page)
     Route::get('/admin/faqs', function () {
         return redirect('/admin/landing-page');
