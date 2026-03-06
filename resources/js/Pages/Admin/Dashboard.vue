@@ -77,16 +77,16 @@
       <!-- Content Area -->
       <div class="max-w-7xl mx-auto px-4 py-8">
         <!-- Visi & Misi Tab -->
-        <div v-if="activeTab === 'visi-misi'" class="bg-white rounded-lg shadow p-6">
-          <h2 class="text-2xl font-bold text-gray-900 mb-6">Visi & Misi KP-SPAMS</h2>
-          <form @submit.prevent="submitVisiMisi" class="space-y-6">
+        <div v-if="activeTab === 'visi-misi'" class="bg-white rounded-lg shadow p-4 sm:p-6">
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Visi & Misi KP-SPAMS</h2>
+          <form @submit.prevent="submitVisiMisi" class="space-y-5">
             <!-- Visi -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Visi</label>
               <textarea
                 v-model="visiMisiForm.visi"
                 rows="4"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Masukkan visi KP-SPAMS..."
               ></textarea>
             </div>
@@ -94,36 +94,40 @@
             <!-- Misi -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-3">Misi</label>
-              <div class="space-y-3">
-                <div v-for="(misi, idx) in visiMisiForm.misi" :key="idx" class="flex gap-2">
+              <div class="space-y-2">
+                <div v-for="(misi, idx) in visiMisiForm.misi" :key="idx" class="flex items-center gap-2">
                   <input
                     type="text"
                     v-model="visiMisiForm.misi[idx]"
-                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     :placeholder="`Misi ${idx + 1}...`"
                   />
                   <button
                     v-if="visiMisiForm.misi.length > 1"
                     type="button"
                     @click="visiMisiForm.misi.splice(idx, 1)"
-                    class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                    class="shrink-0 p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                    title="Hapus misi"
                   >
-                    Hapus
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
                   </button>
                 </div>
               </div>
               <button
                 type="button"
                 @click="visiMisiForm.misi.push('')"
-                class="mt-3 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                class="mt-3 flex items-center gap-1.5 px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
               >
-                + Tambah Misi
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                Tambah Misi
               </button>
             </div>
 
             <button
               type="submit"
-              class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+              class="w-full sm:w-auto px-6 py-2.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium"
             >
               Simpan Visi & Misi
             </button>
