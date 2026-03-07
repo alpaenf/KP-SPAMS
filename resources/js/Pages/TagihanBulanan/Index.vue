@@ -444,78 +444,45 @@
                     <div class="bg-white rounded-lg shadow-md overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-blue-800">
+                                <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Tanggal</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID Pelanggan</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Nama Pelanggan</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Wilayah</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Bulan Bayar</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">M. Sebelum</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">M. Sesudah</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Pemakaian</th>
-                                        <th class="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">Abunemen</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Jumlah Bayar</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Keterangan</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Metode</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Catatan</th>
-                                        <th class="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">Aksi</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pelanggan</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pembayaran Untuk</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Metode</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="pembayaran in filteredPembayaranList" :key="pembayaran.id" class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ formatDate(pembayaran.tanggal_bayar) }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900">{{ pembayaran.pelanggan.id_pelanggan }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900">{{ pembayaran.pelanggan.nama_pelanggan }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-600">{{ pembayaran.pelanggan.wilayah || '-' }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ formatBulan(pembayaran.bulan_bayar) }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-600">{{ pembayaran.meteran_sebelum || '-' }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-600">{{ pembayaran.meteran_sesudah || '-' }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-600">{{ pembayaran.jumlah_kubik ? pembayaran.jumlah_kubik + ' m³' : '-' }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 text-center">
-                                            <span v-if="pembayaran.abunemen" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                                </svg>
-                                                Ya
-                                            </span>
-                                            <span v-else class="text-gray-400 text-sm">-</span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-semibold text-gray-900">Rp {{ formatRupiah(pembayaran.jumlah_bayar) }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span v-if="pembayaran.keterangan === 'Nunggak'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                {{ pembayaran.keterangan }}
-                                            </span>
-                                            <span v-else-if="pembayaran.keterangan === 'Cicilan'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                {{ pembayaran.keterangan }}
-                                            </span>
-                                            <span v-else class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                {{ pembayaran.keterangan || 'Lunas' }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ pembayaran.metode_bayar }}</div>
+                                    <tr v-for="pembayaran in filteredPembayaranList" :key="pembayaran.id" class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ waktuRelatif(pembayaran.tanggal_bayar) }}
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-600 max-w-xs truncate">{{ pembayaran.catatan || '-' }}</div>
+                                            <div class="text-sm font-medium text-gray-900">{{ pembayaran.pelanggan.nama_pelanggan }}</div>
+                                            <div class="text-xs text-gray-500">{{ pembayaran.pelanggan.id_pelanggan }} • {{ pembayaran.pelanggan.wilayah || '-' }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            Tagihan {{ formatBulan(pembayaran.bulan_bayar) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span v-if="pembayaran.bulan_bayar !== selectedBulan" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                Bayar Tunggakan
+                                            </span>
+                                            <span v-else-if="pembayaran.keterangan === 'Cicilan'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                                                Cicilan
+                                            </span>
+                                            <span v-else class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                Tagihan Rutin
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            {{ pembayaran.metode_bayar }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-bold">
+                                            {{ formatRupiah(pembayaran.jumlah_bayar) }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-center">
                                             <button
@@ -531,7 +498,7 @@
                                         </td>
                                     </tr>
                                     <tr v-if="!filteredPembayaranList || filteredPembayaranList.length === 0">
-                                        <td colspan="14" class="px-6 py-12 text-center text-gray-500">
+                                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
                                             <div v-if="searchQuery">
                                                 Tidak ada pembayaran yang sesuai dengan pencarian "{{ searchQuery }}"
                                             </div>
@@ -1249,6 +1216,20 @@ const formatBulan = (bulan) => {
     const [tahun, bulanNum] = bulan.split('-');
     const namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     return `${namaBulan[parseInt(bulanNum) - 1]} ${tahun}`;
+};
+
+const waktuRelatif = (tanggal) => {
+    if (!tanggal) return '-';
+    const now = new Date();
+    const tgl = new Date(tanggal);
+    const diffMs = now - tgl;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffHours < 1) return 'Baru saja';
+    if (diffHours < 24) return `${diffHours} jam lalu`;
+    if (diffDays === 1) return 'Kemarin';
+    if (diffDays < 30) return `${diffDays} hari lalu`;
+    return tgl.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 const formatTanggal = (tanggal) => {
