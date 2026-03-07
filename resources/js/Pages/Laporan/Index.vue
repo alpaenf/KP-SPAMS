@@ -124,21 +124,26 @@
                                 <span>Sosial:</span>
                                 <span class="font-semibold">{{ formatRupiah(summary.pemasukanSosial || 0) }}</span>
                             </div>
-                            <!-- Tunggakan -->
-                            <div v-if="summary.pemasukanTunggakan > 0" class="mt-1 pt-1 border-t border-blue-400 border-opacity-30">
-                                <div class="flex justify-between text-xs text-yellow-200 font-semibold mb-1">
-                                    <span>⚠ Tunggakan Terbayar:</span>
-                                    <span>{{ formatRupiah(summary.pemasukanTunggakan) }}</span>
-                                </div>
-                                <!-- Detail siapa yang bayar tunggakan -->
-                                <div
-                                    v-for="item in (summary.detailPembayaranTunggakan || [])"
-                                    :key="item.id_pelanggan + item.bulan_bayar"
-                                    class="flex justify-between text-xs text-yellow-100 opacity-90 pl-2"
-                                >
-                                    <span>{{ item.id_pelanggan }} - {{ item.nama_pelanggan }}</span>
-                                    <span>{{ formatRupiah(item.jumlah_bayar) }}</span>
-                                </div>
+    
+                        </div>
+                    </div>
+
+                    <!-- Card Tunggakan Terbayar (hanya muncul jika ada) -->
+                    <div v-if="summary.pemasukanTunggakan > 0" class="bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl p-4 sm:p-6 text-white shadow-lg relative overflow-hidden group">
+                        <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                            <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                        </div>
+                        <h4 class="text-orange-50 font-medium text-xs sm:text-sm uppercase tracking-wider mb-2">Tunggakan Terbayar</h4>
+                        <p class="text-2xl sm:text-3xl font-bold">{{ formatRupiah(summary.pemasukanTunggakan) }}</p>
+                        <p class="text-xs text-orange-100 mt-2 opacity-80">Bulan sebelumnya, dibayar bulan ini</p>
+                        <div class="mt-3 pt-3 border-t border-orange-300 border-opacity-40">
+                            <div
+                                v-for="item in (summary.detailPembayaranTunggakan || [])"
+                                :key="item.id_pelanggan + item.bulan_bayar"
+                                class="flex justify-between text-xs text-orange-50 mb-1"
+                            >
+                                <span>{{ item.id_pelanggan }} - {{ item.nama_pelanggan }}</span>
+                                <span class="font-semibold">{{ formatRupiah(item.jumlah_bayar) }}</span>
                             </div>
                         </div>
                     </div>

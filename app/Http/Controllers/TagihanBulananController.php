@@ -69,11 +69,13 @@ class TagihanBulananController extends Controller
                 ];
             });
         
-        // Ambil pembayaran bulan ini
-        // Apply filter wilayah untuk role penarik
+        // Ambil pembayaran yang DITERIMA di bulan ini (termasuk tunggakan dari bulan sebelumnya)
+        // Filter berdasarkan tanggal_bayar agar tunggakan yang dibayar bulan ini ikut muncul
+        $startOfMonth = $bulan . '-01';
+        $endOfMonth = date('Y-m-t', strtotime($startOfMonth));
         $user = $request->user();
         $query = Pembayaran::with('pelanggan')
-            ->where('bulan_bayar', $bulan);
+            ->whereBetween('tanggal_bayar', [$startOfMonth, $endOfMonth]);
         
         // Filter by penarik wilayah if role is penarik
         if ($user && $user->role === 'penarik' && $user->wilayah) {
