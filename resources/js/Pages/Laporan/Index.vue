@@ -120,9 +120,25 @@
                                 <span>Umum:</span>
                                 <span class="font-semibold">{{ formatRupiah(summary.pemasukanUmum || 0) }}</span>
                             </div>
-                            <div class="flex justify-between text-xs text-blue-50">
+                            <div class="flex justify-between text-xs text-blue-50 mb-1">
                                 <span>Sosial:</span>
                                 <span class="font-semibold">{{ formatRupiah(summary.pemasukanSosial || 0) }}</span>
+                            </div>
+                            <!-- Tunggakan -->
+                            <div v-if="summary.pemasukanTunggakan > 0" class="mt-1 pt-1 border-t border-blue-400 border-opacity-30">
+                                <div class="flex justify-between text-xs text-yellow-200 font-semibold mb-1">
+                                    <span>⚠ Tunggakan Terbayar:</span>
+                                    <span>{{ formatRupiah(summary.pemasukanTunggakan) }}</span>
+                                </div>
+                                <!-- Detail siapa yang bayar tunggakan -->
+                                <div
+                                    v-for="item in (summary.detailPembayaranTunggakan || [])"
+                                    :key="item.id_pelanggan + item.bulan_bayar"
+                                    class="flex justify-between text-xs text-yellow-100 opacity-90 pl-2"
+                                >
+                                    <span>{{ item.id_pelanggan }} - {{ item.nama_pelanggan }}</span>
+                                    <span>{{ formatRupiah(item.jumlah_bayar) }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>

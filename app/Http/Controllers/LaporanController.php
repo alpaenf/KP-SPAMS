@@ -85,6 +85,25 @@ class LaporanController extends Controller
         $totalPemasukan = $pembayaranBulanIni + $pembayaranTunggakan;
         $totalKubik = $pembayarans->sum('jumlah_kubik');
         $totalTransaksi = $pembayarans->count();
+
+        // Detail siapa saja yang bayar tunggakan bulan ini
+        $detailPembayaranTunggakan = [];
+        if ($pembayaranTunggakan > 0 && $bulan && $bulan !== 'semua' && $akumulasi != '1') {
+            $bulanFormat = $tahun . '-' . $bulan;
+            $startOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->startOfMonth();
+            $endOfMonth   = Carbon::createFromFormat('Y-m', $bulanFormat)->endOfMonth();
+            $detailPembayaranTunggakan = Pembayaran::with('pelanggan:id,id_pelanggan,nama_pelanggan')
+                ->where('bulan_bayar', '<', $bulanFormat)
+                ->whereBetween('tanggal_bayar', [$startOfMonth, $endOfMonth])
+                ->whereIn('pelanggan_id', $pelangganAktifIds)
+                ->get()
+                ->map(fn($p) => [
+                    'id_pelanggan'   => $p->pelanggan->id_pelanggan ?? '-',
+                    'nama_pelanggan' => $p->pelanggan->nama_pelanggan ?? '-',
+                    'bulan_bayar'    => $p->bulan_bayar,
+                    'jumlah_bayar'   => $p->jumlah_bayar,
+                ])->toArray();
+        }
         
         // Calculate by kategori (case-insensitive and trim whitespace)
         $pemasukanUmum = $pembayarans->filter(function($p) { 
@@ -266,6 +285,9 @@ class LaporanController extends Controller
             'data' => $pembayarans,
             'summary' => [
                 'pemasukan' => $totalPemasukan,
+                'pemasukanBulanan' => $pembayaranBulanIni,
+                'pemasukanTunggakan' => $pembayaranTunggakan,
+                'detailPembayaranTunggakan' => $detailPembayaranTunggakan,
                 'kubikasi' => $totalKubik,
                 'transaksi' => $totalTransaksi,
                 'pemasukanUmum' => $pemasukanUmum,
@@ -463,12 +485,25 @@ class LaporanController extends Controller
         $totalPemasukan = $pembayaranBulanIni + $pembayaranTunggakan;
         $totalKubik = $pembayarans->sum('jumlah_kubik');
         $totalTransaksi = $pembayarans->count();
-        
-        // Calculate by kategori (case-insensitive and trim whitespace)
-        $pemasukanUmum = $pembayarans->filter(function($p) { 
-            $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
-            return $kategori === 'umum'; 
-        })->sum('jumlah_bayar');
+
+        // Detail siapa saja yang bayar tunggakan bulan ini
+        $detailPembayaranTunggakan = [];
+        if ($pembayaranTunggakan > 0 && $bulan && $bulan !== 'semua') {
+            $bulanFormat2 = $tahun . '-' . $bulan;
+            $startOfMonth2 = Carbon::createFromFormat('Y-m', $bulanFormat2)->startOfMonth();
+            $endOfMonth2   = Carbon::createFromFormat('Y-m', $bulanFormat2)->endOfMonth();
+            $detailPembayaranTunggakan = Pembayaran::with('pelanggan:id,id_pelanggan,nama_pelanggan')
+                ->where('bulan_bayar', '<', $bulanFormat2)
+                ->whereBetween('tanggal_bayar', [$startOfMonth2, $endOfMonth2])
+                ->whereIn('pelanggan_id', $pelangganAktifIds)
+                ->get()
+                ->map(fn($p) => [
+                    'id_pelanggan'   => $p->pelanggan->id_pelanggan ?? '-',
+                    'nama_pelanggan' => $p->pelanggan->nama_pelanggan ?? '-',
+                    'bulan_bayar'    => $p->bulan_bayar,
+                    'jumlah_bayar'   => $p->jumlah_bayar,
+                ])->toArray();
+        }
         
         $pemasukanSosial = $pembayarans->filter(function($p) { 
             $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
@@ -597,6 +632,9 @@ class LaporanController extends Controller
             'data' => $pembayarans,
             'summary' => [
                 'pemasukan' => $totalPemasukan,
+                'pemasukanBulanan' => $pembayaranBulanIni,
+                'pemasukanTunggakan' => $pembayaranTunggakan,
+                'detailPembayaranTunggakan' => $detailPembayaranTunggakan,
                 'kubikasi' => $totalKubik,
                 'transaksi' => $totalTransaksi,
                 'pemasukanUmum' => $pemasukanUmum,

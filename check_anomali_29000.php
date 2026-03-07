@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\DB;
 
 echo "=== PEMBAYARAN BULAN MARET 2026 (bulan_bayar=2026-03) ===\n";
 $p1 = DB::table('pembayarans')
-    ->where('bulan_bayar', '2026-03')
-    ->join('pelanggans', 'pembayarans.pelanggan_id', '=', 'pelanggans.id')
-    ->select('pembayarans.id', 'pelanggans.id_pelanggan', 'pelanggans.nama_pelanggan', 'pembayarans.bulan_bayar', 'pembayarans.tanggal_bayar', 'pembayarans.jumlah_bayar')
+    ->where('pembayarans.bulan_bayar', '2026-03')
+    ->join('pelanggan', 'pembayarans.pelanggan_id', '=', 'pelanggan.id')
+    ->select('pembayarans.id', 'pelanggan.id_pelanggan', 'pelanggan.nama_pelanggan', 'pembayarans.bulan_bayar', 'pembayarans.tanggal_bayar', 'pembayarans.jumlah_bayar')
     ->get();
 if ($p1->isEmpty()) {
     echo "  (tidak ada)\n";
@@ -22,10 +22,10 @@ if ($p1->isEmpty()) {
 
 echo "\n=== PEMBAYARAN TUNGGAKAN DIBAYAR DI MARET 2026 (bulan_bayar < 2026-03) ===\n";
 $p2 = DB::table('pembayarans')
-    ->where('bulan_bayar', '<', '2026-03')
-    ->whereBetween('tanggal_bayar', ['2026-03-01', '2026-03-31'])
-    ->join('pelanggans', 'pembayarans.pelanggan_id', '=', 'pelanggans.id')
-    ->select('pembayarans.id', 'pelanggans.id_pelanggan', 'pelanggans.nama_pelanggan', 'pembayarans.bulan_bayar', 'pembayarans.tanggal_bayar', 'pembayarans.jumlah_bayar')
+    ->where('pembayarans.bulan_bayar', '<', '2026-03')
+    ->whereBetween('pembayarans.tanggal_bayar', ['2026-03-01', '2026-03-31'])
+    ->join('pelanggan', 'pembayarans.pelanggan_id', '=', 'pelanggan.id')
+    ->select('pembayarans.id', 'pelanggan.id_pelanggan', 'pelanggan.nama_pelanggan', 'pembayarans.bulan_bayar', 'pembayarans.tanggal_bayar', 'pembayarans.jumlah_bayar')
     ->get();
 if ($p2->isEmpty()) {
     echo "  (tidak ada)\n";
@@ -37,9 +37,9 @@ if ($p2->isEmpty()) {
 }
 
 echo "\n=== TAGIHAN BULANAN KBK032 (Parmin) ===\n";
-$pel = DB::table('pelanggans')->where('id_pelanggan', 'KBK032')->first();
+$pel = DB::table('pelanggan')->where('id_pelanggan', 'KBK032')->first();
 if ($pel) {
-    $tagihan = DB::table('tagihan_bulanans')
+    $tagihan = DB::table('tagihan_bulanan')
         ->where('pelanggan_id', $pel->id)
         ->orderBy('bulan')
         ->get(['bulan', 'total_tagihan', 'status_bayar', 'jumlah_terbayar']);
