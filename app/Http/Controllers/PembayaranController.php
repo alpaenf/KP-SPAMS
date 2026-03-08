@@ -148,6 +148,8 @@ class PembayaranController extends Controller
                     'jumlah_bayar'     => $jumlahBayar,
                     'status_tagihan'   => $statusTagihan,
                     'keterangan'       => $p->keterangan,
+                    'foto_meteran'     => $p->foto_meteran,
+                    'foto_meteran_url' => $p->foto_meteran ? asset('storage/' . $p->foto_meteran) : null,
                 ];
             });
         
@@ -414,6 +416,8 @@ class PembayaranController extends Controller
                 'jumlah_bayar' => $pembayaran->jumlah_bayar,
                 'status_tagihan' => $tagihan->status_bayar ?? 'BELUM_BAYAR',
                 'keterangan' => $pembayaran->keterangan,
+                'foto_meteran' => $pembayaran->foto_meteran,
+                'foto_meteran_url' => $pembayaran->foto_meteran ? asset('storage/' . $pembayaran->foto_meteran) : null,
             ],
         ], 201);
     }
