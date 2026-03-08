@@ -1558,10 +1558,13 @@ const fetchMeteranData = async (bulan) => {
             }
 
             // If tagihan didn't have valid reading, check payment history
+            // Cari pembayaran terakhir SEBELUM bulan ini (tidak harus tepat bulan sebelumnya)
             if (!foundPreviousReading) {
-                const prevPayment = pembayaranList.value.find(p => p.bulan_bayar === prevMonth);
-                if (prevPayment && prevPayment.meteran_sesudah > 0) {
-                    previousReading = prevPayment.meteran_sesudah;
+                const sortedPayments = [...pembayaranList.value]
+                    .filter(p => p.bulan_bayar < bulan && p.meteran_sesudah > 0)
+                    .sort((a, b) => b.bulan_bayar.localeCompare(a.bulan_bayar));
+                if (sortedPayments.length > 0) {
+                    previousReading = sortedPayments[0].meteran_sesudah;
                     foundPreviousReading = true;
                 }
             }
