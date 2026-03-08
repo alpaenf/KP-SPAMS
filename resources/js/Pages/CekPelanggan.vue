@@ -1524,16 +1524,19 @@ const fetchMeteranData = async (bulan) => {
             // Simpan data tagihan lengkap untuk InfoCicilan
             currentTagihan.value = tagihan;
             
-            pembayaranForm.value.meteran_sebelum = tagihan.meteran_sebelum;
-            pembayaranForm.value.meteran_sesudah = tagihan.meteran_sesudah;
-            pembayaranForm.value.jumlah_kubik = tagihan.pemakaian_kubik;
+            // Jika tagihan ada tapi meteran_sebelum sudah terisi (> 0), langsung pakai
+            if (tagihan.meteran_sebelum > 0 || tagihan.meteran_sesudah > 0) {
+                pembayaranForm.value.meteran_sebelum = tagihan.meteran_sebelum;
+                pembayaranForm.value.meteran_sesudah = tagihan.meteran_sesudah;
+                pembayaranForm.value.jumlah_kubik = tagihan.pemakaian_kubik;
+                if (tagihan.ada_abunemen) pembayaranForm.value.abunemen = true;
+                hitungTagihan();
+                return;
+            }
             
-            // Only overwrite abunemen if it's explicitly set in tagihan
+            // Tagihan ada tapi data meteran masih kosong/0 (misal dari generate-bulk)
+            // Jangan return dulu, lanjut cari meteran_sebelum dari data bulan sebelumnya
             if (tagihan.ada_abunemen) pembayaranForm.value.abunemen = true;
-            
-            // Recalculate bill
-            hitungTagihan();
-            return; 
         }
 
         // 2. If NO data for current month (new entry), try to get PREVIOUS month's final reading
