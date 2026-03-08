@@ -754,27 +754,35 @@
                             <div class="mt-3">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Foto Bukti Meteran <span class="text-gray-400 font-normal">(opsional)</span></label>
                                 <!-- Hidden inputs -->
-                                <input id="fotoGaleri" type="file" accept="image/*" class="hidden" @change="onFotoMeteranChange" />
-                                <input id="fotoKamera" type="file" accept="image/*" capture="environment" class="hidden" @change="onFotoMeteranChange" />
+                                <input ref="inputFotoGaleri" type="file" accept="image/*" class="hidden" @change="onFotoMeteranChange" />
+                                <input ref="inputFotoKamera" type="file" accept="image/*" capture="environment" class="hidden" @change="onFotoMeteranChange" />
                                 <div class="flex gap-2">
-                                    <label for="fotoGaleri" class="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition text-sm text-gray-600 hover:text-blue-700">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                        Pilih Galeri
-                                    </label>
-                                    <label for="fotoKamera" class="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 border-2 border-dashed border-blue-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition text-sm text-blue-600 hover:text-blue-800">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                        Ambil Foto
-                                    </label>
-                                </div>
-                                <p class="text-xs text-gray-400 mt-1">Maks 5MB. Klik "Ambil Foto" untuk langsung buka kamera.</p>
-                                <div v-if="fotoMeteranPreview" class="mt-2 relative inline-block">
-                                    <img :src="fotoMeteranPreview" class="h-28 w-auto rounded-lg border border-gray-200 object-cover shadow-sm" alt="Preview foto meteran" />
                                     <button
                                         type="button"
-                                        @click="clearFotoMeteran"
-                                        class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
-                                        title="Hapus foto"
-                                    >x</button>
+                                        @click="inputFotoGaleri.click()"
+                                        class="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition text-sm text-gray-600 hover:text-blue-700"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                        Pilih Galeri
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="triggerKamera"
+                                        class="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 border-2 border-dashed border-blue-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition text-sm text-blue-600 hover:text-blue-800"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        Ambil Foto
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">Maks 5MB. Klik "Ambil Foto" untuk langsung buka kamera.</p>
+                                <!-- Feedback foto terpilih -->
+                                <div v-if="fotoMeteran" class="mt-2 flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    <span class="truncate">{{ fotoMeteran.name }}</span>
+                                    <button type="button" @click="clearFotoMeteran" class="ml-auto flex-shrink-0 text-red-400 hover:text-red-600 font-bold" title="Hapus foto">&times;</button>
+                                </div>
+                                <div v-if="fotoMeteranPreview" class="mt-2 relative inline-block">
+                                    <img :src="fotoMeteranPreview" class="h-28 w-auto rounded-lg border border-gray-200 object-cover shadow-sm" alt="Preview foto meteran" />
                                 </div>
                             </div>
 
@@ -1162,6 +1170,12 @@ const loadingPembayaran = ref(false);
 const isSubmitting = ref(false);
 const currentTagihan = ref(null); // Data tagihan bulan ini untuk info cicilan
 const listTunggakan = ref([]); // List tunggakan yang belum lunas
+
+// Foto meteran
+const fotoMeteran = ref(null);
+const fotoMeteranPreview = ref(null);
+const inputFotoGaleri = ref(null);
+const inputFotoKamera = ref(null);
 
 // Form pembayaran
 const pembayaranForm = ref({
@@ -1590,11 +1604,20 @@ const onFotoMeteranChange = (event) => {
     if (!file) return;
     fotoMeteran.value = file;
     fotoMeteranPreview.value = URL.createObjectURL(file);
+    // Reset input agar bisa pilih file yang sama lagi jika perlu
+    event.target.value = '';
 };
 
 const clearFotoMeteran = () => {
     fotoMeteran.value = null;
     fotoMeteranPreview.value = null;
+};
+
+const triggerKamera = () => {
+    // Programmatic click lebih reliable untuk trigger camera di mobile
+    if (inputFotoKamera.value) {
+        inputFotoKamera.value.click();
+    }
 };
 
 const submitPembayaran = async () => {
@@ -1668,7 +1691,7 @@ const submitPembayaran = async () => {
                 allPelanggan.value[pelangganIndex].has_tunggakan = true;
             } else if (response.data.pembayaran.sisa_tunggakan > 0) {
                 allPelanggan.value[pelangganIndex].has_tunggakan = true;
-            } else if (payload.bayar_tunggakan && payload.jumlah_bayar_tunggakan >= payload.tunggakan) {
+            } else if (form.bayar_tunggakan && form.jumlah_bayar_tunggakan >= form.tunggakan) {
                 allPelanggan.value[pelangganIndex].has_tunggakan = false;
             }
         }
@@ -1740,6 +1763,7 @@ const submitPembayaran = async () => {
                 alert(error.response.data.message);
             }
         } else {
+            console.error('Error menyimpan pembayaran:', error);
             alert('Terjadi kesalahan saat menyimpan pembayaran');
         }
     } finally {
