@@ -137,7 +137,7 @@
         /* ===== PRINT MEDIA ===== */
         @media print {
             body { background: white !important; padding: 0 !important; }
-            .control-panel { display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; }
+            .control-panel { display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; pointer-events: none !important; }
             .print-container { box-shadow: none !important; padding: 0 !important; max-width: 100% !important; font-size: inherit !important; font-weight: 700; }
             .struk-container { border: 2px solid #000; }
         }
@@ -192,8 +192,6 @@
             <!-- Header -->
             <div class="header">
                 <h1>KP-SPAMS "DAMAR WULAN"</h1>
-                <p>Air Bersih untuk Kehidupan Sehat</p>
-                <p>Desa Ciwuni, Kec. Kesugihan, Kabupaten Cilacap</p>
             </div>
 
             <!-- Struk Title -->
@@ -304,14 +302,9 @@
                 <span class="status-badge">LUNAS</span>
             </div>
 
-            <!-- Footer -->
-            <div class="footer">
-                <p><strong>Terima kasih atas pembayaran Anda!</strong></p>
-                <p>Struk ini adalah bukti pembayaran yang sah</p>
-                <p>Simpan struk ini dengan baik</p>
-                <p style="margin-top: 10px; font-size: .85em; opacity: .75;">
-                    Dicetak pada: {{ now()->format('d/m/Y H:i') }} WIB
-                </p>
+            <!-- Tanggal Cetak -->
+            <div style="text-align: center; margin-top: 1em; font-size: .85em; opacity: .75; font-family: 'Courier New', monospace;">
+                Dicetak pada: {{ now()->format('d/m/Y H:i') }} WIB
             </div>
         </div>
     </div>
@@ -326,6 +319,16 @@ const PAGE_CONFIG = {
 };
 let currentSize = '80';
 let currentFont = 'besar';
+
+// Sembunyikan control panel saat print (backup selain CSS @media print)
+window.addEventListener('beforeprint', function() {
+    const panel = document.querySelector('.control-panel');
+    if (panel) panel.style.setProperty('display', 'none', 'important');
+});
+window.addEventListener('afterprint', function() {
+    const panel = document.querySelector('.control-panel');
+    if (panel) panel.style.removeProperty('display');
+});
 
 function setSize(size) {
     currentSize = size;
@@ -472,9 +475,6 @@ function buildEscPosData(cols = 42) {
     cmd(GS, 0x21, 0x00);
     line('DAMAR WULAN');
     cmd(ESC, 0x45, 0x00);
-    line('Air Bersih untuk Kehidupan Sehat');
-    line('Desa Ciwuni, Kec. Kesugihan');
-    line('Kabupaten Cilacap');
     line();
     dash('=');
     cmd(ESC, 0x45, 0x01);
@@ -523,9 +523,6 @@ function buildEscPosData(cols = 42) {
     line('*** LUNAS ***');
     cmd(ESC, 0x45, 0x00);
     dash('=');
-    line();
-    line('Terima kasih atas pembayaran Anda!');
-    line('Struk ini adalah bukti resmi.');
     line();
     line('Dicetak: {{ now()->format('d/m/Y H:i') }} WIB');
     line(); line(); line();
