@@ -95,6 +95,7 @@ class PengelolaController extends Controller
             'pin' => 'nullable|string|min:4|max:8',
             'role' => 'required|in:admin,pengelola,penarik',
             'wilayah' => 'nullable|in:dawuhan,kubangsari_kulon,kubangsari_wetan,sokarame,tiparjaya',
+            'ukuran_kertas' => 'nullable|in:58,80,a4',
         ]);
 
         // Validasi: Jika role penarik, wilayah wajib diisi
@@ -109,6 +110,7 @@ class PengelolaController extends Controller
             'role' => $validated['role'],
             'wilayah' => $validated['wilayah'] ?? null,
             'pin' => $validated['pin'],
+            'ukuran_kertas' => $validated['ukuran_kertas'] ?? '80',
         ]);
 
         return redirect()->back()->with('success', 'Akun pengelola berhasil dibuat.');
@@ -131,6 +133,7 @@ class PengelolaController extends Controller
             'pin' => 'nullable|string|min:4|max:8',
             'role' => 'required|in:admin,pengelola,penarik',
             'wilayah' => 'nullable|in:dawuhan,kubangsari_kulon,kubangsari_wetan,sokarame,tiparjaya',
+            'ukuran_kertas' => 'nullable|in:58,80,a4',
         ]);
 
         // Validasi: Jika role penarik, wilayah wajib diisi
@@ -142,6 +145,7 @@ class PengelolaController extends Controller
         $user->email = $validated['email'];
         $user->role = $validated['role'];
         $user->wilayah = $validated['wilayah'] ?? null;
+        $user->ukuran_kertas = $validated['ukuran_kertas'] ?? '80';
         
         if ($validated['password']) {
             $user->password = Hash::make($validated['password']);

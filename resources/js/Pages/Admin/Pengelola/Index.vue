@@ -72,6 +72,7 @@
                                     <tr>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nama & Email</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Role & Wilayah</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Kertas Printer</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">PIN Akses</th>
                                         <th scope="col" class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Aksi</th>
                                     </tr>
@@ -98,6 +99,11 @@
                                                     📍 {{ wilayahOptions[user.wilayah] || user.wilayah }}
                                                 </div>
                                             </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <span class="font-mono font-bold">
+                                                {{ user.ukuran_kertas === '58' ? '58mm' : user.ukuran_kertas === 'a4' ? 'A4' : '80mm' }}
+                                            </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
                                             {{ user.pin || '-' }}
@@ -180,6 +186,16 @@
                                                 </option>
                                             </select>
                                             <p v-if="form.errors.wilayah" class="text-red-500 text-xs mt-1">{{ form.errors.wilayah }}</p>
+                                        </div>
+
+                                        <!-- Ukuran Kertas Printer -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Ukuran Kertas Printer</label>
+                                            <select v-model="form.ukuran_kertas" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                                <option value="58">58mm (thermal kecil)</option>
+                                                <option value="80">80mm (thermal standar)</option>
+                                                <option value="a4">A4 (printer biasa)</option>
+                                            </select>
                                         </div>
 
                                         <div class="grid grid-cols-2 gap-4">
@@ -274,6 +290,7 @@ const form = useForm({
     role: 'pengelola',
     wilayah: '',
     pin: '',
+    ukuran_kertas: '80',
 });
 
 const roleClass = (role) => {
@@ -290,6 +307,7 @@ const openModal = (user = null) => {
         form.role = user.role;
         form.wilayah = user.wilayah || '';
         form.pin = user.pin || '';
+        form.ukuran_kertas = user.ukuran_kertas || '80';
         form.password = ''; // Don't show password
     } else {
         form.reset();

@@ -703,6 +703,8 @@ class PembayaranController extends Controller
             ]
         ];
         
+        $data['ukuranKertas'] = auth()->check() ? (auth()->user()->ukuran_kertas ?? '80') : '80';
+
         return view('print.struk-pembayaran', $data);
     }
 }

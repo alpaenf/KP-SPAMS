@@ -111,28 +111,28 @@
         .font-size-pill:hover  { border-color: #6a1b9a; color: #6a1b9a; }
 
         /* ===== BASE TYPOGRAPHY — tebal & kontras tinggi untuk lansia ===== */
-        .print-container { font-weight: 700; letter-spacing: .01em; line-height: 1.65; }
+        .print-container { font-weight: 700; letter-spacing: .01em; line-height: 1.3; }
 
         /* ===== INNER ELEMENTS (em-based so they scale with container font-size) ===== */
-        .header { text-align: center; margin-bottom: 1em; border-bottom: 3px solid #000; padding-bottom: .7em; }
-        .header h1 { font-size: 1.5em; font-weight: 900; margin-bottom: .3em; letter-spacing: .03em; }
-        .header p  { font-size: .95em; margin: .2em 0; font-weight: 700; }
-        .struk-title { text-align: center; font-size: 1.25em; font-weight: 900; margin: 1em 0; text-transform: uppercase; letter-spacing: .05em; }
-        .info-row    { display: table; width: 100%; margin-bottom: .45em; }
+        .header { text-align: center; margin-bottom: .5em; border-bottom: 3px solid #000; padding-bottom: .35em; }
+        .header h1 { font-size: 1.5em; font-weight: 900; margin-bottom: .15em; letter-spacing: .03em; }
+        .header p  { font-size: .95em; margin: .1em 0; font-weight: 700; }
+        .struk-title { text-align: center; font-size: 1.25em; font-weight: 900; margin: .45em 0; text-transform: uppercase; letter-spacing: .05em; }
+        .info-row    { display: table; width: 100%; margin-bottom: .2em; }
         .info-label  { display: table-cell; width: 42%; font-weight: 900; }
         .info-value  { display: table-cell; width: 58%; font-weight: 700; }
-        .divider     { border-bottom: 2px dashed #222; margin: .7em 0; }
-        .total-section { background: #efefef; padding: .8em; margin: .8em 0; border-radius: 4px; border: 1px solid #bbb; }
-        .total-row   { display: table; width: 100%; margin-bottom: .45em; }
+        .divider     { border-bottom: 2px dashed #222; margin: .35em 0; }
+        .total-section { background: #efefef; padding: .45em .6em; margin: .4em 0; border-radius: 4px; border: 1px solid #bbb; }
+        .total-row   { display: table; width: 100%; margin-bottom: .2em; }
         .total-label { display: table-cell; font-weight: 700; }
         .total-value { display: table-cell; text-align: right; font-weight: 900; }
-        .grand-total { font-weight: 900; margin-top: .8em; padding-top: .7em; border-top: 4px double #000; border-bottom: 4px double #000; }
+        .grand-total { font-weight: 900; margin-top: .4em; padding-top: .35em; border-top: 4px double #000; border-bottom: 4px double #000; }
         .grand-total .total-label { font-size: 1.2em; font-weight: 900; letter-spacing: .03em; }
         .grand-total .total-value { font-size: 1.25em; font-weight: 900; }
-        .footer { text-align: center; margin-top: 1.2em; padding-top: .8em; border-top: 3px solid #000; }
-        .footer p { margin: .25em 0; font-weight: 700; }
-        .status-badge { display: inline-block; padding: .3em 1.2em; border-radius: 4px; font-weight: 900; color: #000; background: transparent; border: 3px solid #000; font-size: 1.2em; letter-spacing: .1em; }
-        .info-box { background: #f0f0f0; border: 2px solid #bbb; padding: .8em; margin: .6em 0; border-radius: 4px; }
+        .footer { text-align: center; margin-top: .5em; padding-top: .4em; border-top: 3px solid #000; }
+        .footer p { margin: .1em 0; font-weight: 700; }
+        .status-badge { display: inline-block; padding: .2em 1em; border-radius: 4px; font-weight: 900; color: #000; background: transparent; border: 3px solid #000; font-size: 1.2em; letter-spacing: .1em; }
+        .info-box { background: #f0f0f0; border: 2px solid #bbb; padding: .4em .6em; margin: .3em 0; border-radius: 4px; }
 
         /* ===== PRINT MEDIA ===== */
         @media print {
@@ -148,23 +148,11 @@
         @page { size: 80mm auto; margin: 4mm; }
     </style>
 </head>
-<body class="size-80 font-besar">
+<body class="size-{{ $ukuranKertas }} font-besar">
 
     <!-- ===== CONTROL PANEL ===== -->
     <div class="control-panel">
-        <h3>Pilih Ukuran Kertas</h3>
-        <div class="size-pills">
-            <div class="size-pill" data-size="58" onclick="setSize('58')">
-                58mm <span class="sub">(thermal kecil)</span>
-            </div>
-            <div class="size-pill active" data-size="80" onclick="setSize('80')">
-                80mm <span class="sub">(thermal standar)</span>
-            </div>
-            <div class="size-pill" data-size="a4" onclick="setSize('a4')">
-                A4 <span class="sub">(printer biasa)</span>
-            </div>
-        </div>
-        <h3 style="margin-top:10px;">Ukuran Huruf</h3>
+        <h3 style="margin-bottom:6px;">Ukuran Huruf</h3>
         <div class="size-pills">
             <div class="size-pill font-size-pill" data-font="normal" onclick="setFontSize('normal')">
                 Normal <span class="sub">(standar)</span>
@@ -298,12 +286,12 @@
             <div class="divider"></div>
 
             <!-- Status -->
-            <div style="text-align: center; margin: 15px 0;">
+            <div style="text-align: center; margin: 5px 0;">
                 <span class="status-badge">LUNAS</span>
             </div>
 
             <!-- Tanggal Cetak -->
-            <div style="text-align: center; margin-top: 1em; font-size: .85em; opacity: .75; font-family: 'Courier New', monospace;">
+            <div style="text-align: center; margin-top: .4em; font-size: .85em; opacity: .75; font-family: 'Courier New', monospace;">
                 Dicetak pada: {{ now()->format('d/m/Y H:i') }} WIB
             </div>
         </div>
@@ -317,8 +305,15 @@ const PAGE_CONFIG = {
     '80':  { pageSize: '80mm auto',  margin: '4mm', btCols: 42 },
     'a4':  { pageSize: 'A4',         margin: '15mm', btCols: 48 },
 };
-let currentSize = '80';
+let currentSize = '{{ $ukuranKertas }}';
 let currentFont = 'besar';
+
+// Apply the server-provided paper size on load
+(function() {
+    const cfg = PAGE_CONFIG[currentSize] || PAGE_CONFIG['80'];
+    document.getElementById('page-style').textContent =
+        `@page { size: ${cfg.pageSize}; margin: ${cfg.margin}; }`;
+})();
 
 // Sembunyikan control panel saat print (backup selain CSS @media print)
 window.addEventListener('beforeprint', function() {
