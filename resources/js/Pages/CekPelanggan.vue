@@ -533,12 +533,12 @@
                                 </div>
                             </div>
                             
-                            <!-- Info Cicilan (jika ada) -->
+                            <!-- Info Cicilan: gabungkan bulan ini + semua tunggakan sebelumnya -->
                             <InfoCicilan
-                                v-if="currentTagihan"
-                                :total-tagihan="currentTagihan.total_tagihan || 0"
-                                :jumlah-terbayar="currentTagihan.jumlah_terbayar || 0"
-                                :status-bayar="currentTagihan.status_bayar || 'BELUM_BAYAR'"
+                                v-if="currentTagihan || listTunggakan.length > 0"
+                                :total-tagihan="(currentTagihan?.total_tagihan || 0) + listTunggakan.reduce((sum, t) => sum + (t.sisa_tagihan || 0), 0)"
+                                :jumlah-terbayar="currentTagihan?.jumlah_terbayar || 0"
+                                :status-bayar="currentTagihan?.status_bayar || 'BELUM_BAYAR'"
                                 class="mb-4"
                             />
                             

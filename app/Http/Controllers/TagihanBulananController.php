@@ -392,21 +392,34 @@ class TagihanBulananController extends Controller
      */
     public function getByPelangganBulan($pelangganId, $bulan)
     {
+        $pelanggan = \App\Models\Pelanggan::find($pelangganId);
+        $isSosial = $pelanggan && $pelanggan->kategori === 'sosial';
+
         $tagihan = TagihanBulanan::where('pelanggan_id', $pelangganId)
             ->where('bulan', $bulan)
             ->first();
         
         if ($tagihan) {
+            // Hitung ulang total_tagihan dengan tarif yang benar (2000/m³)
+            // agar tidak terpengaruh nilai tarif salah dari generate-bulk
+            $pemakaian = $tagihan->pemakaian_kubik ?? 0;
+            $tarif = $isSosial ? 0 : 2000;
+            $adaAbunemen = $tagihan->ada_abunemen ?? false;
+            $biayaAbunemen = ($adaAbunemen && !$isSosial) ? 3000 : 0;
+            $totalTagihan = $pemakaian > 0
+                ? ($pemakaian * $tarif) + $biayaAbunemen
+                : ($tagihan->total_tagihan ?? 0);
+
             return response()->json([
                 'tagihan' => [
                     'id' => $tagihan->id,
                     'meteran_sebelum' => $tagihan->meteran_sebelum ?? 0,
                     'meteran_sesudah' => $tagihan->meteran_sesudah ?? 0,
-                    'pemakaian_kubik' => $tagihan->pemakaian_kubik ?? 0,
-                    'total_tagihan' => $tagihan->total_tagihan ?? 0,
+                    'pemakaian_kubik' => $pemakaian,
+                    'total_tagihan' => $totalTagihan,
                     'jumlah_terbayar' => $tagihan->jumlah_terbayar ?? 0,
-                    'ada_abunemen' => $tagihan->ada_abunemen ?? false,
-                    'biaya_abunemen' => $tagihan->biaya_abunemen ?? 0,
+                    'ada_abunemen' => $adaAbunemen,
+                    'biaya_abunemen' => $biayaAbunemen,
                     'status_bayar' => $tagihan->status_bayar,
                 ],
             ]);
@@ -446,7 +459,8 @@ class TagihanBulananController extends Controller
     public function getTunggakanByPelanggan($pelangganId)
     {
         try {
-            $tunggakan = TagihanBulanan::where('pelanggan_id', $pelangganId)
+            $tunggakan = TagihanBulanan::with('pelanggan')
+                ->where('pelanggan_id', $pelangganId)
                 ->whereIn('status_bayar', ['BELUM_BAYAR', 'TUNGGAKAN', 'CICILAN'])
                 ->orderBy('bulan', 'asc')
                 ->get()
@@ -460,12 +474,24 @@ class TagihanBulananController extends Controller
                         return null; // Skip dari list tunggakan
                     }
                     
+                    // Hitung ulang total dengan tarif yang benar (2000/m³)
+                    $pelanggan = $t->pelanggan;
+                    $isSosial = $pelanggan && $pelanggan->kategori === 'sosial';
+                    $tarif = $isSosial ? 0 : 2000;
+                    $adaAbunemen = $t->ada_abunemen ?? false;
+                    $biayaAbunemen = ($adaAbunemen && !$isSosial) ? 3000 : 0;
+                    $pemakaian = $t->pemakaian_kubik ?? 0;
+                    $totalBenar = $pemakaian > 0
+                        ? ($pemakaian * $tarif) + $biayaAbunemen
+                        : $t->total_tagihan;
+                    $sisaBenar = max(0, $totalBenar - ($t->jumlah_terbayar ?? 0));
+
                     return [
                         'id' => $t->id,
                         'bulan' => $t->bulan,
-                        'total_tagihan' => $t->total_tagihan,
+                        'total_tagihan' => $totalBenar,
                         'jumlah_terbayar' => $t->jumlah_terbayar,
-                        'sisa_tagihan' => $sisaTagihan,
+                        'sisa_tagihan' => $sisaBenar,
                     ];
                 })
                 ->filter(fn($t) => $t !== null && $t['sisa_tagihan'] > 0);
