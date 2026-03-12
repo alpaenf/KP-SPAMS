@@ -1107,6 +1107,38 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Pilih Ukuran Kertas -->
+    <div v-if="showPrintModal" class="fixed inset-0 z-[300] flex items-center justify-center" @click.self="showPrintModal = false">
+        <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl p-6 w-80 mx-4">
+            <h3 class="text-base font-bold text-gray-800 mb-1">Pilih Ukuran Kertas</h3>
+            <p class="text-xs text-gray-500 mb-4">Pilih sesuai printer yang digunakan</p>
+            <div class="flex flex-col gap-2 mb-5">
+                <label
+                    v-for="opt in [{value:'58', label:'58mm', sub:'Thermal kecil'}, {value:'80', label:'80mm', sub:'Thermal standar'}, {value:'a4', label:'A4', sub:'Printer biasa'}]"
+                    :key="opt.value"
+                    :class="['flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition', printSelectedSize === opt.value ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300']"
+                    @click="printSelectedSize = opt.value"
+                >
+                    <div :class="['w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0', printSelectedSize === opt.value ? 'border-blue-600' : 'border-gray-400']">
+                        <div v-if="printSelectedSize === opt.value" class="w-2 h-2 rounded-full bg-blue-600"></div>
+                    </div>
+                    <div>
+                        <span class="font-bold text-sm text-gray-800">{{ opt.label }}</span>
+                        <span class="text-xs text-gray-500 ml-1">({{ opt.sub }})</span>
+                    </div>
+                </label>
+            </div>
+            <div class="flex gap-2">
+                <button @click="showPrintModal = false" class="flex-1 py-2.5 rounded-xl border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">Batal</button>
+                <button @click="confirmPrint" class="flex-1 py-2.5 rounded-xl bg-purple-600 text-white text-sm font-bold hover:bg-purple-700 transition flex items-center justify-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    Cetak Struk
+                </button>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup>
@@ -1842,9 +1874,22 @@ const downloadPdf = (pembayaranId) => {
     window.open(`/pembayaran/${pembayaranId}/download-pdf`, '_blank');
 };
 
+// Print size modal
+const showPrintModal = ref(false);
+const printTargetId = ref(null);
+const printSelectedSize = ref('80');
+
 const printReceipt = (pembayaranId) => {
-    // Open print view in new window
-    window.open(`/pembayaran/${pembayaranId}/print`, '_blank');
+    printTargetId.value = pembayaranId;
+    printSelectedSize.value = '80';
+    showPrintModal.value = true;
+};
+
+const confirmPrint = () => {
+    if (!printTargetId.value) return;
+    window.open(`/pembayaran/${printTargetId.value}/print?size=${printSelectedSize.value}`, '_blank');
+    showPrintModal.value = false;
+    printTargetId.value = null;
 };
 
 const showFotoModal = (pelanggan) => {

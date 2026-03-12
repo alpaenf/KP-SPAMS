@@ -703,7 +703,14 @@ class PembayaranController extends Controller
             ]
         ];
         
-        $data['ukuranKertas'] = auth()->check() ? (auth()->user()->ukuran_kertas ?? '80') : '80';
+        // Ukuran kertas: priority query param > user preference > default 80
+        $sizeParam = request()->query('size');
+        $allowedSizes = ['58', '80', 'a4'];
+        if ($sizeParam && in_array($sizeParam, $allowedSizes)) {
+            $data['ukuranKertas'] = $sizeParam;
+        } else {
+            $data['ukuranKertas'] = auth()->check() ? (auth()->user()->ukuran_kertas ?? '80') : '80';
+        }
 
         return view('print.struk-pembayaran', $data);
     }
