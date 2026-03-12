@@ -1154,12 +1154,19 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                         Cetak Struk
                     </button>
-                    <button @click="confirmPrintBluetooth" class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition flex items-center justify-center gap-1.5">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l8 5-8 5V7z"/></svg>
-                        Bluetooth
+                    <button @click="confirmPrintBluetooth" :disabled="btPrinting"
+                        class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-1.5">
+                        <svg v-if="!btPrinting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l8 5-8 5V7z"/></svg>
+                        <svg v-else class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        {{ btPrinting ? 'Menghubungkan...' : 'Bluetooth' }}
                     </button>
                 </div>
-                <button @click="showPrintModal = false" class="w-full py-2 rounded-xl border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">Tutup</button>
+                <!-- BT Status -->
+                <div v-if="btStatusText"
+                    :class="['text-xs px-3 py-2 rounded-lg font-medium', btStatusType === 'error' ? 'bg-red-50 text-red-700' : btStatusType === 'success' ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700']">
+                    {{ btStatusText }}
+                </div>
+                <button @click="closePrintModal" class="w-full py-2 rounded-xl border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">Tutup</button>
             </div>
         </div>
     </div>
@@ -1903,12 +1910,38 @@ const showPrintModal = ref(false);
 const printTargetId = ref(null);
 const printSelectedSize = ref('80');
 const printSelectedFont = ref('besar');
+const printData = ref(null);
+const printDataLoading = ref(false);
+const btPrinting = ref(false);
+const btStatusText = ref('');
+const btStatusType = ref(''); // 'info' | 'error' | 'success'
 
-const printReceipt = (pembayaranId) => {
+const printReceipt = async (pembayaranId) => {
     printTargetId.value = pembayaranId;
     printSelectedSize.value = '80';
     printSelectedFont.value = 'besar';
+    printData.value = null;
+    btStatusText.value = '';
+    btStatusType.value = '';
     showPrintModal.value = true;
+    // Pre-fetch data di background saat modal dibuka
+    printDataLoading.value = true;
+    try {
+        const res = await axios.get(`/pembayaran/${pembayaranId}/print-data`);
+        printData.value = res.data;
+    } catch(e) {
+        console.error('Gagal fetch print data', e);
+    } finally {
+        printDataLoading.value = false;
+    }
+};
+
+const closePrintModal = () => {
+    if (btPrinting.value) return;
+    showPrintModal.value = false;
+    printTargetId.value = null;
+    btStatusText.value = '';
+    btStatusType.value = '';
 };
 
 const confirmPrint = () => {
@@ -1922,23 +1955,189 @@ const confirmPrint = () => {
     document.body.appendChild(iframe);
     iframe.onload = () => {
         setTimeout(() => {
-            try {
-                iframe.contentWindow.focus();
-                iframe.contentWindow.print();
-            } catch(e) { console.error(e); }
-            setTimeout(() => {
-                if (document.body.contains(iframe)) document.body.removeChild(iframe);
-            }, 2000);
+            try { iframe.contentWindow.focus(); iframe.contentWindow.print(); } catch(e) { console.error(e); }
+            setTimeout(() => { if (document.body.contains(iframe)) document.body.removeChild(iframe); }, 2000);
         }, 400);
     };
     iframe.src = url;
 };
 
-const confirmPrintBluetooth = () => {
-    if (!printTargetId.value) return;
-    window.open(`/pembayaran/${printTargetId.value}/print?size=${printSelectedSize.value}&font=${printSelectedFont.value}`, '_blank');
-    showPrintModal.value = false;
-    printTargetId.value = null;
+// ============================================================
+// BLUETOOTH ESC/POS — langsung dari popup, tanpa buka tab baru
+// ============================================================
+const BT_SERVICE_UUIDS = [
+    '000018f0-0000-1000-8000-00805f9b34fb',
+    'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+    '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+    '0000ff00-0000-1000-8000-00805f9b34fb',
+];
+const BT_CHAR_UUIDS = {
+    '000018f0-0000-1000-8000-00805f9b34fb': '00002af1-0000-1000-8000-00805f9b34fb',
+    'e7810a71-73ae-499d-8c15-faa9aef0c3f2': 'bef8d6c9-9c21-4c9e-b632-bd58c1009f9f',
+    '49535343-fe7d-4ae5-8fa9-9fafd205e455': '49535343-8841-43f4-a8d4-ecbe34729bb3',
+    '0000ff00-0000-1000-8000-00805f9b34fb': '0000ff02-0000-1000-8000-00805f9b34fb',
+};
+const BT_COLS = { '58': 32, '80': 42, 'a4': 48 };
+
+const fmtNum = (n, dec = 0) => {
+    const fixed = parseFloat(n || 0).toFixed(dec);
+    const [int, frac] = fixed.split('.');
+    const intFormatted = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return frac !== undefined ? intFormatted + ',' + frac : intFormatted;
+};
+
+const buildEscPos = (d, cols) => {
+    const ESC = 0x1B, GS = 0x1D, LF = 0x0A;
+    const enc = new TextEncoder();
+    const parts = [];
+    const cmd  = (...b) => parts.push(new Uint8Array(b));
+    const txt  = t => parts.push(enc.encode(t));
+    const line = (t = '') => { txt(t); cmd(LF); };
+    const dash = (ch = '-') => line(ch.repeat(cols));
+    const row2 = (label, val) => {
+        const sp = cols - label.length - val.length;
+        line(label + ' '.repeat(Math.max(1, sp)) + val);
+    };
+
+    cmd(ESC, 0x40);           // Init
+    cmd(ESC, 0x61, 0x01);     // Center
+    cmd(ESC, 0x45, 0x01);     // Bold on
+    cmd(GS,  0x21, 0x11);     // Double size
+    line('KP-SPAMS');
+    cmd(GS,  0x21, 0x00);
+    line('DAMAR WULAN');
+    cmd(ESC, 0x45, 0x00);     // Bold off
+    line();
+    dash('=');
+    cmd(ESC, 0x45, 0x01);
+    line('*** STRUK PEMBAYARAN ***');
+    cmd(ESC, 0x45, 0x00);
+    dash('=');
+    line();
+    cmd(ESC, 0x61, 0x00);     // Left align
+    line('ID Pelanggan : ' + d.pelanggan_id);
+    line('Nama         : ' + d.pelanggan_nama);
+    line('Alamat       : RT ' + d.rt + '/RW ' + d.rw);
+    if (d.no_whatsapp) line('WhatsApp     : ' + d.no_whatsapp);
+    line();
+    line('No. Transaksi: #' + String(d.id).padStart(6, '0'));
+    line('Tanggal Bayar: ' + d.tanggal_bayar);
+    line('Bulan Tagihan: ' + d.bulan_bayar);
+    line();
+    dash();
+    if (d.meteran_sebelum && d.meteran_sesudah) {
+        row2('Mtr Sebelum', fmtNum(d.meteran_sebelum) + ' m3');
+        row2('Mtr Sesudah', fmtNum(d.meteran_sesudah) + ' m3');
+        dash();
+    }
+    row2('Pemakaian Air', fmtNum(d.jumlah_kubik ?? 0, 2) + ' m3');
+    row2('Tarif per m3', 'Rp ' + fmtNum(d.tarif_per_kubik ?? 2000));
+    row2('Subtotal', 'Rp ' + fmtNum((d.jumlah_kubik ?? 0) * (d.tarif_per_kubik ?? 2000)));
+    row2('Biaya Abonemen', 'Rp ' + fmtNum(d.biaya_abunemen ?? 3000));
+    if (d.tunggakan > 0) row2('Tunggakan', 'Rp ' + fmtNum(d.tunggakan));
+    if (d.keterangan) line('Keterangan: ' + d.keterangan);
+    dash('=');
+    cmd(ESC, 0x45, 0x01);
+    cmd(GS,  0x21, 0x01);     // Double height
+    row2('TOTAL BAYAR', 'Rp ' + fmtNum(d.jumlah_bayar));
+    cmd(GS,  0x21, 0x00);
+    cmd(ESC, 0x45, 0x00);
+    line();
+    cmd(ESC, 0x61, 0x01);
+    dash('=');
+    cmd(ESC, 0x45, 0x01);
+    line('*** LUNAS ***');
+    cmd(ESC, 0x45, 0x00);
+    dash('=');
+    line();
+    line('Dicetak: ' + new Date().toLocaleDateString('id-ID') + ' ' + new Date().toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'}));
+    line(); line(); line();
+    cmd(GS, 0x56, 0x00);      // Full cut
+
+    const total = parts.reduce((s, p) => s + p.length, 0);
+    const buf = new Uint8Array(total);
+    let off = 0;
+    for (const p of parts) { buf.set(p, off); off += p.length; }
+    return buf;
+};
+
+const confirmPrintBluetooth = async () => {
+    if (!navigator.bluetooth) {
+        btStatusText.value = 'Browser tidak mendukung Bluetooth. Gunakan Chrome/Edge versi terbaru.';
+        btStatusType.value = 'error';
+        return;
+    }
+    if (!printData.value) {
+        btStatusText.value = 'Data belum siap, tunggu sebentar lalu coba lagi.';
+        btStatusType.value = 'error';
+        return;
+    }
+
+    btPrinting.value = true;
+    btStatusText.value = 'Pilih printer di dialog browser...';
+    btStatusType.value = 'info';
+
+    // requestDevice() HARUS dipanggil di sini — masih di dalam user gesture click
+    let device;
+    try {
+        device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: BT_SERVICE_UUIDS,
+        });
+    } catch (err) {
+        btPrinting.value = false;
+        btStatusText.value = err.name === 'NotFoundError' ? 'Tidak ada printer dipilih.' : 'Error: ' + err.message;
+        btStatusType.value = 'error';
+        return;
+    }
+
+    try {
+        btStatusText.value = 'Menghubungkan ke "' + device.name + '"...';
+        const server = await device.gatt.connect();
+
+        let characteristic = null;
+        const services = await server.getPrimaryServices();
+        for (const svc of services) {
+            const knownChar = BT_CHAR_UUIDS[svc.uuid];
+            try {
+                if (knownChar) {
+                    characteristic = await svc.getCharacteristic(knownChar);
+                } else {
+                    const chars = await svc.getCharacteristics();
+                    for (const c of chars) {
+                        if (c.properties.write || c.properties.writeWithoutResponse) { characteristic = c; break; }
+                    }
+                }
+                if (characteristic) break;
+            } catch (_) {}
+        }
+
+        if (!characteristic) throw new Error('Karakteristik write printer tidak ditemukan.');
+
+        btStatusText.value = 'Mengirim data ke printer...';
+        const cols = BT_COLS[printSelectedSize.value] || 42;
+        const data = buildEscPos(printData.value, cols);
+        const CHUNK = 512;
+        for (let i = 0; i < data.length; i += CHUNK) {
+            const chunk = data.slice(i, i + CHUNK);
+            if (characteristic.properties.writeWithoutResponse) {
+                await characteristic.writeValueWithoutResponse(chunk);
+            } else {
+                await characteristic.writeValue(chunk);
+            }
+            await new Promise(r => setTimeout(r, 60));
+        }
+
+        device.gatt.disconnect();
+        btStatusText.value = '✓ Berhasil dicetak via Bluetooth!';
+        btStatusType.value = 'success';
+    } catch (err) {
+        if (device && device.gatt.connected) device.gatt.disconnect();
+        btStatusText.value = 'Error: ' + err.message;
+        btStatusType.value = 'error';
+    } finally {
+        btPrinting.value = false;
+    }
 };
 
 const showFotoModal = (pelanggan) => {

@@ -89,6 +89,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pembayaran/{pembayaran}/receipt-link', [PembayaranController::class, 'getReceiptLink'])->name('pembayaran.receipt-link');
     Route::get('/pembayaran/{pembayaran}/download-pdf', [PembayaranController::class, 'downloadPdf'])->name('pembayaran.download-pdf');
     Route::get('/pembayaran/{pembayaran}/print', [PembayaranController::class, 'printReceipt'])->name('pembayaran.print');
+    Route::get('/pembayaran/{pembayaran}/print-data', [PembayaranController::class, 'printData'])->name('pembayaran.print-data');
     
     // API Tagihan by Pelanggan
     // PENTING: route /tunggakan harus SEBELUM /{bulan} agar wildcard tidak menangkap 'tunggakan' sebagai {bulan}

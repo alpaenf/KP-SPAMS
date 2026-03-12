@@ -667,6 +667,31 @@ class PembayaranController extends Controller
         return $pdf->download($fileName);
     }
 
+    public function printData($id)
+    {
+        $pembayaran = Pembayaran::with('pelanggan')->findOrFail($id);
+        if (!$pembayaran->pelanggan) abort(404);
+
+        return response()->json([
+            'id'             => $pembayaran->id,
+            'pelanggan_id'   => $pembayaran->pelanggan->id_pelanggan,
+            'pelanggan_nama' => $pembayaran->pelanggan->nama_pelanggan,
+            'rt'             => $pembayaran->pelanggan->rt,
+            'rw'             => $pembayaran->pelanggan->rw,
+            'no_whatsapp'    => $pembayaran->pelanggan->no_whatsapp,
+            'bulan_bayar'    => \Carbon\Carbon::parse($pembayaran->bulan_bayar . '-01')->locale('id')->isoFormat('MMMM YYYY'),
+            'tanggal_bayar'  => \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->locale('id')->isoFormat('D MMMM YYYY'),
+            'meteran_sebelum'=> $pembayaran->meteran_sebelum ?? 0,
+            'meteran_sesudah'=> $pembayaran->meteran_sesudah ?? 0,
+            'jumlah_kubik'   => $pembayaran->jumlah_kubik ?? 0,
+            'tarif_per_kubik'=> 2000,
+            'biaya_abunemen' => $pembayaran->abunemen ? 3000 : 0,
+            'tunggakan'      => $pembayaran->tunggakan ?? 0,
+            'jumlah_bayar'   => $pembayaran->jumlah_bayar,
+            'keterangan'     => $pembayaran->keterangan,
+        ]);
+    }
+
     public function printReceipt($id)
     {
         $pembayaran = Pembayaran::with('pelanggan')->findOrFail($id);
