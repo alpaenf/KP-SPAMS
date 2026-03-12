@@ -712,6 +712,10 @@ class PembayaranController extends Controller
             $data['ukuranKertas'] = auth()->check() ? (auth()->user()->ukuran_kertas ?? '80') : '80';
         }
 
+        // Ukuran huruf: query param ?font=normal|besar
+        $fontParam = request()->query('font');
+        $data['fontKelas'] = $fontParam === 'normal' ? 'font-normal' : 'font-besar';
+
         return view('print.struk-pembayaran', $data);
     }
 }

@@ -148,7 +148,7 @@
         @page { size: 80mm auto; margin: 4mm; }
     </style>
 </head>
-<body class="size-{{ $ukuranKertas }} font-besar">
+<body class="size-{{ $ukuranKertas }} {{ $fontKelas }}">
 
     <!-- ===== CONTROL PANEL ===== -->
     <div class="control-panel">

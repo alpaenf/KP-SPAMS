@@ -1108,17 +1108,20 @@
         </div>
     </div>
 
-    <!-- Modal Pilih Ukuran Kertas -->
+    <!-- Modal Cetak Struk -->
     <div v-if="showPrintModal" class="fixed inset-0 z-[300] flex items-center justify-center" @click.self="showPrintModal = false">
         <div class="absolute inset-0 bg-black bg-opacity-50"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl p-6 w-80 mx-4">
-            <h3 class="text-base font-bold text-gray-800 mb-1">Pilih Ukuran Kertas</h3>
-            <p class="text-xs text-gray-500 mb-4">Pilih sesuai printer yang digunakan</p>
-            <div class="flex flex-col gap-2 mb-5">
+            <h3 class="text-base font-bold text-gray-800 mb-1">Cetak Struk</h3>
+            <p class="text-xs text-gray-500 mb-3">Pilih pengaturan sebelum cetak</p>
+
+            <!-- Ukuran Kertas -->
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Ukuran Kertas</p>
+            <div class="flex flex-col gap-1.5 mb-4">
                 <label
                     v-for="opt in [{value:'58', label:'58mm', sub:'Thermal kecil'}, {value:'80', label:'80mm', sub:'Thermal standar'}, {value:'a4', label:'A4', sub:'Printer biasa'}]"
                     :key="opt.value"
-                    :class="['flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition', printSelectedSize === opt.value ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300']"
+                    :class="['flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 cursor-pointer transition', printSelectedSize === opt.value ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300']"
                     @click="printSelectedSize = opt.value"
                 >
                     <div :class="['w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0', printSelectedSize === opt.value ? 'border-blue-600' : 'border-gray-400']">
@@ -1130,12 +1133,33 @@
                     </div>
                 </label>
             </div>
-            <div class="flex gap-2">
-                <button @click="showPrintModal = false" class="flex-1 py-2.5 rounded-xl border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">Batal</button>
-                <button @click="confirmPrint" class="flex-1 py-2.5 rounded-xl bg-purple-600 text-white text-sm font-bold hover:bg-purple-700 transition flex items-center justify-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                    Cetak Struk
-                </button>
+
+            <!-- Ukuran Huruf -->
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Ukuran Huruf</p>
+            <div class="flex gap-2 mb-5">
+                <button
+                    @click="printSelectedFont = 'normal'"
+                    :class="['flex-1 py-2 rounded-xl border-2 text-sm font-medium transition', printSelectedFont === 'normal' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:border-blue-300']"
+                >Normal <span class="text-xs opacity-70">(standar)</span></button>
+                <button
+                    @click="printSelectedFont = 'besar'"
+                    :class="['flex-1 py-2 rounded-xl border-2 text-sm font-medium transition', printSelectedFont === 'besar' ? 'border-purple-600 bg-purple-50 text-purple-700' : 'border-gray-200 text-gray-600 hover:border-purple-300']"
+                >Besar <span class="text-xs opacity-70">(lansia)</span></button>
+            </div>
+
+            <!-- Tombol Aksi -->
+            <div class="flex flex-col gap-2">
+                <div class="flex gap-2">
+                    <button @click="confirmPrint" class="flex-1 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                        Cetak Struk
+                    </button>
+                    <button @click="confirmPrintBluetooth" class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l8 5-8 5V7z"/></svg>
+                        Bluetooth
+                    </button>
+                </div>
+                <button @click="showPrintModal = false" class="w-full py-2 rounded-xl border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">Tutup</button>
             </div>
         </div>
     </div>
@@ -1878,16 +1902,41 @@ const downloadPdf = (pembayaranId) => {
 const showPrintModal = ref(false);
 const printTargetId = ref(null);
 const printSelectedSize = ref('80');
+const printSelectedFont = ref('besar');
 
 const printReceipt = (pembayaranId) => {
     printTargetId.value = pembayaranId;
     printSelectedSize.value = '80';
+    printSelectedFont.value = 'besar';
     showPrintModal.value = true;
 };
 
 const confirmPrint = () => {
     if (!printTargetId.value) return;
-    window.open(`/pembayaran/${printTargetId.value}/print?size=${printSelectedSize.value}`, '_blank');
+    const url = `/pembayaran/${printTargetId.value}/print?size=${printSelectedSize.value}&font=${printSelectedFont.value}`;
+    showPrintModal.value = false;
+    printTargetId.value = null;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:0;height:0;border:0;opacity:0;';
+    document.body.appendChild(iframe);
+    iframe.onload = () => {
+        setTimeout(() => {
+            try {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            } catch(e) { console.error(e); }
+            setTimeout(() => {
+                if (document.body.contains(iframe)) document.body.removeChild(iframe);
+            }, 2000);
+        }, 400);
+    };
+    iframe.src = url;
+};
+
+const confirmPrintBluetooth = () => {
+    if (!printTargetId.value) return;
+    window.open(`/pembayaran/${printTargetId.value}/print?size=${printSelectedSize.value}&font=${printSelectedFont.value}`, '_blank');
     showPrintModal.value = false;
     printTargetId.value = null;
 };
