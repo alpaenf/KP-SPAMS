@@ -741,6 +741,9 @@ class PembayaranController extends Controller
         $fontParam = request()->query('font');
         $data['fontKelas'] = $fontParam === 'normal' ? 'font-normal' : 'font-besar';
 
+        // Mode share: sembunyikan control panel agar tidak ikut di-screenshot oleh app printer
+        $data['shareMode'] = request()->query('share') === '1';
+
         return view('print.struk-pembayaran', $data);
     }
 }

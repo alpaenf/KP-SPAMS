@@ -150,7 +150,8 @@
 </head>
 <body class="size-{{ $ukuranKertas }} {{ $fontKelas }}">
 
-    <!-- ===== CONTROL PANEL ===== -->
+    <!-- ===== CONTROL PANEL (disembunyikan saat share mode) ===== -->
+    @unless($shareMode ?? false)
     <div class="control-panel">
         <h3 style="margin-bottom:6px;">Ukuran Huruf</h3>
         <div class="size-pills">
@@ -174,6 +175,7 @@
         </div>
         <div id="bt-status"></div>
     </div>
+    @endunless
 
     <div class="print-container">
         <div class="struk-container">

@@ -1970,7 +1970,7 @@ const confirmPrint = () => {
 
 const openPrintInTab = () => {
     if (!printTargetId.value) return;
-    const url = `/pembayaran/${printTargetId.value}/print?size=${printSelectedSize.value}&font=${printSelectedFont.value}`;
+    const url = `/pembayaran/${printTargetId.value}/print?size=${printSelectedSize.value}&font=${printSelectedFont.value}&share=1`;
     showPrintModal.value = false;
     printTargetId.value = null;
     window.open(url, '_blank');
