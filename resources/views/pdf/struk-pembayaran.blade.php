@@ -238,7 +238,7 @@
 
         <!-- Status -->
         <div style="text-align: center; margin: 15px 0;">
-            <span class="status-badge">✓ LUNAS</span>
+            <span class="status-badge">*** LUNAS ***</span>
         </div>
 
         <!-- Footer -->

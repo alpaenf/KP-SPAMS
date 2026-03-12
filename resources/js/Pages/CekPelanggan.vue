@@ -1161,6 +1161,12 @@
                         {{ btPrinting ? 'Menghubungkan...' : 'Bluetooth' }}
                     </button>
                 </div>
+                <!-- Tombol Buka di Tab — untuk share ke app printer lain di Android -->
+                <button @click="openPrintInTab"
+                    class="w-full py-2.5 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600 transition flex items-center justify-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    Buka di Tab (Bagikan / Print App)
+                </button>
                 <!-- BT Status -->
                 <div v-if="btStatusText"
                     :class="['text-xs px-3 py-2 rounded-lg font-medium', btStatusType === 'error' ? 'bg-red-50 text-red-700' : btStatusType === 'success' ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700']">
@@ -1962,6 +1968,14 @@ const confirmPrint = () => {
     iframe.src = url;
 };
 
+const openPrintInTab = () => {
+    if (!printTargetId.value) return;
+    const url = `/pembayaran/${printTargetId.value}/print?size=${printSelectedSize.value}&font=${printSelectedFont.value}`;
+    showPrintModal.value = false;
+    printTargetId.value = null;
+    window.open(url, '_blank');
+};
+
 // ============================================================
 // BLUETOOTH ESC/POS — langsung dari popup, tanpa buka tab baru
 // ============================================================
@@ -1998,6 +2012,10 @@ const buildEscPos = (d, cols) => {
         const sp = cols - label.length - val.length;
         line(label + ' '.repeat(Math.max(1, sp)) + val);
     };
+    const center = (t) => {
+        const sp = Math.max(0, Math.floor((cols - t.length) / 2));
+        line(' '.repeat(sp) + t);
+    };
 
     cmd(ESC, 0x40);           // Init
     cmd(ESC, 0x61, 0x01);     // Center
@@ -2005,8 +2023,11 @@ const buildEscPos = (d, cols) => {
     cmd(GS,  0x21, 0x11);     // Double size
     line('KP-SPAMS');
     cmd(GS,  0x21, 0x00);
-    line('DAMAR WULAN');
+    line('"DAMAR WULAN"');
     cmd(ESC, 0x45, 0x00);     // Bold off
+    line('Air Bersih untuk Kehidupan Sehat');
+    line('Desa Ciwuni, Kec. Kesugihan');
+    line('Kabupaten Cilacap');
     line();
     dash('=');
     cmd(ESC, 0x45, 0x01);
@@ -2017,22 +2038,24 @@ const buildEscPos = (d, cols) => {
     cmd(ESC, 0x61, 0x00);     // Left align
     line('ID Pelanggan : ' + d.pelanggan_id);
     line('Nama         : ' + d.pelanggan_nama);
-    line('Alamat       : RT ' + d.rt + '/RW ' + d.rw);
-    if (d.no_whatsapp) line('WhatsApp     : ' + d.no_whatsapp);
+    line('Alamat       : RT ' + d.rt + ' / RW ' + d.rw);
+    if (d.no_whatsapp) line('No. WhatsApp : ' + d.no_whatsapp);
     line();
+    dash();
     line('No. Transaksi: #' + String(d.id).padStart(6, '0'));
     line('Tanggal Bayar: ' + d.tanggal_bayar);
     line('Bulan Tagihan: ' + d.bulan_bayar);
     line();
     dash();
     if (d.meteran_sebelum && d.meteran_sesudah) {
-        row2('Mtr Sebelum', fmtNum(d.meteran_sebelum) + ' m3');
-        row2('Mtr Sesudah', fmtNum(d.meteran_sesudah) + ' m3');
+        row2('Meteran Sebelum', fmtNum(d.meteran_sebelum) + ' m3');
+        row2('Meteran Sesudah', fmtNum(d.meteran_sesudah) + ' m3');
         dash();
     }
     row2('Pemakaian Air', fmtNum(d.jumlah_kubik ?? 0, 2) + ' m3');
     row2('Tarif per m3', 'Rp ' + fmtNum(d.tarif_per_kubik ?? 2000));
     row2('Subtotal', 'Rp ' + fmtNum((d.jumlah_kubik ?? 0) * (d.tarif_per_kubik ?? 2000)));
+    dash();
     row2('Biaya Abonemen', 'Rp ' + fmtNum(d.biaya_abunemen ?? 3000));
     if (d.tunggakan > 0) row2('Tunggakan', 'Rp ' + fmtNum(d.tunggakan));
     if (d.keterangan) line('Keterangan: ' + d.keterangan);
@@ -2042,14 +2065,19 @@ const buildEscPos = (d, cols) => {
     row2('TOTAL BAYAR', 'Rp ' + fmtNum(d.jumlah_bayar));
     cmd(GS,  0x21, 0x00);
     cmd(ESC, 0x45, 0x00);
-    line();
-    cmd(ESC, 0x61, 0x01);
     dash('=');
+    line();
+    cmd(ESC, 0x61, 0x01); // Center
     cmd(ESC, 0x45, 0x01);
     line('*** LUNAS ***');
     cmd(ESC, 0x45, 0x00);
-    dash('=');
     line();
+    dash('-');
+    line('Terima kasih atas pembayaran Anda!');
+    line('Struk ini adalah bukti pembayaran yang sah');
+    line('Simpan struk ini dengan baik');
+    line();
+    cmd(ESC, 0x61, 0x00);
     line('Dicetak: ' + new Date().toLocaleDateString('id-ID') + ' ' + new Date().toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'}));
     line(); line(); line();
     cmd(GS, 0x56, 0x00);      // Full cut
