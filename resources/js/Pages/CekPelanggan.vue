@@ -2031,7 +2031,7 @@ const buildEscPos = (d, cols) => {
     line();
     dash('=');
     cmd(ESC, 0x45, 0x01);
-    line('*** STRUK PEMBAYARAN ***');
+    line('STRUK PEMBAYARAN');
     cmd(ESC, 0x45, 0x00);
     dash('=');
     line();

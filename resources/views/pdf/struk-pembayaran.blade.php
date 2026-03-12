@@ -134,7 +134,7 @@
 
         <!-- Struk Title -->
         <div class="struk-title">
-            *** STRUK PEMBAYARAN ***
+            STRUK PEMBAYARAN
         </div>
 
         <!-- Info Pelanggan -->
