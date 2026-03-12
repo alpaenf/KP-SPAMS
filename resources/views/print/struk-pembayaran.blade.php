@@ -181,7 +181,8 @@
         <div class="struk-container">
             <!-- Header -->
             <div class="header">
-                <h1>KP-SPAMS "DAMAR WULAN"</h1>
+                <h1>KP-SPAMS</h1>
+                <h1>"DAMAR WULAN"</h1>
             </div>
 
             <!-- Struk Title -->

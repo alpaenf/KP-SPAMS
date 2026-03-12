@@ -2022,8 +2022,9 @@ const buildEscPos = (d, cols) => {
     cmd(ESC, 0x45, 0x01);     // Bold on
     cmd(GS,  0x21, 0x11);     // Double size
     line('KP-SPAMS');
-    cmd(GS,  0x21, 0x00);
+    cmd(GS,  0x21, 0x01);     // Double height only
     line('"DAMAR WULAN"');
+    cmd(GS,  0x21, 0x00);     // Reset size
     cmd(ESC, 0x45, 0x00);     // Bold off
     line('Air Bersih untuk Kehidupan Sehat');
     line('Desa Ciwuni, Kec. Kesugihan');
