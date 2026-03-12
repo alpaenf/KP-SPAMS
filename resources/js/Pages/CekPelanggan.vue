@@ -1238,7 +1238,8 @@ const pembayaranList = ref([]);
 const loadingPembayaran = ref(false);
 const isSubmitting = ref(false);
 const currentTagihan = ref(null); // Data tagihan bulan ini untuk info cicilan
-const listTunggakan = ref([]); // List tunggakan yang belum lunas
+const listTunggakan = ref([]); // List tunggakan yang belum lunas (sudah difilter)
+const allTunggakan = ref([]); // Semua tunggakan raw dari API
 
 // Foto meteran
 const fotoMeteran = ref(null);
@@ -1483,7 +1484,8 @@ const showPembayaranModal = async (pelanggan) => {
         const response = await axios.get(`/pelanggan/${pelanggan.id}/pembayaran`);
         pembayaranList.value = response.data.pembayarans;
         
-        // Cari bulan pertama yang belum dibayar (dari Januari tahun ini sampai bulan sekarang)
+        // Cari bulan pertama yang BENAR-BENAR belum dibayar (bukan hanya TUNGGAKAN)
+        // Bulan yang ada pembayaran dengan jumlah_bayar > 0 dianggap "sudah bayar"
         const today = new Date();
         const currentYear = today.getFullYear();
         const currentMonthNum = today.getMonth() + 1;
@@ -1491,7 +1493,10 @@ const showPembayaranModal = async (pelanggan) => {
         
         for (let month = 1; month <= currentMonthNum; month++) {
             const monthStr = `${currentYear}-${String(month).padStart(2, '0')}`;
-            const sudahBayar = pembayaranList.value.some(p => p.bulan_bayar === monthStr);
+            // Dianggap "sudah bayar" hanya jika ada pembayaran dengan jumlah_bayar > 0
+            const sudahBayar = pembayaranList.value.some(
+                p => p.bulan_bayar === monthStr && Number(p.jumlah_bayar) > 0
+            );
             if (!sudahBayar) {
                 bulanTujuan = monthStr;
                 break;
@@ -1522,9 +1527,10 @@ const showPembayaranModal = async (pelanggan) => {
         try {
             const responseTunggakan = await axios.get(`/api/tagihan-bulanan/${pelanggan.id}/tunggakan`);
             if (responseTunggakan.data && responseTunggakan.data.tunggakan) {
-                // Filter tunggakan: hanya bulan-bulan SEBELUM bulan yang sedang diinput
-                // Ini mencegah bulan yang sama muncul di form utama DAN di list tunggakan
-                listTunggakan.value = responseTunggakan.data.tunggakan.filter(t => t.bulan < bulanTujuan);
+                // Simpan semua raw tunggakan
+                allTunggakan.value = responseTunggakan.data.tunggakan;
+                // Filter: hanya bulan-bulan SEBELUM bulan yang sedang diinput
+                listTunggakan.value = allTunggakan.value.filter(t => t.bulan < bulanTujuan);
                 
                 // Hitung total tunggakan dari list yang sudah difilter
                 const totalTunggakan = listTunggakan.value.reduce((sum, t) => sum + (t.sisa_tagihan || 0), 0);
@@ -1537,6 +1543,7 @@ const showPembayaranModal = async (pelanggan) => {
         } catch (error) {
             console.error('Error loading tunggakan:', error);
             listTunggakan.value = [];
+            allTunggakan.value = [];
         }
         
         // Hitung tagihan jika ada tunggakan
@@ -1664,6 +1671,18 @@ const fetchMeteranData = async (bulan) => {
 watch(() => pembayaranForm.value.bulan_bayar, (newBulan) => {
     if (newBulan && selectedPelanggan.value) {
         fetchMeteranData(newBulan);
+        // Re-filter listTunggakan berdasarkan bulan yang baru dipilih
+        listTunggakan.value = allTunggakan.value.filter(t => t.bulan < newBulan);
+        const totalTunggakan = listTunggakan.value.reduce((sum, t) => sum + (t.sisa_tagihan || 0), 0);
+        pembayaranForm.value.tunggakan = totalTunggakan;
+        if (totalTunggakan > 0) {
+            pembayaranForm.value.bayar_tunggakan = true;
+            pembayaranForm.value.jumlah_bayar_tunggakan = totalTunggakan;
+        } else {
+            pembayaranForm.value.bayar_tunggakan = false;
+            pembayaranForm.value.jumlah_bayar_tunggakan = 0;
+        }
+        hitungTagihan();
     }
 });
 
