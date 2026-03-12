@@ -1154,11 +1154,10 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                         Cetak Struk
                     </button>
-                    <button @click="confirmPrintBluetooth" :disabled="btPrinting"
+                    <button @click="openBluetoothPreview" :disabled="btPrinting || printDataLoading"
                         class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-1.5">
-                        <svg v-if="!btPrinting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l8 5-8 5V7z"/></svg>
-                        <svg v-else class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                        {{ btPrinting ? 'Menghubungkan...' : 'Bluetooth' }}
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l8 5-8 5V7z"/></svg>
+                        Bluetooth
                     </button>
                 </div>
                 <!-- Tombol Buka di Tab — untuk share ke app printer lain di Android -->
@@ -1173,6 +1172,57 @@
                     {{ btStatusText }}
                 </div>
                 <button @click="closePrintModal" class="w-full py-2 rounded-xl border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Preview Bluetooth -->
+    <div v-if="showPrintModal && showBtPreview" class="fixed inset-0 z-[400] flex items-center justify-center" @click.self="showBtPreview = false">
+        <div class="absolute inset-0 bg-black bg-opacity-60"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl mx-4 flex flex-col" style="max-height:90vh; width:340px;">
+            <!-- Header -->
+            <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200">
+                <button @click="showBtPreview = false" class="text-gray-500 hover:text-gray-700 mr-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <h3 class="text-sm font-bold text-gray-800 flex-1">Preview Struk Bluetooth</h3>
+                <span class="text-xs text-gray-400">{{ printSelectedSize }}mm · {{ (BT_COLS[printSelectedSize] || 42) }} kolom</span>
+            </div>
+
+            <!-- Scroll area preview -->
+            <div class="overflow-y-auto flex-1 p-3 bg-gray-100">
+                <div class="bg-white rounded-lg shadow p-2 font-mono text-xs leading-[1.35] whitespace-pre overflow-x-auto"
+                    style="font-size:10px; min-width:100%;">
+                    <template v-if="printData">
+                        <div v-for="(line, i) in buildBtPreviewLines(printData, BT_COLS[printSelectedSize] || 42)" :key="i"
+                            :class="{
+                                'font-black text-base leading-tight': line.style === 'header2',
+                                'font-bold text-sm': line.style === 'header1' || line.style === 'bold',
+                                'font-black text-sm bg-black text-white text-center px-1': line.style === 'lunas',
+                                'font-black': line.style === 'total',
+                                'text-gray-400': line.style === 'dash',
+                            }"
+                            style="white-space:pre;">{{ line.text }}</div>
+                    </template>
+                    <template v-else>
+                        <div class="text-center text-gray-400 py-6">Memuat data struk...</div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Footer tombol -->
+            <div class="px-4 py-3 border-t border-gray-200 flex flex-col gap-2">
+                <div v-if="btStatusText"
+                    :class="['text-xs px-3 py-2 rounded-lg font-medium', btStatusType === 'error' ? 'bg-red-50 text-red-700' : btStatusType === 'success' ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700']">
+                    {{ btStatusText }}
+                </div>
+                <button @click="confirmPrintBluetooth" :disabled="btPrinting || !printData"
+                    class="w-full py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2">
+                    <svg v-if="!btPrinting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
+                    <svg v-else class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    {{ btPrinting ? 'Menghubungkan...' : 'Cari Perangkat & Cetak' }}
+                </button>
+                <button @click="showBtPreview = false" class="w-full py-2 rounded-xl border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">Kembali</button>
             </div>
         </div>
     </div>
@@ -1940,6 +1990,72 @@ const printDataLoading = ref(false);
 const btPrinting = ref(false);
 const btStatusText = ref('');
 const btStatusType = ref(''); // 'info' | 'error' | 'success'
+const showBtPreview = ref(false); // Mode preview struk Bluetooth
+
+// Bangun baris teks preview (simulasi struk thermal) dari printData
+const buildBtPreviewLines = (d, cols) => {
+    if (!d) return [];
+    const fnum = (n, dec = 0) => {
+        const fixed = parseFloat(n || 0).toFixed(dec);
+        const [int, frac] = fixed.split('.');
+        const intF = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        return frac !== undefined ? intF + ',' + frac : intF;
+    };
+    const pad = (t, len) => t.length >= len ? t.substring(0, len) : t + ' '.repeat(len - t.length);
+    const centerStr = t => {
+        const sp = Math.max(0, Math.floor((cols - t.length) / 2));
+        return ' '.repeat(sp) + t;
+    };
+    const row2Str = (label, val) => {
+        const sp = cols - label.length - val.length;
+        return label + ' '.repeat(Math.max(1, sp)) + val;
+    };
+    const dash = (ch = '-') => ch.repeat(cols);
+    const lines = [];
+    lines.push({ text: centerStr('KP-SPAMS'), style: 'header2' });
+    lines.push({ text: centerStr('"DAMAR WULAN"'), style: 'header1' });
+    lines.push({ text: centerStr('Air Bersih untuk Kehidupan Sehat'), style: 'normal' });
+    lines.push({ text: centerStr('Desa Ciwuni, Kec. Kesugihan'), style: 'normal' });
+    lines.push({ text: centerStr('Kabupaten Cilacap'), style: 'normal' });
+    lines.push({ text: dash('='), style: 'dash' });
+    lines.push({ text: centerStr('STRUK PEMBAYARAN'), style: 'bold' });
+    lines.push({ text: dash('='), style: 'dash' });
+    lines.push({ text: 'ID Pelanggan : ' + d.pelanggan_id, style: 'normal' });
+    lines.push({ text: 'Nama         : ' + d.pelanggan_nama, style: 'normal' });
+    lines.push({ text: 'Alamat       : RT ' + d.rt + ' / RW ' + d.rw, style: 'normal' });
+    if (d.no_whatsapp) lines.push({ text: 'No. WhatsApp : ' + d.no_whatsapp, style: 'normal' });
+    lines.push({ text: dash(), style: 'dash' });
+    lines.push({ text: 'No. Transaksi: #' + String(d.id).padStart(6, '0'), style: 'normal' });
+    lines.push({ text: 'Tanggal Bayar: ' + d.tanggal_bayar, style: 'normal' });
+    lines.push({ text: 'Bulan Tagihan: ' + d.bulan_bayar, style: 'normal' });
+    lines.push({ text: dash(), style: 'dash' });
+    if (d.meteran_sebelum && d.meteran_sesudah) {
+        lines.push({ text: row2Str('Meteran Sebelum', fnum(d.meteran_sebelum) + ' m3'), style: 'normal' });
+        lines.push({ text: row2Str('Meteran Sesudah', fnum(d.meteran_sesudah) + ' m3'), style: 'normal' });
+        lines.push({ text: dash(), style: 'dash' });
+    }
+    lines.push({ text: row2Str('Pemakaian Air', fnum(d.jumlah_kubik ?? 0, 2) + ' m3'), style: 'normal' });
+    lines.push({ text: row2Str('Tarif per m3', 'Rp ' + fnum(d.tarif_per_kubik ?? 2000)), style: 'normal' });
+    lines.push({ text: row2Str('Subtotal', 'Rp ' + fnum((d.jumlah_kubik ?? 0) * (d.tarif_per_kubik ?? 2000))), style: 'normal' });
+    lines.push({ text: dash(), style: 'dash' });
+    lines.push({ text: row2Str('Biaya Abonemen', 'Rp ' + fnum(d.biaya_abunemen ?? 3000)), style: 'normal' });
+    if (d.tunggakan > 0) lines.push({ text: row2Str('Tunggakan', 'Rp ' + fnum(d.tunggakan)), style: 'normal' });
+    if (d.keterangan) lines.push({ text: 'Keterangan: ' + d.keterangan, style: 'normal' });
+    lines.push({ text: dash('='), style: 'dash' });
+    lines.push({ text: row2Str('TOTAL BAYAR', 'Rp ' + fnum(d.jumlah_bayar)), style: 'total' });
+    lines.push({ text: dash('='), style: 'dash' });
+    lines.push({ text: centerStr('*** LUNAS ***'), style: 'lunas' });
+    lines.push({ text: dash(), style: 'dash' });
+    lines.push({ text: centerStr('Terima kasih atas pembayaran Anda!'), style: 'normal' });
+    lines.push({ text: centerStr('Struk ini adalah bukti pembayaran yang sah'), style: 'normal' });
+    return lines;
+};
+
+const openBluetoothPreview = () => {
+    showBtPreview.value = true;
+    btStatusText.value = '';
+    btStatusType.value = '';
+};
 
 const printReceipt = async (pembayaranId) => {
     printTargetId.value = pembayaranId;
@@ -1948,6 +2064,8 @@ const printReceipt = async (pembayaranId) => {
     printData.value = null;
     btStatusText.value = '';
     btStatusType.value = '';
+    showBtPreview.value = false;
+    showBtPreview.value = false;
     showPrintModal.value = true;
     // Pre-fetch data di background saat modal dibuka
     printDataLoading.value = true;
@@ -1964,6 +2082,7 @@ const printReceipt = async (pembayaranId) => {
 const closePrintModal = () => {
     if (btPrinting.value) return;
     showPrintModal.value = false;
+    showBtPreview.value = false;
     printTargetId.value = null;
     btStatusText.value = '';
     btStatusType.value = '';
