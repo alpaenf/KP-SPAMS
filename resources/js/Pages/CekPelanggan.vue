@@ -1179,35 +1179,27 @@
     <!-- Modal Preview Bluetooth -->
     <div v-if="showPrintModal && showBtPreview" class="fixed inset-0 z-[400] flex items-center justify-center" @click.self="showBtPreview = false">
         <div class="absolute inset-0 bg-black bg-opacity-60"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl mx-4 flex flex-col" style="max-height:90vh; width:340px;">
+        <div class="relative bg-white rounded-2xl shadow-2xl mx-2 flex flex-col" style="max-height:92vh; width:min(96vw, 420px);">
             <!-- Header -->
-            <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200">
+            <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 flex-shrink-0">
                 <button @click="showBtPreview = false" class="text-gray-500 hover:text-gray-700 mr-1">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                 </button>
                 <h3 class="text-sm font-bold text-gray-800 flex-1">Preview Struk Bluetooth</h3>
-                <span class="text-xs text-gray-400">{{ printSelectedSize }}mm · {{ (BT_COLS[printSelectedSize] || 42) }} kolom</span>
+                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">{{ printSelectedSize }}mm</span>
             </div>
 
-            <!-- Scroll area preview -->
-            <div class="overflow-y-auto flex-1 p-3 bg-gray-100">
-                <div class="bg-white rounded-lg shadow p-2 font-mono text-xs leading-[1.35] whitespace-pre overflow-x-auto"
-                    style="font-size:10px; min-width:100%;">
-                    <template v-if="printData">
-                        <div v-for="(line, i) in buildBtPreviewLines(printData, BT_COLS[printSelectedSize] || 42)" :key="i"
-                            :class="{
-                                'font-black text-base leading-tight': line.style === 'header2',
-                                'font-bold text-sm': line.style === 'header1' || line.style === 'bold',
-                                'font-black text-sm bg-black text-white text-center px-1': line.style === 'lunas',
-                                'font-black': line.style === 'total',
-                                'text-gray-400': line.style === 'dash',
-                            }"
-                            style="white-space:pre;">{{ line.text }}</div>
-                    </template>
-                    <template v-else>
-                        <div class="text-center text-gray-400 py-6">Memuat data struk...</div>
-                    </template>
-                </div>
+            <!-- Iframe preview — identik dengan PDF -->
+            <div class="flex-1 overflow-hidden bg-gray-200">
+                <iframe
+                    v-if="printTargetId"
+                    :src="`/pembayaran/${printTargetId}/print?size=${printSelectedSize}&font=${printSelectedFont}&share=1`"
+                    class="w-full border-0"
+                    style="height:100%; min-height:62vh;"
+                    scrolling="yes"
+                    title="Preview Struk"
+                ></iframe>
+                <div v-else class="flex items-center justify-center h-full text-gray-400 text-sm py-12">Memuat...</div>
             </div>
 
             <!-- Footer tombol -->
