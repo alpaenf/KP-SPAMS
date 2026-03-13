@@ -421,8 +421,13 @@ async function printViaBluetooth() {
 
         statusEl.textContent = 'Mengirim data ke printer...';
 
-        const data  = buildEscPosData(PAGE_CONFIG[currentSize].btCols);
-        const CHUNK = 512;
+        let cols = PAGE_CONFIG[currentSize].btCols || 42;
+        const n = String(device.name || '').toLowerCase();
+        if (n.includes('58')) cols = 32;
+        else if (n.includes('80')) cols = 42;
+        
+        const data  = buildEscPosData(cols);
+        const CHUNK = 100;
         for (let i = 0; i < data.length; i += CHUNK) {
             const chunk = data.slice(i, i + CHUNK);
             if (characteristic.properties.writeWithoutResponse) {
@@ -430,7 +435,7 @@ async function printViaBluetooth() {
             } else {
                 await characteristic.writeValue(chunk);
             }
-            await new Promise(r => setTimeout(r, 60));
+            await new Promise(r => setTimeout(r, 100));
         }
 
         device.gatt.disconnect();

@@ -2288,7 +2288,7 @@ const confirmPrintBluetooth = async () => {
         const detectedCols = detectBtColsFromDeviceName(device?.name);
         const cols = detectedCols || selectedCols;
         const data = buildEscPos(printData.value, cols);
-        const CHUNK = 512;
+        const CHUNK = 100;
         for (let i = 0; i < data.length; i += CHUNK) {
             const chunk = data.slice(i, i + CHUNK);
             if (characteristic.properties.writeWithoutResponse) {
@@ -2296,7 +2296,7 @@ const confirmPrintBluetooth = async () => {
             } else {
                 await characteristic.writeValue(chunk);
             }
-            await new Promise(r => setTimeout(r, 60));
+            await new Promise(r => setTimeout(r, 100));
         }
 
         device.gatt.disconnect();
