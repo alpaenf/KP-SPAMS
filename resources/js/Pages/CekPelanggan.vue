@@ -1133,6 +1133,9 @@
                     </div>
                 </label>
             </div>
+            <p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mb-4">
+                Jika hasil cetak turun baris/berantakan, coba pilih 58mm.
+            </p>
 
             <!-- Ukuran Huruf -->
             <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Ukuran Huruf</p>
@@ -1975,7 +1978,7 @@ const downloadPdf = (pembayaranId) => {
 // Print size modal
 const showPrintModal = ref(false);
 const printTargetId = ref(null);
-const printSelectedSize = ref('80');
+const printSelectedSize = ref('58');
 const printSelectedFont = ref('besar');
 const printData = ref(null);
 const printDataLoading = ref(false);
@@ -2051,7 +2054,7 @@ const openBluetoothPreview = () => {
 
 const printReceipt = async (pembayaranId) => {
     printTargetId.value = pembayaranId;
-    printSelectedSize.value = '80';
+    printSelectedSize.value = '58';
     printSelectedFont.value = 'besar';
     printData.value = null;
     btStatusText.value = '';
@@ -2122,6 +2125,13 @@ const BT_CHAR_UUIDS = {
     '0000ff00-0000-1000-8000-00805f9b34fb': '0000ff02-0000-1000-8000-00805f9b34fb',
 };
 const BT_COLS = { '58': 32, '80': 42, 'a4': 48 };
+
+const detectBtColsFromDeviceName = (deviceName = '') => {
+    const n = String(deviceName || '').toLowerCase();
+    if (n.includes('58')) return 32;
+    if (n.includes('80')) return 42;
+    return null;
+};
 
 const fmtNum = (n, dec = 0) => {
     const fixed = parseFloat(n || 0).toFixed(dec);
@@ -2274,7 +2284,9 @@ const confirmPrintBluetooth = async () => {
         if (!characteristic) throw new Error('Karakteristik write printer tidak ditemukan.');
 
         btStatusText.value = 'Mengirim data ke printer...';
-        const cols = BT_COLS[printSelectedSize.value] || 42;
+        const selectedCols = BT_COLS[printSelectedSize.value] || 42;
+        const detectedCols = detectBtColsFromDeviceName(device?.name);
+        const cols = detectedCols || selectedCols;
         const data = buildEscPos(printData.value, cols);
         const CHUNK = 512;
         for (let i = 0; i < data.length; i += CHUNK) {
