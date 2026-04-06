@@ -262,7 +262,7 @@
 
     <div class="summary-cards">
         <div class="summary-card pemasukan">
-            <h3>Total Pemasukan</h3>
+            <h3>Pendapatan Kotor Air</h3>
             <div class="amount">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</div>
         </div>
         <div class="summary-card abonemen">

@@ -89,9 +89,10 @@ class LaporanController extends Controller
             $abonemenTunggakan = (clone $pembayaranTunggakanQuery)->where('abunemen', true)->count() * 3000;
         }
         
-        // Total Pemasukan / Total Tarikan (including tunggakan)
-        $totalPemasukan = $pembayaranBulanIni + $pembayaranTunggakan;
+        // Total Pemasukan / Total Tarikan (khusus air, Abonemen dipisah)
         $totalAbonemen = $abonemenBulanIni + $abonemenTunggakan;
+        $totalPemasukan = ($pembayaranBulanIni + $pembayaranTunggakan) - $totalAbonemen;
+        
         $totalKubik = $pembayarans->sum('jumlah_kubik');
         $totalTransaksi = $pembayarans->count();
 
@@ -150,8 +151,8 @@ class LaporanController extends Controller
 
         // === 2. Hitung Detail Keuangan (Mirip Dashboard) ===
         
-        // A. 20% Tarikan (dari Total Pemasukan dikurangi Total Abonemen)
-        $tarik20Persen = ($totalPemasukan - $totalAbonemen) * 0.20;
+        // A. 20% Tarikan
+        $tarik20Persen = $totalPemasukan * 0.20;
 
         // B. Biaya Operasional
         $biayaOperasional = 0;
@@ -502,8 +503,9 @@ class LaporanController extends Controller
             $abonemenTunggakan = (clone $pembayaranTunggakanQuery)->where('abunemen', true)->count() * 3000;
         }
         
-        $totalPemasukan = $pembayaranBulanIni + $pembayaranTunggakan;
         $totalAbonemen = $abonemenBulanIni + $abonemenTunggakan;
+        $totalPemasukan = ($pembayaranBulanIni + $pembayaranTunggakan) - $totalAbonemen;
+
         $totalKubik = $pembayarans->sum('jumlah_kubik');
         $totalTransaksi = $pembayarans->count();
 
@@ -559,7 +561,7 @@ class LaporanController extends Controller
         })->count();
 
         // Hitung Detail Keuangan
-        $tarik20Persen = ($totalPemasukan - $totalAbonemen) * 0.20;
+        $tarik20Persen = $totalPemasukan * 0.20;
 
         $laporanQuery = LaporanBulanan::query();
         if ($bulan && $bulan !== 'semua') {

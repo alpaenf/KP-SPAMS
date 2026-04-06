@@ -604,11 +604,11 @@ class HomeController extends Controller
             ['biaya_operasional_penarik' => 0]
         );
         
-        // 1. Total Tarikan (semua pembayaran bulan ini, termasuk tunggakan)
-        $totalTarikan = $totalPembayaran;
+        // 1. Total Tarikan (khusus air, Abonemen dipisah karena "Biar bisa berdiri sendiri")
+        $totalTarikan = $totalPembayaran - $totalAbonemen;
         
-        // 2. 20% Tarikan (dari Tarikan - Abonemen)
-        $tarik20Persen = ($totalTarikan - $totalAbonemen) * 0.20;
+        // 2. 20% Tarikan
+        $tarik20Persen = $totalTarikan * 0.20;
         
         // 3. Biaya Operasional Penarik (dar database, bisa diubah)
         $biayaOperasionalPenarik = $laporanBulanan->biaya_operasional_penarik;
@@ -618,20 +618,16 @@ class HomeController extends Controller
         
         // 3c. Biaya Operasional Lapangan (dari database, bisa diubah)
         $biayaOpsLapangan = $laporanBulanan->biaya_operasional_lapangan ?? 0;
-        
-        // 3d. Biaya Lain-lain (dari database, bisa diubah)
         $biayaLainLain = $laporanBulanan->biaya_lain_lain ?? 0;
-        
-        // 3e. Biaya CSR (dari database, bisa diubah)
         $biayaCSR = $laporanBulanan->biaya_csr ?? 0;
-        
+
         // 4. Honor Penarik = 20% + Operasional
         $honorPenarik = $tarik20Persen + $biayaOperasionalPenarik;
         
         // 4b. Total Semua Biaya = Honor Penarik + PAD Desa + Ops Lapangan + Lain-lain + CSR
         $totalSemuaBiaya = $honorPenarik + $biayaPadDesa + $biayaOpsLapangan + $biayaLainLain + $biayaCSR;
-        
-        // 5. Total Tarikan Bersih = Total - Total Semua Biaya
+
+        // 5. Total Tarikan Bersih (Sisa Kas Air)
         $totalTarikanBersih = $totalTarikan - $totalSemuaBiaya;
         
         // 6. Total SR (Sambungan Rumah) Sudah Bayar
