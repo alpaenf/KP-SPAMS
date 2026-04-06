@@ -437,14 +437,14 @@
                         <!-- Total Tarikan -->
                         <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-5 border border-blue-200">
                             <div class="flex items-center justify-between mb-2">
-                                <h4 class="text-sm font-medium text-blue-900">Total Tarikan (Kotor)</h4>
+                                <h4 class="text-sm font-medium text-blue-900">Total Tarikan Keseluruhan</h4>
                                 <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd" />
                                 </svg>
                             </div>
                             <p class="text-2xl font-bold text-blue-900">Rp {{ formatRupiah(laporanKeuangan.totalTarikan) }}</p>
-                            <p class="text-xs text-blue-700 mt-1">Dari {{ laporanKeuangan.totalSRSudahBayar }} pelanggan bayar</p>
+                            <p class="text-xs text-blue-700 mt-1">Air + Abonemen ({{ laporanKeuangan.totalSRSudahBayar }} pelanggan)</p>
                         </div>
 
                         <!-- Total Abonemen -->
@@ -456,7 +456,19 @@
                                 </svg>
                             </div>
                             <p class="text-2xl font-bold text-cyan-900">Rp {{ formatRupiah(laporanKeuangan.totalAbonemen) }}</p>
-                            <p class="text-xs text-cyan-700 mt-1">Mengurangi dasar 20% penarik</p>
+                            <p class="text-xs text-cyan-700 mt-1">Bukan dasar pengali jasa penarik</p>
+                        </div>
+
+                        <!-- Total Tarikan Air Saja -->
+                        <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg p-5 border border-teal-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-sm font-medium text-teal-900">Tarikan Air (Bersih dari Abonemen)</h4>
+                                <svg class="w-5 h-5 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+                                </svg>
+                            </div>
+                            <p class="text-2xl font-bold text-teal-900">Rp {{ formatRupiah(laporanKeuangan.totalTarikan - laporanKeuangan.totalAbonemen) }}</p>
+                            <p class="text-xs text-teal-700 mt-1">Dasar perhitungan 20% penarik</p>
                         </div>
 
                         <!-- 20% Tarikan -->

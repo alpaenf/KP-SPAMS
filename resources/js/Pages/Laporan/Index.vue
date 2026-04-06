@@ -193,16 +193,23 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                         <!-- Total Tarikan -->
                         <div class="bg-blue-50 rounded-xl p-4 sm:p-5 border border-blue-100">
-                             <h4 class="text-xs sm:text-sm font-semibold text-blue-900 mb-2">Total Tarikan (Kotor)</h4>
+                             <h4 class="text-xs sm:text-sm font-semibold text-blue-900 mb-2">Total Semua Tarikan</h4>
                              <p class="text-xl sm:text-2xl font-bold text-blue-800">{{ formatRupiah(detail.totalTarikan) }}</p>
-                             <p class="text-xs text-blue-600 mt-1">Dari {{ detail.srSudahBayar }} pelanggan bayar</p>
+                             <p class="text-xs text-blue-600 mt-1">Air + Abonemen</p>
                         </div>
 
                         <!-- Total Abonemen -->
                         <div class="bg-cyan-50 rounded-xl p-4 sm:p-5 border border-cyan-100">
                              <h4 class="text-xs sm:text-sm font-semibold text-cyan-900 mb-2">Total Abonemen</h4>
                              <p class="text-xl sm:text-2xl font-bold text-cyan-800">{{ formatRupiah(detail.totalAbonemen) }}</p>
-                             <p class="text-xs text-cyan-600 mt-1">Mengurangi dasar 20% penarik</p>
+                             <p class="text-xs text-cyan-600 mt-1">Bukan dasar pengali 20%</p>
+                        </div>
+
+                        <!-- Total Tarikan Air Saja -->
+                        <div class="bg-teal-50 rounded-xl p-4 sm:p-5 border border-teal-100">
+                             <h4 class="text-xs sm:text-sm font-semibold text-teal-900 mb-2">Tarikan Air (Kotor)</h4>
+                             <p class="text-xl sm:text-2xl font-bold text-teal-800">{{ formatRupiah(detail.totalTarikan - detail.totalAbonemen) }}</p>
+                             <p class="text-xs text-teal-600 mt-1">Dasar perhitungan 20% penarik</p>
                         </div>
 
                          <!-- 20% Jasa Penarik -->
