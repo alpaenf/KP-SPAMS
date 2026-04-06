@@ -414,6 +414,7 @@ class LaporanController extends Controller
             'pembayarans' => $data['data'],
             'laporanBulanan' => $laporanBulanan,
             'totalPemasukan' => $totalPemasukan,
+            'totalAbonemen' => $data['summary']['totalAbonemen'],
             'totalPengeluaran' => $totalPengeluaran,
             'saldoAkhir' => $saldoAkhir,
             'totalPelangganAktif' => $totalPelangganAktif,

@@ -78,7 +78,7 @@
         
         .summary-card {
             display: table-cell;
-            width: 33.33%;
+            width: 25%;
             padding: 15px;
             text-align: center;
             border: 2px solid #e2e8f0;
@@ -88,6 +88,11 @@
         .summary-card.pemasukan {
             border-color: #10b981;
             background-color: #ecfdf5;
+        }
+        
+        .summary-card.abonemen {
+            border-color: #06b6d4;
+            background-color: #ecfeff;
         }
         
         .summary-card.pengeluaran {
@@ -116,6 +121,10 @@
         
         .summary-card.pemasukan .amount {
             color: #059669;
+        }
+
+        .summary-card.abonemen .amount {
+            color: #0891b2;
         }
         
         .summary-card.pengeluaran .amount {
@@ -255,6 +264,10 @@
         <div class="summary-card pemasukan">
             <h3>Total Pemasukan</h3>
             <div class="amount">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</div>
+        </div>
+        <div class="summary-card abonemen">
+            <h3>Total Abonemen</h3>
+            <div class="amount">Rp {{ number_format($totalAbonemen, 0, ',', '.') }}</div>
         </div>
         <div class="summary-card pengeluaran">
             <h3>Total Pengeluaran</h3>
