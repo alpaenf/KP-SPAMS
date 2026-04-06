@@ -387,14 +387,15 @@ class LaporanController extends Controller
         }
         
         $laporanBulanan = $laporanQuery->get();
-        
-        // Calculate totals
-        $totalPengeluaran = $laporanBulanan->sum(function($laporan) {
-            return ($laporan->biaya_operasional_penarik ?? 0) + ($laporan->biaya_operasional_lainnya ?? 0);
-        });
+        // Calculate totals using accurate logic from detail
+        $totalPengeluaran = ($data['detail']['honorPenarik'] ?? 0) 
+            + ($data['detail']['biayaPadDesa'] ?? 0)
+            + ($data['detail']['biayaOpsLapangan'] ?? 0)
+            + ($data['detail']['biayaLainLain'] ?? 0)
+            + ($data['detail']['biayaCSR'] ?? 0);
         
         $totalPemasukan = $data['summary']['pemasukan'];
-        $saldoAkhir = $totalPemasukan - $totalPengeluaran;
+        $saldoAkhir = $data['detail']['totalTarikanBersih'];
         
         // Count active customers
         // Apply filter wilayah berdasarkan user yang login
@@ -419,6 +420,7 @@ class LaporanController extends Controller
             'totalPengeluaran' => $totalPengeluaran,
             'saldoAkhir' => $saldoAkhir,
             'totalPelangganAktif' => $totalPelangganAktif,
+            'detailKeuangan' => $data['detail'],
             'distribusiWilayah' => isset($data['distribusiWilayah']) ? $data['distribusiWilayah']->toArray() : [],
         ];
         

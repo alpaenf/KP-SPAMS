@@ -489,7 +489,51 @@
     @endif
 
     <div class="detail-section">
-        <div class="section-title">📤 Detail Pengeluaran Operasional</div>
+        <div class="section-title">📤 Detail Seluruh Pengeluaran</div>
+        <table style="margin-bottom: 20px;">
+            <thead>
+                <tr>
+                    <th style="width: 70%;">Komponen Biaya</th>
+                    <th style="width: 30%;" class="text-right">Jumlah (Rp)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>20% Jasa Penarik (Dari Rp {{ number_format($detailKeuangan['totalTarikan'], 0, ',', '.') }})</td>
+                    <td class="text-right">{{ number_format($detailKeuangan['tarik20Persen'], 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <td>Biaya Operasional Penarik</td>
+                    <td class="text-right">{{ number_format($detailKeuangan['biayaOperasional'], 0, ',', '.') }}</td>
+                </tr>
+                <tr style="background-color: #f1f5f9; font-weight: bold;">
+                    <td class="text-right">SUBTOTAL HONOR PENARIK:</td>
+                    <td class="text-right">{{ number_format($detailKeuangan['honorPenarik'], 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <td>Biaya PAD Desa</td>
+                    <td class="text-right">{{ number_format($detailKeuangan['biayaPadDesa'], 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <td>Biaya Operasional Lapangan</td>
+                    <td class="text-right">{{ number_format($detailKeuangan['biayaOpsLapangan'], 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <td>Biaya Lain-lain</td>
+                    <td class="text-right">{{ number_format($detailKeuangan['biayaLainLain'], 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <td>Biaya CSR / Sosial</td>
+                    <td class="text-right">{{ number_format($detailKeuangan['biayaCSR'] ?? 0, 0, ',', '.') }}</td>
+                </tr>
+                <tr style="background-color: #fee2e2; font-weight: bold; font-size: 14px;">
+                    <td class="text-right" style="color: #991b1b;">TOTAL SELURUH PENGELUARAN:</td>
+                    <td class="text-right" style="color: #991b1b;">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="section-title">📤 Rincian Biaya Operasional per Wilayah</div>
         
         @if(count($laporanBulanan) > 0)
             <table>
