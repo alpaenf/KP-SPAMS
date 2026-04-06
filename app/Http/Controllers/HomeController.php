@@ -563,7 +563,8 @@ class HomeController extends Controller
             
         $abonemenBulanIniSaja = Pembayaran::where('bulan_bayar', $bulanIni)
             ->whereIn('pelanggan_id', $pelangganAktifIds)
-            ->sum('abunemen');
+            ->where('abunemen', true)
+            ->count() * 3000;
         
         // Pembayaran tunggakan (dibayar bulan ini tapi untuk bulan sebelumnya)
         $pembayaranTunggakan = Pembayaran::where('bulan_bayar', '<', $bulanIni)
@@ -574,7 +575,8 @@ class HomeController extends Controller
         $abonemenTunggakan = Pembayaran::where('bulan_bayar', '<', $bulanIni)
             ->where('tanggal_bayar', '>=', now()->startOfMonth())
             ->whereIn('pelanggan_id', $pelangganAktifIds)
-            ->sum('abunemen');
+            ->where('abunemen', true)
+            ->count() * 3000;
         
         $totalPembayaran = $pembayaranBulanIniSaja + $pembayaranTunggakan;
         $totalAbonemen = $abonemenBulanIniSaja + $abonemenTunggakan;
