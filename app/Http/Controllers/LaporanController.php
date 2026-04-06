@@ -66,7 +66,11 @@ class LaporanController extends Controller
         
         // Calculate total based on billing month PLUS tunggakan (like Dashboard)
         $pembayaranBulanIni = $pembayarans->sum('jumlah_bayar');
-        $abonemenBulanIni = $pembayarans->sum('abunemen');
+        // abunemen is boolean in DB
+        $abonemenBulanIni = $pembayarans->filter(function($p) {
+            $isSosial = strtolower(trim($p->pelanggan->kategori ?? 'umum')) === 'sosial';
+            return $p->abunemen && !$isSosial;
+        })->count() * 3000;
         
         // Add tunggakan (pembayaran bulan lalu yang dibayar di periode ini)
         $pembayaranTunggakan = 0;
@@ -82,7 +86,7 @@ class LaporanController extends Controller
                 ->whereIn('pelanggan_id', $pelangganAktifIds);
                 
             $pembayaranTunggakan = (clone $pembayaranTunggakanQuery)->sum('jumlah_bayar');
-            $abonemenTunggakan = (clone $pembayaranTunggakanQuery)->sum('abunemen');
+            $abonemenTunggakan = (clone $pembayaranTunggakanQuery)->where('abunemen', true)->count() * 3000;
         }
         
         // Total Pemasukan / Total Tarikan (including tunggakan)
