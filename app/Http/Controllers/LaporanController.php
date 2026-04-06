@@ -66,23 +66,28 @@ class LaporanController extends Controller
         
         // Calculate total based on billing month PLUS tunggakan (like Dashboard)
         $pembayaranBulanIni = $pembayarans->sum('jumlah_bayar');
+        $abonemenBulanIni = $pembayarans->sum('abunemen');
         
         // Add tunggakan (pembayaran bulan lalu yang dibayar di periode ini)
         $pembayaranTunggakan = 0;
+        $abonemenTunggakan = 0;
         if ($bulan && $bulan !== 'semua' && $akumulasi != '1') {
             // Hanya hitung tunggakan jika bukan mode akumulasi
             $bulanFormat = $tahun . '-' . $bulan;
             $startOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->startOfMonth();
             $endOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->endOfMonth();
             
-            $pembayaranTunggakan = Pembayaran::where('bulan_bayar', '<', $bulanFormat)
+            $pembayaranTunggakanQuery = Pembayaran::where('bulan_bayar', '<', $bulanFormat)
                 ->whereBetween('tanggal_bayar', [$startOfMonth, $endOfMonth])
-                ->whereIn('pelanggan_id', $pelangganAktifIds)
-                ->sum('jumlah_bayar');
+                ->whereIn('pelanggan_id', $pelangganAktifIds);
+                
+            $pembayaranTunggakan = (clone $pembayaranTunggakanQuery)->sum('jumlah_bayar');
+            $abonemenTunggakan = (clone $pembayaranTunggakanQuery)->sum('abunemen');
         }
         
         // Total Pemasukan / Total Tarikan (including tunggakan)
         $totalPemasukan = $pembayaranBulanIni + $pembayaranTunggakan;
+        $totalAbonemen = $abonemenBulanIni + $abonemenTunggakan;
         $totalKubik = $pembayarans->sum('jumlah_kubik');
         $totalTransaksi = $pembayarans->count();
 
@@ -141,8 +146,8 @@ class LaporanController extends Controller
 
         // === 2. Hitung Detail Keuangan (Mirip Dashboard) ===
         
-        // A. 20% Tarikan
-        $tarik20Persen = $totalPemasukan * 0.20;
+        // A. 20% Tarikan (dari Total Pemasukan dikurangi Total Abonemen)
+        $tarik20Persen = ($totalPemasukan - $totalAbonemen) * 0.20;
 
         // B. Biaya Operasional
         $biayaOperasional = 0;
@@ -287,6 +292,7 @@ class LaporanController extends Controller
                 'pemasukan' => $totalPemasukan,
                 'pemasukanBulanan' => $pembayaranBulanIni,
                 'pemasukanTunggakan' => $pembayaranTunggakan,
+                'totalAbonemen' => $totalAbonemen,
                 'detailPembayaranTunggakan' => $detailPembayaranTunggakan,
                 'kubikasi' => $totalKubik,
                 'transaksi' => $totalTransaksi,
@@ -299,6 +305,7 @@ class LaporanController extends Controller
             ],
             'detail' => [
                 'totalTarikan' => $totalPemasukan,
+                'totalAbonemen' => $totalAbonemen,
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasional' => $biayaOperasional,
                 'biayaPadDesa' => $biayaPadDesa,
@@ -468,21 +475,26 @@ class LaporanController extends Controller
         
         // Calculate total based on billing month PLUS tunggakan (like Dashboard)
         $pembayaranBulanIni = $pembayarans->sum('jumlah_bayar');
+        $abonemenBulanIni = $pembayarans->sum('abunemen');
         
         // Add tunggakan (pembayaran bulan lalu yang dibayar di periode ini)
         $pembayaranTunggakan = 0;
+        $abonemenTunggakan = 0;
         if ($bulan && $bulan !== 'semua') {
             $bulanFormat = $tahun . '-' . $bulan;
             $startOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->startOfMonth();
             $endOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->endOfMonth();
             
-            $pembayaranTunggakan = Pembayaran::where('bulan_bayar', '<', $bulanFormat)
+            $pembayaranTunggakanQuery = Pembayaran::where('bulan_bayar', '<', $bulanFormat)
                 ->whereBetween('tanggal_bayar', [$startOfMonth, $endOfMonth])
-                ->whereIn('pelanggan_id', $pelangganAktifIds)
-                ->sum('jumlah_bayar');
+                ->whereIn('pelanggan_id', $pelangganAktifIds);
+                
+            $pembayaranTunggakan = (clone $pembayaranTunggakanQuery)->sum('jumlah_bayar');
+            $abonemenTunggakan = (clone $pembayaranTunggakanQuery)->sum('abunemen');
         }
         
         $totalPemasukan = $pembayaranBulanIni + $pembayaranTunggakan;
+        $totalAbonemen = $abonemenBulanIni + $abonemenTunggakan;
         $totalKubik = $pembayarans->sum('jumlah_kubik');
         $totalTransaksi = $pembayarans->count();
 
@@ -504,7 +516,11 @@ class LaporanController extends Controller
                     'jumlah_bayar'   => $p->jumlah_bayar,
                 ])->toArray();
         }
-        
+        $pemasukanUmum = $pembayarans->filter(function($p) { 
+            $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
+            return $kategori === 'umum'; 
+        })->sum('jumlah_bayar');
+
         $pemasukanSosial = $pembayarans->filter(function($p) { 
             $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
             return $kategori === 'sosial'; 
@@ -534,7 +550,7 @@ class LaporanController extends Controller
         })->count();
 
         // Hitung Detail Keuangan
-        $tarik20Persen = $totalPemasukan * 0.20;
+        $tarik20Persen = ($totalPemasukan - $totalAbonemen) * 0.20;
 
         $laporanQuery = LaporanBulanan::query();
         if ($bulan && $bulan !== 'semua') {
@@ -634,6 +650,7 @@ class LaporanController extends Controller
                 'pemasukan' => $totalPemasukan,
                 'pemasukanBulanan' => $pembayaranBulanIni,
                 'pemasukanTunggakan' => $pembayaranTunggakan,
+                'totalAbonemen' => $totalAbonemen,
                 'detailPembayaranTunggakan' => $detailPembayaranTunggakan,
                 'kubikasi' => $totalKubik,
                 'transaksi' => $totalTransaksi,
@@ -646,6 +663,7 @@ class LaporanController extends Controller
             ],
             'detail' => [
                 'totalTarikan' => $totalPemasukan,
+                'totalAbonemen' => $totalAbonemen,
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasional' => $biayaOperasional,
                 'biayaPadDesa' => $biayaPadDesa,

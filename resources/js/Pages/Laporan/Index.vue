@@ -198,6 +198,13 @@
                              <p class="text-xs text-blue-600 mt-1">Dari {{ detail.srSudahBayar }} pelanggan bayar</p>
                         </div>
 
+                        <!-- Total Abonemen -->
+                        <div class="bg-cyan-50 rounded-xl p-4 sm:p-5 border border-cyan-100">
+                             <h4 class="text-xs sm:text-sm font-semibold text-cyan-900 mb-2">Total Abonemen</h4>
+                             <p class="text-xl sm:text-2xl font-bold text-cyan-800">{{ formatRupiah(detail.totalAbonemen) }}</p>
+                             <p class="text-xs text-cyan-600 mt-1">Mengurangi dasar 20% penarik</p>
+                        </div>
+
                          <!-- 20% Jasa Penarik -->
                         <div class="bg-purple-50 rounded-xl p-4 sm:p-5 border border-purple-100">
                              <h4 class="text-xs sm:text-sm font-semibold text-purple-900 mb-2">20% Jasa Penarik</h4>

@@ -560,14 +560,24 @@ class HomeController extends Controller
         $pembayaranBulanIniSaja = Pembayaran::where('bulan_bayar', $bulanIni)
             ->whereIn('pelanggan_id', $pelangganAktifIds)
             ->sum('jumlah_bayar');
+            
+        $abonemenBulanIniSaja = Pembayaran::where('bulan_bayar', $bulanIni)
+            ->whereIn('pelanggan_id', $pelangganAktifIds)
+            ->sum('abunemen');
         
         // Pembayaran tunggakan (dibayar bulan ini tapi untuk bulan sebelumnya)
         $pembayaranTunggakan = Pembayaran::where('bulan_bayar', '<', $bulanIni)
             ->where('tanggal_bayar', '>=', now()->startOfMonth())
             ->whereIn('pelanggan_id', $pelangganAktifIds)
             ->sum('jumlah_bayar');
+            
+        $abonemenTunggakan = Pembayaran::where('bulan_bayar', '<', $bulanIni)
+            ->where('tanggal_bayar', '>=', now()->startOfMonth())
+            ->whereIn('pelanggan_id', $pelangganAktifIds)
+            ->sum('abunemen');
         
         $totalPembayaran = $pembayaranBulanIniSaja + $pembayaranTunggakan;
+        $totalAbonemen = $abonemenBulanIniSaja + $abonemenTunggakan;
         
         $sudahBayarCount = Pembayaran::where('bulan_bayar', $bulanIni)
             ->whereIn('pelanggan_id', $pelangganAktifIds)
@@ -595,8 +605,8 @@ class HomeController extends Controller
         // 1. Total Tarikan (semua pembayaran bulan ini, termasuk tunggakan)
         $totalTarikan = $totalPembayaran;
         
-        // 2. 20% Tarikan
-        $tarik20Persen = $totalTarikan * 0.20;
+        // 2. 20% Tarikan (dari Tarikan - Abonemen)
+        $tarik20Persen = ($totalTarikan - $totalAbonemen) * 0.20;
         
         // 3. Biaya Operasional Penarik (dar database, bisa diubah)
         $biayaOperasionalPenarik = $laporanBulanan->biaya_operasional_penarik;
@@ -766,6 +776,7 @@ class HomeController extends Controller
             'laporanKeuangan' => [
                 'bulan' => $bulanIni,
                 'totalTarikan' => $totalTarikan,
+                'totalAbonemen' => $totalAbonemen,
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasionalPenarik' => $biayaOperasionalPenarik,
                 'biayaPadDesa' => $biayaPadDesa,
@@ -804,8 +815,8 @@ class HomeController extends Controller
             'rw' => 'nullable|numeric|max:999',
             'kategori' => 'required|in:umum,sosial',
             'wilayah' => 'required|string|max:100',
-            'latitude' => 'nullable|numeric|max:999',
-            'longitude' => 'nullable|numeric',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'google_maps_url' => 'nullable|url|max:500',
             'foto_rumah' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
             'status_aktif' => 'boolean',
@@ -859,8 +870,8 @@ class HomeController extends Controller
             'rw' => 'nullable|numeric|max:999',
             'kategori' => 'required|in:umum,sosial',
             'wilayah' => 'required|string|max:100',
-            'latitude' => 'nullable|numeric',
-            'longitude' => 'nullable|numeric',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'google_maps_url' => 'nullable|url|max:500',
             'foto_rumah' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
             'status_aktif' => 'boolean',
