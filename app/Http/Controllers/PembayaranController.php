@@ -10,6 +10,8 @@ use Inertia\Inertia;
 
 class PembayaranController extends Controller
 {
+    private const GO_LIVE_MONTH = '2026-02';
+
     /**
      * Halaman riwayat pembayaran semua pelanggan
      */
@@ -180,7 +182,7 @@ class PembayaranController extends Controller
         }
         
         $validated = $request->validate([
-            'bulan_bayar' => 'required|string|max:7',
+            'bulan_bayar' => ['required', 'regex:/^\d{4}-\d{2}$/'],
             'tanggal_bayar' => 'required|date',
             'meteran_sebelum' => 'nullable|numeric|min:0',
             'meteran_sesudah' => 'nullable|numeric|min:0',
@@ -195,7 +197,32 @@ class PembayaranController extends Controller
             'id_tunggakan' => 'nullable|array',
             'id_tunggakan.*' => 'integer|exists:tagihan_bulanan,id',
             'foto_meteran' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'legacy_override' => 'nullable|boolean',
+            'legacy_reason' => 'nullable|string|max:255',
         ]);
+
+        $isLegacyMonth = strcmp($validated['bulan_bayar'], self::GO_LIVE_MONTH) < 0;
+        $isLegacyOverride = (bool)($validated['legacy_override'] ?? false);
+
+        if ($isLegacyMonth && !$isLegacyOverride) {
+            return response()->json([
+                'message' => 'Periode sebelum Februari 2026 dikunci. Aktifkan input data lama jika memang diperlukan.'
+            ], 422);
+        }
+
+        if ($isLegacyMonth && $isLegacyOverride && empty(trim($validated['legacy_reason'] ?? ''))) {
+            return response()->json([
+                'errors' => [
+                    'legacy_reason' => ['Alasan input data lama wajib diisi.']
+                ]
+            ], 422);
+        }
+
+        if ($isLegacyMonth && $isLegacyOverride) {
+            $legacyReason = trim($validated['legacy_reason'] ?? '');
+            $legacyNote = '[LEGACY ' . $validated['bulan_bayar'] . '] ' . strtoupper($legacyReason);
+            $validated['keterangan'] = trim(($validated['keterangan'] ?? '') . ' ' . $legacyNote);
+        }
 
         // Handle foto meteran upload
         if ($request->hasFile('foto_meteran')) {

@@ -594,7 +594,24 @@
                                             class="block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-white"
                                         />
                                     </div>
+                                    <p class="mt-1 text-xs text-gray-500">Khusus Januari, default diarahkan ke Desember tahun sebelumnya.</p>
+                                    <div v-if="pembayaranForm.bulan_bayar && pembayaranForm.bulan_bayar < GO_LIVE_MONTH" class="mt-2 rounded-lg border border-amber-300 bg-amber-50 p-2">
+                                        <p class="text-xs text-amber-700 font-medium">Periode sebelum {{ GO_LIVE_MONTH }} dikunci sebagai data lama.</p>
+                                        <label class="mt-2 flex items-start gap-2 cursor-pointer">
+                                            <input type="checkbox" v-model="pembayaranForm.legacy_override" class="mt-0.5 w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500" />
+                                            <span class="text-xs text-amber-700">Izinkan input data lama (legacy)</span>
+                                        </label>
+                                        <input
+                                            v-if="pembayaranForm.legacy_override"
+                                            type="text"
+                                            v-model="pembayaranForm.legacy_reason"
+                                            class="mt-2 block w-full rounded-md border-amber-300 focus:border-amber-500 focus:ring-amber-500 sm:text-sm p-2 bg-white"
+                                            placeholder="Alasan input data lama (wajib)"
+                                            maxlength="255"
+                                        />
+                                    </div>
                                     <p v-if="pembayaranErrors.bulan_bayar" class="mt-1 text-xs text-red-600">{{ pembayaranErrors.bulan_bayar }}</p>
+                                    <p v-if="pembayaranErrors.legacy_reason" class="mt-1 text-xs text-red-600">{{ pembayaranErrors.legacy_reason }}</p>
                                 </div>
                                 <div class="col-span-1">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Bayar</label>
@@ -1291,10 +1308,41 @@ const fotoMeteran = ref(null);
 const fotoMeteranPreview = ref(null);
 const inputFotoGaleri = ref(null);
 const inputFotoKamera = ref(null);
+const GO_LIVE_MONTH = '2026-02';
+
+const compareMonth = (monthA, monthB) => {
+    if (!monthA || !monthB) return 0;
+    return monthA.localeCompare(monthB);
+};
+
+const clampToGoLiveMonth = (monthStr) => {
+    if (!monthStr) return GO_LIVE_MONTH;
+    return compareMonth(monthStr, GO_LIVE_MONTH) < 0 ? GO_LIVE_MONTH : monthStr;
+};
+
+const getDefaultBulanBayar = (referenceMonth = null) => {
+    const fallback = new Date().toISOString().slice(0, 7);
+    const baseMonth = referenceMonth || fallback;
+    const parts = baseMonth.split('-');
+
+    if (parts.length !== 2) return baseMonth;
+
+    const year = Number(parts[0]);
+    const month = Number(parts[1]);
+
+    if (!year || !month) return baseMonth;
+
+    // Januari diarahkan ke Desember tahun sebelumnya agar sesuai periode tagihan.
+    if (month === 1) {
+        return clampToGoLiveMonth(`${year - 1}-12`);
+    }
+
+    return clampToGoLiveMonth(`${year}-${String(month).padStart(2, '0')}`);
+};
 
 // Form pembayaran
 const pembayaranForm = ref({
-    bulan_bayar: props.bulanIni || '',
+    bulan_bayar: getDefaultBulanBayar(props.bulanIni || new Date().toISOString().slice(0, 7)),
     tanggal_bayar: new Date().toISOString().split('T')[0],
     meteran_sebelum: null,
     meteran_sesudah: null,
@@ -1308,7 +1356,9 @@ const pembayaranForm = ref({
     status_bayar: 'SUDAH_BAYAR',
     bayar_tunggakan: false, // Apakah mau bayar tunggakan juga
     jumlah_bayar_tunggakan: 0, // Jumlah yang dibayar untuk tunggakan (bisa cicilan)
-    id_tunggakan: [] // Array ID tagihan yang mau dibayar
+    id_tunggakan: [], // Array ID tagihan yang mau dibayar
+    legacy_override: false,
+    legacy_reason: ''
 });
 
 const hitungTagihan = () => {
@@ -1522,6 +1572,7 @@ const showPembayaranModal = async (pelanggan) => {
     // Default values
     const today = new Date();
     const currentMonth = props.bulanIni || today.toISOString().slice(0, 7);
+    const defaultBulanBayar = getDefaultBulanBayar(currentMonth);
     const currentDate = today.toISOString().split('T')[0];
     
     // Load payment history first untuk cek bulan yang belum dibayar
@@ -1529,8 +1580,8 @@ const showPembayaranModal = async (pelanggan) => {
         const response = await axios.get(`/pelanggan/${pelanggan.id}/pembayaran`);
         pembayaranList.value = response.data.pembayarans;
         
-        // Karena permintaan klien agar auto-fill ke bulan ini (bukan bulan tertunggak dari Januari)
-        let bulanTujuan = currentMonth;
+        // Auto-fill mengikuti periode tagihan: khusus Januari diarahkan ke Desember tahun sebelumnya.
+        let bulanTujuan = defaultBulanBayar;
         
         // Reset form dengan bulan pertama yang belum dibayar agar fleksibel
         pembayaranForm.value = {
@@ -1544,7 +1595,9 @@ const showPembayaranModal = async (pelanggan) => {
             jumlah_bayar: 0,
             keterangan: '',
             status_bayar: 'BELUM_BAYAR',
-            bayar_tunggakan: false // Default false, akan kita auto-check jika ada tunggakan
+            bayar_tunggakan: false, // Default false, akan kita auto-check jika ada tunggakan
+            legacy_override: false,
+            legacy_reason: ''
         };
         
         // PENTING: Ambil data meteran setelah history pembayaran dimuat
@@ -1749,11 +1802,23 @@ const submitPembayaran = async () => {
     
     pembayaranErrors.value = {};
     isSubmitting.value = true;
+    const form = pembayaranForm.value;
     
     try {
+        if (form.bulan_bayar && compareMonth(form.bulan_bayar, GO_LIVE_MONTH) < 0 && !form.legacy_override) {
+            alert(`Periode sebelum ${GO_LIVE_MONTH} dikunci. Aktifkan input data lama jika memang diperlukan.`);
+            isSubmitting.value = false;
+            return;
+        }
+
+        if (form.bulan_bayar && compareMonth(form.bulan_bayar, GO_LIVE_MONTH) < 0 && form.legacy_override && !String(form.legacy_reason || '').trim()) {
+            alert('Alasan input data lama wajib diisi.');
+            isSubmitting.value = false;
+            return;
+        }
+
         // Prepare FormData untuk mendukung upload foto
         const formData = new FormData();
-        const form = pembayaranForm.value;
         formData.append('bulan_bayar', form.bulan_bayar);
         formData.append('tanggal_bayar', form.tanggal_bayar);
         formData.append('meteran_sebelum', form.meteran_sebelum ?? '');
@@ -1766,6 +1831,8 @@ const submitPembayaran = async () => {
         formData.append('status_bayar', form.status_bayar);
         formData.append('bayar_tunggakan', form.bayar_tunggakan ? '1' : '0');
         formData.append('jumlah_bayar_tunggakan', form.jumlah_bayar_tunggakan ?? 0);
+        formData.append('legacy_override', form.legacy_override ? '1' : '0');
+        formData.append('legacy_reason', form.legacy_reason || '');
 
         // Jika bayar tunggakan, kirim ID semua tunggakan untuk FIFO distribution
         if (form.bayar_tunggakan && listTunggakan.value.length > 0) {
@@ -1824,8 +1891,8 @@ const submitPembayaran = async () => {
         listTunggakan.value = [];
         currentTagihan.value = null;
 
-        // Gunakan bulan ini sebagai auto-fill
-        let bulanBerikutnya = props.bulanIni || new Date().toISOString().slice(0, 7);
+        // Gunakan default periode tagihan (khusus Januari => Desember tahun sebelumnya)
+        let bulanBerikutnya = getDefaultBulanBayar(props.bulanIni || new Date().toISOString().slice(0, 7));
 
         // Reset form
         fotoMeteran.value = null;
@@ -1844,7 +1911,9 @@ const submitPembayaran = async () => {
             status_bayar: 'BELUM_BAYAR',
             bayar_tunggakan: false,
             jumlah_bayar_tunggakan: 0,
-            id_tunggakan: []
+            id_tunggakan: [],
+            legacy_override: false,
+            legacy_reason: ''
         };
 
         // Re-trigger auto-fill untuk bulan berikutnya
