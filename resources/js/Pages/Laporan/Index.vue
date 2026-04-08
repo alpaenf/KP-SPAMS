@@ -193,16 +193,9 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                         <!-- Total Tarikan -->
                         <div class="bg-blue-50 rounded-xl p-4 sm:p-5 border border-blue-100">
-                             <h4 class="text-xs sm:text-sm font-semibold text-blue-900 mb-2">Pendapatan Kotor Air (Tanpa Abonemen)</h4>
+                             <h4 class="text-xs sm:text-sm font-semibold text-blue-900 mb-2">Total Tarikan (Kotor)</h4>
                              <p class="text-xl sm:text-2xl font-bold text-blue-800">{{ formatRupiah(detail.totalTarikan) }}</p>
-                             <p class="text-xs text-blue-600 mt-1">Dasar perhitungan 20% penarik</p>
-                        </div>
-
-                        <!-- Total Abonemen -->
-                        <div class="bg-cyan-50 rounded-xl p-4 sm:p-5 border border-cyan-100">
-                             <h4 class="text-xs sm:text-sm font-semibold text-cyan-900 mb-2">Total Abonemen</h4>
-                             <p class="text-xl sm:text-2xl font-bold text-cyan-800">{{ formatRupiah(detail.totalAbonemen) }}</p>
-                             <p class="text-xs text-cyan-600 mt-1">Berdiri Sendiri / Terpisah</p>
+                             <p class="text-xs text-blue-600 mt-1">Dari {{ detail.srSudahBayar }} pelanggan bayar</p>
                         </div>
 
                          <!-- 20% Jasa Penarik -->
@@ -491,14 +484,9 @@
                                                                 <td class="px-3 py-2 text-xs font-medium text-gray-900">{{ detail.id_pelanggan }}</td>
                                                                 <td class="px-3 py-2 text-xs text-gray-900">{{ detail.nama_pelanggan }}</td>
                                                                 <td class="px-3 py-2 text-xs text-right">
-                                                                    <div class="flex flex-col items-end gap-1">
-                                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
-                                                                            {{ detail.jumlah_bulan }} bulan
-                                                                        </span>
-                                                                        <span v-if="detail.bulan_teks" class="text-[10px] text-gray-500 max-w-[150px] leading-tight" :title="detail.bulan_teks">
-                                                                            ({{ detail.bulan_teks }})
-                                                                        </span>
-                                                                    </div>
+                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
+                                                                        {{ detail.jumlah_bulan }} bulan
+                                                                    </span>
                                                                 </td>
                                                                 <td class="px-3 py-2 text-xs text-right font-semibold text-red-700"> {{ formatRupiah(detail.total_tunggakan) }}</td>
                                                             </tr>

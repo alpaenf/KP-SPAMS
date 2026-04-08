@@ -1529,24 +1529,8 @@ const showPembayaranModal = async (pelanggan) => {
         const response = await axios.get(`/pelanggan/${pelanggan.id}/pembayaran`);
         pembayaranList.value = response.data.pembayarans;
         
-        // Cari bulan pertama yang BENAR-BENAR belum dibayar (bukan hanya TUNGGAKAN)
-        // Bulan yang ada pembayaran dengan jumlah_bayar > 0 dianggap "sudah bayar"
-        const today = new Date();
-        const currentYear = today.getFullYear();
-        const currentMonthNum = today.getMonth() + 1;
+        // Karena permintaan klien agar auto-fill ke bulan ini (bukan bulan tertunggak dari Januari)
         let bulanTujuan = currentMonth;
-        
-        for (let month = 1; month <= currentMonthNum; month++) {
-            const monthStr = `${currentYear}-${String(month).padStart(2, '0')}`;
-            // Dianggap "sudah bayar" hanya jika ada pembayaran dengan jumlah_bayar > 0
-            const sudahBayar = pembayaranList.value.some(
-                p => p.bulan_bayar === monthStr && Number(p.jumlah_bayar) > 0
-            );
-            if (!sudahBayar) {
-                bulanTujuan = monthStr;
-                break;
-            }
-        }
         
         // Reset form dengan bulan pertama yang belum dibayar agar fleksibel
         pembayaranForm.value = {
@@ -1840,21 +1824,10 @@ const submitPembayaran = async () => {
         listTunggakan.value = [];
         currentTagihan.value = null;
 
-        // Cari bulan berikutnya yang belum dibayar untuk auto-fill
-        const today2 = new Date();
-        const currentYear2 = today2.getFullYear();
-        const currentMonthNum2 = today2.getMonth() + 1;
-        let bulanBerikutnya = props.bulanIni || today2.toISOString().slice(0, 7);
-        for (let month = 1; month <= currentMonthNum2; month++) {
-            const monthStr = `${currentYear2}-${String(month).padStart(2, '0')}`;
-            const sudahBayar = pembayaranList.value.some(p => p.bulan_bayar === monthStr);
-            if (!sudahBayar) {
-                bulanBerikutnya = monthStr;
-                break;
-            }
-        }
+        // Gunakan bulan ini sebagai auto-fill
+        let bulanBerikutnya = props.bulanIni || new Date().toISOString().slice(0, 7);
 
-        // Reset form dengan bulan berikutnya yang belum dibayar
+        // Reset form
         fotoMeteran.value = null;
         fotoMeteranPreview.value = null;
 

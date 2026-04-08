@@ -66,33 +66,23 @@ class LaporanController extends Controller
         
         // Calculate total based on billing month PLUS tunggakan (like Dashboard)
         $pembayaranBulanIni = $pembayarans->sum('jumlah_bayar');
-        // abunemen is boolean in DB
-        $abonemenBulanIni = $pembayarans->filter(function($p) {
-            $isSosial = strtolower(trim($p->pelanggan->kategori ?? 'umum')) === 'sosial';
-            return $p->abunemen && !$isSosial;
-        })->count() * 3000;
         
         // Add tunggakan (pembayaran bulan lalu yang dibayar di periode ini)
         $pembayaranTunggakan = 0;
-        $abonemenTunggakan = 0;
         if ($bulan && $bulan !== 'semua' && $akumulasi != '1') {
             // Hanya hitung tunggakan jika bukan mode akumulasi
             $bulanFormat = $tahun . '-' . $bulan;
             $startOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->startOfMonth();
             $endOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->endOfMonth();
             
-            $pembayaranTunggakanQuery = Pembayaran::where('bulan_bayar', '<', $bulanFormat)
+            $pembayaranTunggakan = Pembayaran::where('bulan_bayar', '<', $bulanFormat)
                 ->whereBetween('tanggal_bayar', [$startOfMonth, $endOfMonth])
-                ->whereIn('pelanggan_id', $pelangganAktifIds);
-                
-            $pembayaranTunggakan = (clone $pembayaranTunggakanQuery)->sum('jumlah_bayar');
-            $abonemenTunggakan = (clone $pembayaranTunggakanQuery)->where('abunemen', true)->count() * 3000;
+                ->whereIn('pelanggan_id', $pelangganAktifIds)
+                ->sum('jumlah_bayar');
         }
         
-        // Total Pemasukan / Total Tarikan (khusus air, Abonemen dipisah)
-        $totalAbonemen = $abonemenBulanIni + $abonemenTunggakan;
-        $totalPemasukan = ($pembayaranBulanIni + $pembayaranTunggakan) - $totalAbonemen;
-        
+        // Total Pemasukan / Total Tarikan (including tunggakan)
+        $totalPemasukan = $pembayaranBulanIni + $pembayaranTunggakan;
         $totalKubik = $pembayarans->sum('jumlah_kubik');
         $totalTransaksi = $pembayarans->count();
 
@@ -265,7 +255,7 @@ class LaporanController extends Controller
                     ->where('status_bayar', 'BELUM_BAYAR')
                     ->whereIn('pelanggan_id', $pelangganIds)
                     ->with('pelanggan:id,id_pelanggan,nama_pelanggan')
-                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw('SUM(total_tagihan) as total_tunggakan'), \DB::raw('GROUP_CONCAT(bulan ORDER BY bulan ASC) as list_bulan'))
+                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw('SUM(total_tagihan) as total_tunggakan'))
                     ->groupBy('pelanggan_id')
                     ->get();
                 
@@ -273,31 +263,11 @@ class LaporanController extends Controller
                 
                 // Detail pelanggan yang nunggak
                 $detailTunggakan = $tunggakanData->map(function($t) {
-                    $listBulanStr = $t->list_bulan ?? '';
-                    $listBulanFormatted = [];
-                    if (!empty($listBulanStr)) {
-                        $listBulanArray = explode(',', $listBulanStr);
-                        $listBulanFormatted = array_map(function($b) {
-                            $parts = explode('-', $b);
-                            if(count($parts) == 2) {
-                                $bulanNames = [
-                                    '01' => 'Jan', '02' => 'Feb', '03' => 'Mar',
-                                    '04' => 'Apr', '05' => 'Mei', '06' => 'Jun',
-                                    '07' => 'Jul', '08' => 'Agu', '09' => 'Sep',
-                                    '10' => 'Okt', '11' => 'Nov', '12' => 'Des'
-                                ];
-                                return ($bulanNames[$parts[1]] ?? $parts[1]) . " '" . substr($parts[0], 2, 2);
-                            }
-                            return $b;
-                        }, $listBulanArray);
-                    }
-
                     return [
                         'id_pelanggan' => $t->pelanggan->id_pelanggan ?? 'N/A',
                         'nama_pelanggan' => $t->pelanggan->nama_pelanggan ?? 'N/A',
                         'jumlah_bulan' => $t->jumlah_bulan,
                         'total_tunggakan' => $t->total_tunggakan,
-                        'bulan_teks' => implode(', ', $listBulanFormatted),
                     ];
                 })->toArray();
                 
@@ -317,7 +287,6 @@ class LaporanController extends Controller
                 'pemasukan' => $totalPemasukan,
                 'pemasukanBulanan' => $pembayaranBulanIni,
                 'pemasukanTunggakan' => $pembayaranTunggakan,
-                'totalAbonemen' => $totalAbonemen,
                 'detailPembayaranTunggakan' => $detailPembayaranTunggakan,
                 'kubikasi' => $totalKubik,
                 'transaksi' => $totalTransaksi,
@@ -330,7 +299,6 @@ class LaporanController extends Controller
             ],
             'detail' => [
                 'totalTarikan' => $totalPemasukan,
-                'totalAbonemen' => $totalAbonemen,
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasional' => $biayaOperasional,
                 'biayaPadDesa' => $biayaPadDesa,
@@ -407,15 +375,14 @@ class LaporanController extends Controller
         }
         
         $laporanBulanan = $laporanQuery->get();
-        // Calculate totals using accurate logic from detail
-        $totalPengeluaran = ($data['detail']['honorPenarik'] ?? 0) 
-            + ($data['detail']['biayaPadDesa'] ?? 0)
-            + ($data['detail']['biayaOpsLapangan'] ?? 0)
-            + ($data['detail']['biayaLainLain'] ?? 0)
-            + ($data['detail']['biayaCSR'] ?? 0);
+        
+        // Calculate totals
+        $totalPengeluaran = $laporanBulanan->sum(function($laporan) {
+            return ($laporan->biaya_operasional_penarik ?? 0) + ($laporan->biaya_operasional_lainnya ?? 0);
+        });
         
         $totalPemasukan = $data['summary']['pemasukan'];
-        $saldoAkhir = $data['detail']['totalTarikanBersih'];
+        $saldoAkhir = $totalPemasukan - $totalPengeluaran;
         
         // Count active customers
         // Apply filter wilayah berdasarkan user yang login
@@ -436,11 +403,9 @@ class LaporanController extends Controller
             'pembayarans' => $data['data'],
             'laporanBulanan' => $laporanBulanan,
             'totalPemasukan' => $totalPemasukan,
-            'totalAbonemen' => $data['summary']['totalAbonemen'],
             'totalPengeluaran' => $totalPengeluaran,
             'saldoAkhir' => $saldoAkhir,
             'totalPelangganAktif' => $totalPelangganAktif,
-            'detailKeuangan' => $data['detail'],
             'distribusiWilayah' => isset($data['distribusiWilayah']) ? $data['distribusiWilayah']->toArray() : [],
         ];
         
@@ -503,31 +468,21 @@ class LaporanController extends Controller
         
         // Calculate total based on billing month PLUS tunggakan (like Dashboard)
         $pembayaranBulanIni = $pembayarans->sum('jumlah_bayar');
-        // abunemen is boolean in DB
-        $abonemenBulanIni = $pembayarans->filter(function($p) {
-            $isSosial = strtolower(trim($p->pelanggan->kategori ?? 'umum')) === 'sosial';
-            return $p->abunemen && !$isSosial;
-        })->count() * 3000;
         
         // Add tunggakan (pembayaran bulan lalu yang dibayar di periode ini)
         $pembayaranTunggakan = 0;
-        $abonemenTunggakan = 0;
         if ($bulan && $bulan !== 'semua') {
             $bulanFormat = $tahun . '-' . $bulan;
             $startOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->startOfMonth();
             $endOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->endOfMonth();
             
-            $pembayaranTunggakanQuery = Pembayaran::where('bulan_bayar', '<', $bulanFormat)
+            $pembayaranTunggakan = Pembayaran::where('bulan_bayar', '<', $bulanFormat)
                 ->whereBetween('tanggal_bayar', [$startOfMonth, $endOfMonth])
-                ->whereIn('pelanggan_id', $pelangganAktifIds);
-                
-            $pembayaranTunggakan = (clone $pembayaranTunggakanQuery)->sum('jumlah_bayar');
-            $abonemenTunggakan = (clone $pembayaranTunggakanQuery)->where('abunemen', true)->count() * 3000;
+                ->whereIn('pelanggan_id', $pelangganAktifIds)
+                ->sum('jumlah_bayar');
         }
         
-        $totalAbonemen = $abonemenBulanIni + $abonemenTunggakan;
-        $totalPemasukan = ($pembayaranBulanIni + $pembayaranTunggakan) - $totalAbonemen;
-
+        $totalPemasukan = $pembayaranBulanIni + $pembayaranTunggakan;
         $totalKubik = $pembayarans->sum('jumlah_kubik');
         $totalTransaksi = $pembayarans->count();
 
@@ -549,11 +504,7 @@ class LaporanController extends Controller
                     'jumlah_bayar'   => $p->jumlah_bayar,
                 ])->toArray();
         }
-        $pemasukanUmum = $pembayarans->filter(function($p) { 
-            $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
-            return $kategori === 'umum'; 
-        })->sum('jumlah_bayar');
-
+        
         $pemasukanSosial = $pembayarans->filter(function($p) { 
             $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
             return $kategori === 'sosial'; 
@@ -651,7 +602,7 @@ class LaporanController extends Controller
                     ->where('status_bayar', 'BELUM_BAYAR')
                     ->whereIn('pelanggan_id', $pelangganIds)
                     ->with('pelanggan:id,id_pelanggan,nama_pelanggan')
-                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw('SUM(total_tagihan) as total_tunggakan'), \DB::raw('GROUP_CONCAT(bulan ORDER BY bulan ASC) as list_bulan'))
+                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw('SUM(total_tagihan) as total_tunggakan'))
                     ->groupBy('pelanggan_id')
                     ->get();
                 
@@ -659,31 +610,11 @@ class LaporanController extends Controller
                 
                 // Detail pelanggan yang nunggak
                 $detailTunggakan = $tunggakanData->map(function($t) {
-                    $listBulanStr = $t->list_bulan ?? '';
-                    $listBulanFormatted = [];
-                    if (!empty($listBulanStr)) {
-                        $listBulanArray = explode(',', $listBulanStr);
-                        $listBulanFormatted = array_map(function($b) {
-                            $parts = explode('-', $b);
-                            if(count($parts) == 2) {
-                                $bulanNames = [
-                                    '01' => 'Jan', '02' => 'Feb', '03' => 'Mar',
-                                    '04' => 'Apr', '05' => 'Mei', '06' => 'Jun',
-                                    '07' => 'Jul', '08' => 'Agu', '09' => 'Sep',
-                                    '10' => 'Okt', '11' => 'Nov', '12' => 'Des'
-                                ];
-                                return ($bulanNames[$parts[1]] ?? $parts[1]) . " '" . substr($parts[0], 2, 2);
-                            }
-                            return $b;
-                        }, $listBulanArray);
-                    }
-
                     return [
                         'id_pelanggan' => $t->pelanggan->id_pelanggan ?? 'N/A',
                         'nama_pelanggan' => $t->pelanggan->nama_pelanggan ?? 'N/A',
                         'jumlah_bulan' => $t->jumlah_bulan,
                         'total_tunggakan' => $t->total_tunggakan,
-                        'bulan_teks' => implode(', ', $listBulanFormatted),
                     ];
                 })->toArray();
                 
@@ -703,7 +634,6 @@ class LaporanController extends Controller
                 'pemasukan' => $totalPemasukan,
                 'pemasukanBulanan' => $pembayaranBulanIni,
                 'pemasukanTunggakan' => $pembayaranTunggakan,
-                'totalAbonemen' => $totalAbonemen,
                 'detailPembayaranTunggakan' => $detailPembayaranTunggakan,
                 'kubikasi' => $totalKubik,
                 'transaksi' => $totalTransaksi,
@@ -716,7 +646,6 @@ class LaporanController extends Controller
             ],
             'detail' => [
                 'totalTarikan' => $totalPemasukan,
-                'totalAbonemen' => $totalAbonemen,
                 'tarik20Persen' => $tarik20Persen,
                 'biayaOperasional' => $biayaOperasional,
                 'biayaPadDesa' => $biayaPadDesa,
