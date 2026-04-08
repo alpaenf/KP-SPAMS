@@ -78,9 +78,9 @@ echo "\nPembayaran dari kategori umum: " . $pembayaranUmum->count() . "\n";
 $uniqueSosial = $pembayaranSosialNew->unique('pelanggan_id')->count();
 $uniqueUmum = $pembayaranUmum->unique('pelanggan_id')->count();
 
-echo "\n=== Unique pelanggan yang bayar (bangunan) ===\n";
-echo "Unique pelanggan sosial: {$uniqueSosial} bangunan\n";
-echo "Unique pelanggan umum: {$uniqueUmum} bangunan\n";
-echo "Total unique: " . ($uniqueSosial + $uniqueUmum) . " bangunan\n";
+echo "\n=== Unique pelanggan yang bayar (SR) ===\n";
+echo "Unique pelanggan sosial: {$uniqueSosial} SR\n";
+echo "Unique pelanggan umum: {$uniqueUmum} SR\n";
+echo "Total unique: " . ($uniqueSosial + $uniqueUmum) . " SR\n";
 
 echo "\n=== DONE ===\n";

@@ -200,9 +200,56 @@
 
                         <!-- Total Abunemen -->
                         <div class="bg-emerald-50 rounded-xl p-4 sm:p-5 border border-emerald-100">
-                            <h4 class="text-xs sm:text-sm font-semibold text-emerald-900 mb-2">Total Abunemen</h4>
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <h4 class="text-xs sm:text-sm font-semibold text-emerald-900">Total Abunemen</h4>
+                                <button
+                                    type="button"
+                                    @click="showAbunemenDetail = !showAbunemenDetail"
+                                    class="text-[11px] px-2 py-1 rounded-md bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition"
+                                >
+                                    {{ showAbunemenDetail ? 'Sembunyikan Detail' : 'Lihat Detail' }}
+                                </button>
+                            </div>
                             <p class="text-xl sm:text-2xl font-bold text-emerald-800">{{ formatRupiah(detail.totalAbunemen || 0) }}</p>
                             <p class="text-xs text-emerald-600 mt-1">{{ detail.jumlahTransaksiAbunemen || 0 }} transaksi abunemen</p>
+
+                            <div v-if="showAbunemenDetail" class="mt-3 pt-3 border-t border-emerald-200 space-y-3">
+                                <div>
+                                    <p class="text-[11px] font-semibold text-emerald-900 mb-1">Bayar Abunemen ({{ (detail.detailAbunemenBayar || []).length }})</p>
+                                    <div class="max-h-28 overflow-y-auto space-y-1 pr-1">
+                                        <div
+                                            v-for="item in (detail.detailAbunemenBayar || [])"
+                                            :key="`abn-paid-${item.id}`"
+                                            class="text-[11px] bg-white border border-emerald-100 rounded px-2 py-1"
+                                        >
+                                            <div class="font-medium text-emerald-900">{{ item.id_pelanggan }} - {{ item.nama_pelanggan }}</div>
+                                            <div class="text-emerald-700 flex justify-between">
+                                                <span>{{ item.bulan_bayar }}</span>
+                                                <span>{{ formatRupiah(item.jumlah_bayar) }}</span>
+                                            </div>
+                                        </div>
+                                        <p v-if="(detail.detailAbunemenBayar || []).length === 0" class="text-[11px] text-emerald-700 italic">Tidak ada data.</p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <p class="text-[11px] font-semibold text-amber-900 mb-1">Tidak Bayar Abunemen ({{ (detail.detailAbunemenTidakBayar || []).length }})</p>
+                                    <div class="max-h-28 overflow-y-auto space-y-1 pr-1">
+                                        <div
+                                            v-for="item in (detail.detailAbunemenTidakBayar || [])"
+                                            :key="`abn-unpaid-${item.id}`"
+                                            class="text-[11px] bg-white border border-amber-100 rounded px-2 py-1"
+                                        >
+                                            <div class="font-medium text-amber-900">{{ item.id_pelanggan }} - {{ item.nama_pelanggan }}</div>
+                                            <div class="text-amber-700 flex justify-between">
+                                                <span>{{ item.bulan_bayar }}</span>
+                                                <span>{{ formatRupiah(item.jumlah_bayar) }}</span>
+                                            </div>
+                                        </div>
+                                        <p v-if="(detail.detailAbunemenTidakBayar || []).length === 0" class="text-[11px] text-amber-700 italic">Semua transaksi bayar abunemen.</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Total Tarikan Tanpa Abunemen -->
@@ -346,7 +393,7 @@
                                         Pelanggan UMUM
                                     </span>
                                     <span class="px-2 py-1 bg-green-200 text-green-800 text-xs font-bold rounded-full">
-                                        {{ summary.pelangganUmum || 0 }} bangunan
+                                        {{ summary.pelangganUmum || 0 }} SR
                                     </span>
                                 </div>
                                 <div class="text-2xl font-bold text-green-800 mb-1">
@@ -369,7 +416,7 @@
                                         Pelanggan SOSIAL
                                     </span>
                                     <span class="px-2 py-1 bg-blue-200 text-blue-800 text-xs font-bold rounded-full">
-                                        {{ summary.pelangganSosial || 0 }} bangunan
+                                        {{ summary.pelangganSosial || 0 }} SR
                                     </span>
                                 </div>
                                 <div class="text-2xl font-bold text-blue-800 mb-1">
@@ -387,9 +434,9 @@
                         <div class="mt-4 pt-4 border-t border-gray-200">
                             <div class="grid grid-cols-2 gap-4 text-sm">
                                 <div class="text-left">
-                                    <span class="text-gray-600 font-medium">Total Bangunan:</span>
+                                    <span class="text-gray-600 font-medium">Total SR:</span>
                                     <div class="font-bold text-gray-900 mt-1">
-                                        {{ (summary.pelangganUmum || 0) + (summary.pelangganSosial || 0) }} bangunan
+                                        {{ (summary.pelangganUmum || 0) + (summary.pelangganSosial || 0) }} SR
                                     </div>
                                     <div class="text-xs text-gray-500">
                                         ({{ summary.pelangganUmum || 0 }} umum + {{ summary.pelangganSosial || 0 }} sosial)
@@ -561,10 +608,10 @@
                             <h3 class="font-bold text-gray-700">Rincian Transaksi</h3>
                             <div class="flex flex-wrap items-center gap-2 text-xs">
                                 <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full font-semibold">
-                                    🟢 Umum: {{ summary.pelangganUmum || 0 }} bangunan ({{ summary.transaksiUmum || 0 }}×)
+                                    🟢 Umum: {{ summary.pelangganUmum || 0 }} SR ({{ summary.transaksiUmum || 0 }}×)
                                 </span>
                                 <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-semibold">
-                                    🔵 Sosial: {{ summary.pelangganSosial || 0 }} bangunan ({{ summary.transaksiSosial || 0 }}×)
+                                    🔵 Sosial: {{ summary.pelangganSosial || 0 }} SR ({{ summary.transaksiSosial || 0 }}×)
                                 </span>
                                 <span class="bg-white border border-gray-200 text-gray-600 px-2 py-1 rounded-full font-medium">
                                     Total: {{ data.length }} data
@@ -802,6 +849,7 @@ const toggleDetail = (wilayahName) => {
 
 // Toggle Akumulasi (untuk menampilkan data bulan sebelumnya juga)
 const showAkumulasi = ref(false);
+const showAbunemenDetail = ref(false);
 
 const toggleAkumulasi = () => {
     showAkumulasi.value = !showAkumulasi.value;

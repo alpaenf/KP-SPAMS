@@ -137,7 +137,7 @@ class LaporanController extends Controller
             return $kategori === 'sosial'; 
         })->count();
         
-        // Hitung jumlah pelanggan/bangunan aktif per kategori (dari semua pelanggan aktif, bukan hanya yang bayar)
+        // Hitung jumlah pelanggan/SR aktif per kategori (dari semua pelanggan aktif, bukan hanya yang bayar)
         $allPelangganAktif = Pelanggan::whereIn('id', $pelangganAktifIds)->get();
         
         $pelangganUmum = $allPelangganAktif->filter(function($p) { 
@@ -155,6 +155,30 @@ class LaporanController extends Controller
         // A. Pisahkan dulu komponen abunemen dari total tarikan
         $jumlahTransaksiAbunemen = $pembayarans->where('abunemen', true)->count();
         $totalAbunemen = $jumlahTransaksiAbunemen * 3000;
+        $detailAbunemenBayar = $pembayarans
+            ->filter(fn($p) => (bool)$p->abunemen)
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'id_pelanggan' => $p->pelanggan->id_pelanggan ?? '-',
+                    'nama_pelanggan' => $p->pelanggan->nama_pelanggan ?? 'N/A',
+                    'bulan_bayar' => $p->bulan_bayar,
+                    'tanggal_bayar' => $p->tanggal_bayar ? $p->tanggal_bayar->format('Y-m-d') : null,
+                    'jumlah_bayar' => $p->jumlah_bayar,
+                ];
+            })->values()->toArray();
+        $detailAbunemenTidakBayar = $pembayarans
+            ->filter(fn($p) => !(bool)$p->abunemen)
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'id_pelanggan' => $p->pelanggan->id_pelanggan ?? '-',
+                    'nama_pelanggan' => $p->pelanggan->nama_pelanggan ?? 'N/A',
+                    'bulan_bayar' => $p->bulan_bayar,
+                    'tanggal_bayar' => $p->tanggal_bayar ? $p->tanggal_bayar->format('Y-m-d') : null,
+                    'jumlah_bayar' => $p->jumlah_bayar,
+                ];
+            })->values()->toArray();
         $totalTarikanKotorAsli = $totalPemasukan;
         $totalTarikanTanpaAbunemen = max(0, $totalTarikanKotorAsli - $totalAbunemen);
 
@@ -342,6 +366,8 @@ class LaporanController extends Controller
                 'honorMurni' => $honorPenarik,   // Sama, penamaan beda konteks
                 'totalAbunemen' => $totalAbunemen,
                 'jumlahTransaksiAbunemen' => $jumlahTransaksiAbunemen,
+                'detailAbunemenBayar' => $detailAbunemenBayar,
+                'detailAbunemenTidakBayar' => $detailAbunemenTidakBayar,
                 'totalTarikanKotorAsli' => $totalTarikanKotorAsli,
                 'totalTarikanTanpaAbunemen' => $totalTarikanTanpaAbunemen,
                 'totalTarikanBersih' => $totalTarikanBersih,
@@ -575,7 +601,7 @@ class LaporanController extends Controller
             return $kategori === 'sosial'; 
         })->count();
         
-        // Hitung jumlah pelanggan/bangunan aktif per kategori (dari semua pelanggan aktif, bukan hanya yang bayar)
+        // Hitung jumlah pelanggan/SR aktif per kategori (dari semua pelanggan aktif, bukan hanya yang bayar)
         $allPelangganAktif = Pelanggan::whereIn('id', $pelangganAktifIds)->get();
         
         $pelangganUmum = $allPelangganAktif->filter(function($p) { 
@@ -591,6 +617,30 @@ class LaporanController extends Controller
         // Hitung Detail Keuangan
         $jumlahTransaksiAbunemen = $pembayarans->where('abunemen', true)->count();
         $totalAbunemen = $jumlahTransaksiAbunemen * 3000;
+        $detailAbunemenBayar = $pembayarans
+            ->filter(fn($p) => (bool)$p->abunemen)
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'id_pelanggan' => $p->pelanggan->id_pelanggan ?? '-',
+                    'nama_pelanggan' => $p->pelanggan->nama_pelanggan ?? 'N/A',
+                    'bulan_bayar' => $p->bulan_bayar,
+                    'tanggal_bayar' => $p->tanggal_bayar ? $p->tanggal_bayar->format('Y-m-d') : null,
+                    'jumlah_bayar' => $p->jumlah_bayar,
+                ];
+            })->values()->toArray();
+        $detailAbunemenTidakBayar = $pembayarans
+            ->filter(fn($p) => !(bool)$p->abunemen)
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'id_pelanggan' => $p->pelanggan->id_pelanggan ?? '-',
+                    'nama_pelanggan' => $p->pelanggan->nama_pelanggan ?? 'N/A',
+                    'bulan_bayar' => $p->bulan_bayar,
+                    'tanggal_bayar' => $p->tanggal_bayar ? $p->tanggal_bayar->format('Y-m-d') : null,
+                    'jumlah_bayar' => $p->jumlah_bayar,
+                ];
+            })->values()->toArray();
         $totalTarikanKotorAsli = $totalPemasukan;
         $totalTarikanTanpaAbunemen = max(0, $totalTarikanKotorAsli - $totalAbunemen);
         $tarik20Persen = $totalTarikanTanpaAbunemen * 0.20;
@@ -731,6 +781,8 @@ class LaporanController extends Controller
                 'honorMurni' => $honorPenarik,
                 'totalAbunemen' => $totalAbunemen,
                 'jumlahTransaksiAbunemen' => $jumlahTransaksiAbunemen,
+                'detailAbunemenBayar' => $detailAbunemenBayar,
+                'detailAbunemenTidakBayar' => $detailAbunemenTidakBayar,
                 'totalTarikanKotorAsli' => $totalTarikanKotorAsli,
                 'totalTarikanTanpaAbunemen' => $totalTarikanTanpaAbunemen,
                 'totalTarikanBersih' => $totalTarikanBersih,
