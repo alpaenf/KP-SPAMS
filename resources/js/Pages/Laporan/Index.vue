@@ -491,9 +491,14 @@
                                                                 <td class="px-3 py-2 text-xs font-medium text-gray-900">{{ detail.id_pelanggan }}</td>
                                                                 <td class="px-3 py-2 text-xs text-gray-900">{{ detail.nama_pelanggan }}</td>
                                                                 <td class="px-3 py-2 text-xs text-right">
-                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
-                                                                        {{ detail.jumlah_bulan }} bulan
-                                                                    </span>
+                                                                    <div class="flex flex-col items-end gap-1">
+                                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
+                                                                            {{ detail.jumlah_bulan }} bulan
+                                                                        </span>
+                                                                        <span v-if="detail.bulan_teks" class="text-[10px] text-gray-500 max-w-[150px] leading-tight" :title="detail.bulan_teks">
+                                                                            ({{ detail.bulan_teks }})
+                                                                        </span>
+                                                                    </div>
                                                                 </td>
                                                                 <td class="px-3 py-2 text-xs text-right font-semibold text-red-700"> {{ formatRupiah(detail.total_tunggakan) }}</td>
                                                             </tr>

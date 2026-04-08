@@ -265,7 +265,7 @@ class LaporanController extends Controller
                     ->where('status_bayar', 'BELUM_BAYAR')
                     ->whereIn('pelanggan_id', $pelangganIds)
                     ->with('pelanggan:id,id_pelanggan,nama_pelanggan')
-                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw('SUM(total_tagihan) as total_tunggakan'))
+                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw('SUM(total_tagihan) as total_tunggakan'), \DB::raw('GROUP_CONCAT(bulan ORDER BY bulan ASC) as list_bulan'))
                     ->groupBy('pelanggan_id')
                     ->get();
                 
@@ -273,11 +273,31 @@ class LaporanController extends Controller
                 
                 // Detail pelanggan yang nunggak
                 $detailTunggakan = $tunggakanData->map(function($t) {
+                    $listBulanStr = $t->list_bulan ?? '';
+                    $listBulanFormatted = [];
+                    if (!empty($listBulanStr)) {
+                        $listBulanArray = explode(',', $listBulanStr);
+                        $listBulanFormatted = array_map(function($b) {
+                            $parts = explode('-', $b);
+                            if(count($parts) == 2) {
+                                $bulanNames = [
+                                    '01' => 'Jan', '02' => 'Feb', '03' => 'Mar',
+                                    '04' => 'Apr', '05' => 'Mei', '06' => 'Jun',
+                                    '07' => 'Jul', '08' => 'Agu', '09' => 'Sep',
+                                    '10' => 'Okt', '11' => 'Nov', '12' => 'Des'
+                                ];
+                                return ($bulanNames[$parts[1]] ?? $parts[1]) . " '" . substr($parts[0], 2, 2);
+                            }
+                            return $b;
+                        }, $listBulanArray);
+                    }
+
                     return [
                         'id_pelanggan' => $t->pelanggan->id_pelanggan ?? 'N/A',
                         'nama_pelanggan' => $t->pelanggan->nama_pelanggan ?? 'N/A',
                         'jumlah_bulan' => $t->jumlah_bulan,
                         'total_tunggakan' => $t->total_tunggakan,
+                        'bulan_teks' => implode(', ', $listBulanFormatted),
                     ];
                 })->toArray();
                 
@@ -631,7 +651,7 @@ class LaporanController extends Controller
                     ->where('status_bayar', 'BELUM_BAYAR')
                     ->whereIn('pelanggan_id', $pelangganIds)
                     ->with('pelanggan:id,id_pelanggan,nama_pelanggan')
-                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw('SUM(total_tagihan) as total_tunggakan'))
+                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw('SUM(total_tagihan) as total_tunggakan'), \DB::raw('GROUP_CONCAT(bulan ORDER BY bulan ASC) as list_bulan'))
                     ->groupBy('pelanggan_id')
                     ->get();
                 
@@ -639,11 +659,31 @@ class LaporanController extends Controller
                 
                 // Detail pelanggan yang nunggak
                 $detailTunggakan = $tunggakanData->map(function($t) {
+                    $listBulanStr = $t->list_bulan ?? '';
+                    $listBulanFormatted = [];
+                    if (!empty($listBulanStr)) {
+                        $listBulanArray = explode(',', $listBulanStr);
+                        $listBulanFormatted = array_map(function($b) {
+                            $parts = explode('-', $b);
+                            if(count($parts) == 2) {
+                                $bulanNames = [
+                                    '01' => 'Jan', '02' => 'Feb', '03' => 'Mar',
+                                    '04' => 'Apr', '05' => 'Mei', '06' => 'Jun',
+                                    '07' => 'Jul', '08' => 'Agu', '09' => 'Sep',
+                                    '10' => 'Okt', '11' => 'Nov', '12' => 'Des'
+                                ];
+                                return ($bulanNames[$parts[1]] ?? $parts[1]) . " '" . substr($parts[0], 2, 2);
+                            }
+                            return $b;
+                        }, $listBulanArray);
+                    }
+
                     return [
                         'id_pelanggan' => $t->pelanggan->id_pelanggan ?? 'N/A',
                         'nama_pelanggan' => $t->pelanggan->nama_pelanggan ?? 'N/A',
                         'jumlah_bulan' => $t->jumlah_bulan,
                         'total_tunggakan' => $t->total_tunggakan,
+                        'bulan_teks' => implode(', ', $listBulanFormatted),
                     ];
                 })->toArray();
                 
