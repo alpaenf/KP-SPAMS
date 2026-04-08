@@ -196,7 +196,11 @@ class LaporanController extends Controller
         // C. Honor Penarik
         $honorPenarik = $tarik20Persen + $biayaOperasional;
 
-        // D. Total Tarikan Bersih (dikurangi honor penarik, PAD Desa, Ops Lapangan, Lain-lain, dan CSR)
+        // D. Total Abunemen (berdasarkan transaksi yang mencentang abunemen)
+        $jumlahTransaksiAbunemen = $pembayarans->where('abunemen', true)->count();
+        $totalAbunemen = $jumlahTransaksiAbunemen * 3000;
+
+        // E. Total Tarikan Bersih (dikurangi honor penarik, PAD Desa, Ops Lapangan, Lain-lain, dan CSR)
         $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa - $biayaOpsLapangan - $biayaLainLain - $biayaCSR;
 
         // === 3. Statistik SR (Sambungan Rumah) ===
@@ -333,6 +337,8 @@ class LaporanController extends Controller
                 'biayaCSR' => $biayaCSR,
                 'honorPenarik' => $honorPenarik, // 20% + Ops
                 'honorMurni' => $honorPenarik,   // Sama, penamaan beda konteks
+                'totalAbunemen' => $totalAbunemen,
+                'jumlahTransaksiAbunemen' => $jumlahTransaksiAbunemen,
                 'totalTarikanBersih' => $totalTarikanBersih,
                 'totalSR' => $totalSR,
                 'srSudahBayar' => $srSudahBayar,
@@ -599,6 +605,8 @@ class LaporanController extends Controller
         $biayaLainLain = $laporanQuery->sum('biaya_lain_lain');
         $biayaCSR = $laporanQuery->sum('biaya_csr');
         $honorPenarik = $tarik20Persen + $biayaOperasional;
+        $jumlahTransaksiAbunemen = $pembayarans->where('abunemen', true)->count();
+        $totalAbunemen = $jumlahTransaksiAbunemen * 3000;
         $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa - $biayaOpsLapangan - $biayaLainLain - $biayaCSR;
 
         // Statistik SR - use pelanggan IDs already calculated
@@ -707,6 +715,8 @@ class LaporanController extends Controller
                 'biayaCSR' => $biayaCSR,
                 'honorPenarik' => $honorPenarik,
                 'honorMurni' => $honorPenarik,
+                'totalAbunemen' => $totalAbunemen,
+                'jumlahTransaksiAbunemen' => $jumlahTransaksiAbunemen,
                 'totalTarikanBersih' => $totalTarikanBersih,
                 'totalSR' => $totalSR,
                 'srSudahBayar' => $srSudahBayar,
