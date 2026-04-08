@@ -191,19 +191,26 @@
                         </button>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                        <!-- Total Tarikan -->
+                        <!-- Total Tarikan Kotor Asli -->
                         <div class="bg-blue-50 rounded-xl p-4 sm:p-5 border border-blue-100">
-                             <h4 class="text-xs sm:text-sm font-semibold text-blue-900 mb-2">Total Tarikan (Kotor)</h4>
-                             <p class="text-xl sm:text-2xl font-bold text-blue-800">{{ formatRupiah(detail.totalTarikan) }}</p>
+                             <h4 class="text-xs sm:text-sm font-semibold text-blue-900 mb-2">Total Tarikan (Kotor Asli)</h4>
+                             <p class="text-xl sm:text-2xl font-bold text-blue-800">{{ formatRupiah(detail.totalTarikanKotorAsli || detail.totalTarikan) }}</p>
                              <p class="text-xs text-blue-600 mt-1">Dari {{ detail.srSudahBayar }} pelanggan bayar</p>
                         </div>
 
-                            <!-- Total Abunemen -->
-                            <div class="bg-emerald-50 rounded-xl p-4 sm:p-5 border border-emerald-100">
-                                <h4 class="text-xs sm:text-sm font-semibold text-emerald-900 mb-2">Total Abunemen</h4>
-                                <p class="text-xl sm:text-2xl font-bold text-emerald-800">{{ formatRupiah(detail.totalAbunemen || 0) }}</p>
-                                <p class="text-xs text-emerald-600 mt-1">{{ detail.jumlahTransaksiAbunemen || 0 }} transaksi abunemen</p>
-                            </div>
+                        <!-- Total Abunemen -->
+                        <div class="bg-emerald-50 rounded-xl p-4 sm:p-5 border border-emerald-100">
+                            <h4 class="text-xs sm:text-sm font-semibold text-emerald-900 mb-2">Total Abunemen</h4>
+                            <p class="text-xl sm:text-2xl font-bold text-emerald-800">{{ formatRupiah(detail.totalAbunemen || 0) }}</p>
+                            <p class="text-xs text-emerald-600 mt-1">{{ detail.jumlahTransaksiAbunemen || 0 }} transaksi abunemen</p>
+                        </div>
+
+                        <!-- Total Tarikan Tanpa Abunemen -->
+                        <div class="bg-cyan-50 rounded-xl p-4 sm:p-5 border border-cyan-100">
+                             <h4 class="text-xs sm:text-sm font-semibold text-cyan-900 mb-2">Tarikan Tanpa Abunemen</h4>
+                             <p class="text-xl sm:text-2xl font-bold text-cyan-800">{{ formatRupiah(detail.totalTarikanTanpaAbunemen || 0) }}</p>
+                             <p class="text-xs text-cyan-600 mt-1">Kotor - Abunemen</p>
+                        </div>
 
                          <!-- 20% Jasa Penarik -->
                         <div class="bg-purple-50 rounded-xl p-4 sm:p-5 border border-purple-100">
@@ -297,6 +304,9 @@
                             <p class="text-xs sm:text-sm text-blue-600 mt-2">
                                 {{ showAkumulasi && form.bulan !== 'semua' ? 'Dana bersih sampai bulan ini (akumulasi)' : 'Dana bersih untuk kas desa/KP-SPAMS setelah dikurangi honor dan biaya lain.' }}
                             </p>
+                            <p class="text-[11px] text-blue-500 mt-1">
+                                Rumus: (Tarikan tanpa abunemen + Abunemen) - Total Semua Biaya
+                            </p>
                         </div>
 
                         <!-- SR Status -->
@@ -347,7 +357,7 @@
                                     <span class="font-semibold">{{ summary.transaksiUmum || 0 }} transaksi</span>
                                 </div>
                                 <div class="text-xs text-green-600 bg-green-50 rounded px-2 py-1">
-                                    Rata-rata: {{ formatRupiah((summary.pemasukanUmum || 0) / (summary.pelangganUmum || 1)) }}/bangunan
+                                    Rata-rata: {{ formatRupiah((summary.pemasukanUmum || 0) / (summary.pelangganUmum || 1)) }}/sr
                                 </div>
                             </div>
                             
@@ -370,7 +380,7 @@
                                     <span class="font-semibold">{{ summary.transaksiSosial || 0 }} transaksi</span>
                                 </div>
                                 <div class="text-xs text-blue-600 bg-blue-50 rounded px-2 py-1">
-                                    Rata-rata: {{ formatRupiah((summary.pemasukanSosial || 0) / (summary.pelangganSosial || 1)) }}/bangunan
+                                    Rata-rata: {{ formatRupiah((summary.pemasukanSosial || 0) / (summary.pelangganSosial || 1)) }}/sr
                                 </div>
                             </div>
                         </div>

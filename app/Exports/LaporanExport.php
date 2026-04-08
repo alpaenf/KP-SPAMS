@@ -73,9 +73,10 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithTit
         
         // Detail Keuangan
         $rows->push(['DETAIL KEUANGAN']);
-        $rows->push(['Pendapatan Kotor Air (Tanpa Abonemen)', 'Rp ' . number_format($this->detail['totalTarikan'], 0, ',', '.')]);
-        $rows->push(['Total Abonemen (Terpisah)', 'Rp ' . number_format($this->detail['totalAbonemen'] ?? 0, 0, ',', '.')]);
-        $rows->push(['20% Jasa Penarik', 'Rp ' . number_format($this->detail['tarik20Persen'], 0, ',', '.')]);
+        $rows->push(['Pendapatan Kotor Air (Kotor Asli)', 'Rp ' . number_format($this->detail['totalTarikanKotorAsli'] ?? $this->detail['totalTarikan'], 0, ',', '.')]);
+        $rows->push(['Total Abunemen (Terpisah)', 'Rp ' . number_format($this->detail['totalAbunemen'] ?? 0, 0, ',', '.')]);
+        $rows->push(['Pendapatan Air (Tanpa Abunemen)', 'Rp ' . number_format($this->detail['totalTarikanTanpaAbunemen'] ?? 0, 0, ',', '.')]);
+        $rows->push(['20% Jasa Penarik (Dari Tarikan Tanpa Abunemen)', 'Rp ' . number_format($this->detail['tarik20Persen'], 0, ',', '.')]);
         $rows->push(['Biaya Operasional Penarik', 'Rp ' . number_format($this->detail['biayaOperasional'], 0, ',', '.')]);
         $rows->push(['Biaya PAD Desa', 'Rp ' . number_format($this->detail['biayaPadDesa'], 0, ',', '.')]);
         $rows->push(['Biaya Ops Lapangan', 'Rp ' . number_format($this->detail['biayaOpsLapangan'], 0, ',', '.')]);

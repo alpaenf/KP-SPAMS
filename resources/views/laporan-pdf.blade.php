@@ -262,12 +262,12 @@
 
     <div class="summary-cards">
         <div class="summary-card pemasukan">
-            <h3>Pendapatan Kotor Air</h3>
-            <div class="amount">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</div>
+            <h3>Tarikan Kotor Asli</h3>
+            <div class="amount">Rp {{ number_format($totalTarikanKotorAsli, 0, ',', '.') }}</div>
         </div>
         <div class="summary-card abonemen">
-            <h3>Total Abonemen</h3>
-            <div class="amount">Rp {{ number_format($totalAbonemen, 0, ',', '.') }}</div>
+            <h3>Tarikan Tanpa Abunemen</h3>
+            <div class="amount">Rp {{ number_format($totalTarikanTanpaAbunemen, 0, ',', '.') }}</div>
         </div>
         <div class="summary-card pengeluaran">
             <h3>Total Pengeluaran</h3>
@@ -499,8 +499,12 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>20% Jasa Penarik (Dari Rp {{ number_format($detailKeuangan['totalTarikan'], 0, ',', '.') }})</td>
+                    <td>20% Jasa Penarik (Dari Tarikan Tanpa Abunemen: Rp {{ number_format($detailKeuangan['totalTarikanTanpaAbunemen'] ?? 0, 0, ',', '.') }})</td>
                     <td class="text-right">{{ number_format($detailKeuangan['tarik20Persen'], 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <td>Total Abunemen (Terpisah)</td>
+                    <td class="text-right">{{ number_format($detailKeuangan['totalAbunemen'] ?? 0, 0, ',', '.') }}</td>
                 </tr>
                 <tr>
                     <td>Biaya Operasional Penarik</td>

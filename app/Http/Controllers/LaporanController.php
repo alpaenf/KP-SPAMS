@@ -151,11 +151,17 @@ class LaporanController extends Controller
         })->count();
 
         // === 2. Hitung Detail Keuangan (Mirip Dashboard) ===
-        
-        // A. 20% Tarikan
-        $tarik20Persen = $totalPemasukan * 0.20;
 
-        // B. Biaya Operasional
+        // A. Pisahkan dulu komponen abunemen dari total tarikan
+        $jumlahTransaksiAbunemen = $pembayarans->where('abunemen', true)->count();
+        $totalAbunemen = $jumlahTransaksiAbunemen * 3000;
+        $totalTarikanKotorAsli = $totalPemasukan;
+        $totalTarikanTanpaAbunemen = max(0, $totalTarikanKotorAsli - $totalAbunemen);
+
+        // B. 20% Jasa Penarik dihitung dari tarikan TANPA abunemen
+        $tarik20Persen = $totalTarikanTanpaAbunemen * 0.20;
+
+        // C. Biaya Operasional
         $biayaOperasional = 0;
         $biayaPadDesa = 0;
         
@@ -193,15 +199,12 @@ class LaporanController extends Controller
         $biayaLainLain = $laporanQuery->sum('biaya_lain_lain');
         $biayaCSR = $laporanQuery->sum('biaya_csr');
 
-        // C. Honor Penarik
+        // D. Honor Penarik
         $honorPenarik = $tarik20Persen + $biayaOperasional;
 
-        // D. Total Abunemen (berdasarkan transaksi yang mencentang abunemen)
-        $jumlahTransaksiAbunemen = $pembayarans->where('abunemen', true)->count();
-        $totalAbunemen = $jumlahTransaksiAbunemen * 3000;
-
-        // E. Total Tarikan Bersih (dikurangi honor penarik, PAD Desa, Ops Lapangan, Lain-lain, dan CSR)
-        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa - $biayaOpsLapangan - $biayaLainLain - $biayaCSR;
+        // E. Total Tarikan Bersih = (Tarikan tanpa abunemen + abunemen) - seluruh biaya
+        $totalTarikanBersih = ($totalTarikanTanpaAbunemen + $totalAbunemen)
+            - $honorPenarik - $biayaPadDesa - $biayaOpsLapangan - $biayaLainLain - $biayaCSR;
 
         // === 3. Statistik SR (Sambungan Rumah) ===
         // Use pelanggan IDs already calculated earlier
@@ -339,6 +342,8 @@ class LaporanController extends Controller
                 'honorMurni' => $honorPenarik,   // Sama, penamaan beda konteks
                 'totalAbunemen' => $totalAbunemen,
                 'jumlahTransaksiAbunemen' => $jumlahTransaksiAbunemen,
+                'totalTarikanKotorAsli' => $totalTarikanKotorAsli,
+                'totalTarikanTanpaAbunemen' => $totalTarikanTanpaAbunemen,
                 'totalTarikanBersih' => $totalTarikanBersih,
                 'totalSR' => $totalSR,
                 'srSudahBayar' => $srSudahBayar,
@@ -408,13 +413,15 @@ class LaporanController extends Controller
         
         $laporanBulanan = $laporanQuery->get();
         
-        // Calculate totals
-        $totalPengeluaran = $laporanBulanan->sum(function($laporan) {
-            return ($laporan->biaya_operasional_penarik ?? 0) + ($laporan->biaya_operasional_lainnya ?? 0);
-        });
-        
+        // Calculate totals from the same detail formula used by page/export
         $totalPemasukan = $data['summary']['pemasukan'];
-        $saldoAkhir = $totalPemasukan - $totalPengeluaran;
+        $detailKeuangan = $data['detail'];
+        $totalPengeluaran = (float)($detailKeuangan['honorPenarik'] ?? 0)
+            + (float)($detailKeuangan['biayaPadDesa'] ?? 0)
+            + (float)($detailKeuangan['biayaOpsLapangan'] ?? 0)
+            + (float)($detailKeuangan['biayaLainLain'] ?? 0)
+            + (float)($detailKeuangan['biayaCSR'] ?? 0);
+        $saldoAkhir = (float)($detailKeuangan['totalTarikanBersih'] ?? 0);
         
         // Count active customers
         // Apply filter wilayah berdasarkan user yang login
@@ -435,8 +442,12 @@ class LaporanController extends Controller
             'pembayarans' => $data['data'],
             'laporanBulanan' => $laporanBulanan,
             'totalPemasukan' => $totalPemasukan,
+            'totalAbunemen' => $detailKeuangan['totalAbunemen'] ?? 0,
+            'totalTarikanKotorAsli' => $detailKeuangan['totalTarikanKotorAsli'] ?? $totalPemasukan,
+            'totalTarikanTanpaAbunemen' => $detailKeuangan['totalTarikanTanpaAbunemen'] ?? $totalPemasukan,
             'totalPengeluaran' => $totalPengeluaran,
             'saldoAkhir' => $saldoAkhir,
+            'detailKeuangan' => $detailKeuangan,
             'totalPelangganAktif' => $totalPelangganAktif,
             'distribusiWilayah' => isset($data['distribusiWilayah']) ? $data['distribusiWilayah']->toArray() : [],
         ];
@@ -578,7 +589,11 @@ class LaporanController extends Controller
         })->count();
 
         // Hitung Detail Keuangan
-        $tarik20Persen = $totalPemasukan * 0.20;
+        $jumlahTransaksiAbunemen = $pembayarans->where('abunemen', true)->count();
+        $totalAbunemen = $jumlahTransaksiAbunemen * 3000;
+        $totalTarikanKotorAsli = $totalPemasukan;
+        $totalTarikanTanpaAbunemen = max(0, $totalTarikanKotorAsli - $totalAbunemen);
+        $tarik20Persen = $totalTarikanTanpaAbunemen * 0.20;
 
         $laporanQuery = LaporanBulanan::query();
         if ($bulan && $bulan !== 'semua') {
@@ -605,9 +620,8 @@ class LaporanController extends Controller
         $biayaLainLain = $laporanQuery->sum('biaya_lain_lain');
         $biayaCSR = $laporanQuery->sum('biaya_csr');
         $honorPenarik = $tarik20Persen + $biayaOperasional;
-        $jumlahTransaksiAbunemen = $pembayarans->where('abunemen', true)->count();
-        $totalAbunemen = $jumlahTransaksiAbunemen * 3000;
-        $totalTarikanBersih = $totalPemasukan - $honorPenarik - $biayaPadDesa - $biayaOpsLapangan - $biayaLainLain - $biayaCSR;
+        $totalTarikanBersih = ($totalTarikanTanpaAbunemen + $totalAbunemen)
+            - $honorPenarik - $biayaPadDesa - $biayaOpsLapangan - $biayaLainLain - $biayaCSR;
 
         // Statistik SR - use pelanggan IDs already calculated
         $totalSR = $pelangganAktifIds->count();
@@ -717,6 +731,8 @@ class LaporanController extends Controller
                 'honorMurni' => $honorPenarik,
                 'totalAbunemen' => $totalAbunemen,
                 'jumlahTransaksiAbunemen' => $jumlahTransaksiAbunemen,
+                'totalTarikanKotorAsli' => $totalTarikanKotorAsli,
+                'totalTarikanTanpaAbunemen' => $totalTarikanTanpaAbunemen,
                 'totalTarikanBersih' => $totalTarikanBersih,
                 'totalSR' => $totalSR,
                 'srSudahBayar' => $srSudahBayar,
