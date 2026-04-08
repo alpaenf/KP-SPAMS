@@ -23,6 +23,11 @@ class LaporanController extends Controller
         $bulan = $request->input('bulan', Carbon::now()->format('m')); // 01-12 or 'semua'
         $wilayah = $request->input('wilayah', 'semua');
         $akumulasi = $request->input('akumulasi', '0'); // 0 = bulan ini saja, 1 = dari Januari s/d bulan ini
+        $selectedMonth = ($bulan && $bulan !== 'semua') ? ($tahun . '-' . $bulan) : null;
+        $isBeforeGoLive = $selectedMonth ? (strcmp($selectedMonth, self::GO_LIVE_MONTH) < 0) : false;
+        $startMonthForYear = strcmp($tahun . '-01', self::GO_LIVE_MONTH) < 0
+            ? self::GO_LIVE_MONTH
+            : ($tahun . '-01');
 
         // === 1. Query Data Pembayaran (Untuk Tabel & Total Tarikan) ===
         // Get active pelanggan IDs based on user role and filters
@@ -47,18 +52,20 @@ class LaporanController extends Controller
         // Filter Tahun & Bulan via bulan_bayar
         if ($bulan && $bulan !== 'semua') {
             $bulanFormat = $tahun . '-' . $bulan;
-            
-            // Jika akumulasi ON, ambil dari Januari sampai bulan yang dipilih
-            if ($akumulasi == '1') {
-                $query->where('bulan_bayar', '>=', $tahun . '-01')
-                      ->where('bulan_bayar', '<=', $bulanFormat);
+            if ($isBeforeGoLive) {
+                // Periode sebelum go-live dianggap tidak ada transaksi operasional.
+                $query->whereRaw('1 = 0');
+            } elseif ($akumulasi == '1') {
+                $query->where('bulan_bayar', '>=', $startMonthForYear)
+                    ->where('bulan_bayar', '<=', $bulanFormat);
             } else {
                 // Hanya bulan yang dipilih
                 $query->where('bulan_bayar', $bulanFormat);
             }
         } else {
-             // Semua bulan di tahun ini
-            $query->where('bulan_bayar', 'like', $tahun . '-%');
+             // Semua bulan di tahun ini, mulai dari go-live.
+            $query->where('bulan_bayar', 'like', $tahun . '-%')
+                ->where('bulan_bayar', '>=', $startMonthForYear);
         }
 
         // Filter by active pelanggan
@@ -71,13 +78,14 @@ class LaporanController extends Controller
         
         // Add tunggakan (pembayaran bulan lalu yang dibayar di periode ini)
         $pembayaranTunggakan = 0;
-        if ($bulan && $bulan !== 'semua' && $akumulasi != '1') {
+        if ($bulan && $bulan !== 'semua' && $akumulasi != '1' && !$isBeforeGoLive) {
             // Hanya hitung tunggakan jika bukan mode akumulasi
             $bulanFormat = $tahun . '-' . $bulan;
             $startOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->startOfMonth();
             $endOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->endOfMonth();
             
             $pembayaranTunggakan = Pembayaran::where('bulan_bayar', '<', $bulanFormat)
+            ->where('bulan_bayar', '>=', self::GO_LIVE_MONTH)
                 ->whereBetween('tanggal_bayar', [$startOfMonth, $endOfMonth])
                 ->whereIn('pelanggan_id', $pelangganAktifIds)
                 ->sum('jumlah_bayar');
@@ -90,12 +98,13 @@ class LaporanController extends Controller
 
         // Detail siapa saja yang bayar tunggakan bulan ini
         $detailPembayaranTunggakan = [];
-        if ($pembayaranTunggakan > 0 && $bulan && $bulan !== 'semua' && $akumulasi != '1') {
+        if ($pembayaranTunggakan > 0 && $bulan && $bulan !== 'semua' && $akumulasi != '1' && !$isBeforeGoLive) {
             $bulanFormat = $tahun . '-' . $bulan;
             $startOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->startOfMonth();
             $endOfMonth   = Carbon::createFromFormat('Y-m', $bulanFormat)->endOfMonth();
             $detailPembayaranTunggakan = Pembayaran::with('pelanggan:id,id_pelanggan,nama_pelanggan')
                 ->where('bulan_bayar', '<', $bulanFormat)
+            ->where('bulan_bayar', '>=', self::GO_LIVE_MONTH)
                 ->whereBetween('tanggal_bayar', [$startOfMonth, $endOfMonth])
                 ->whereIn('pelanggan_id', $pelangganAktifIds)
                 ->get()
@@ -224,6 +233,7 @@ class LaporanController extends Controller
 
         // === 5. Distribusi Tunggakan per Wilayah ===
         $bulanFilter = ($bulan && $bulan !== 'semua') ? $tahun . '-' . $bulan : now()->format('Y-m');
+        $isBeforeGoLiveDistribusi = strcmp($bulanFilter, self::GO_LIVE_MONTH) < 0;
         $sqlExpr = WilayahHelper::getSqlExpression();
         
         $distribusiWilayah = (clone $pelangganQuery)
@@ -236,7 +246,7 @@ class LaporanController extends Controller
             ->groupByRaw($sqlExpr)
             ->orderBy('jumlah', 'desc')
             ->get()
-            ->map(function ($item) use ($bulanFilter) {
+            ->map(function ($item) use ($bulanFilter, $isBeforeGoLiveDistribusi) {
                 $sqlExpr = WilayahHelper::getSqlExpression();
                 
                 $pelangganIds = Pelanggan::forUser()
@@ -245,10 +255,13 @@ class LaporanController extends Controller
                     ->pluck('id');
                 
                 // Hitung yang sudah bayar bulan filter
-                $sudahBayar = Pembayaran::where('bulan_bayar', $bulanFilter)
-                    ->whereIn('pelanggan_id', $pelangganIds)
-                    ->distinct('pelanggan_id')
-                    ->count('pelanggan_id');
+                $sudahBayar = 0;
+                if (!$isBeforeGoLiveDistribusi) {
+                    $sudahBayar = Pembayaran::where('bulan_bayar', $bulanFilter)
+                        ->whereIn('pelanggan_id', $pelangganIds)
+                        ->distinct('pelanggan_id')
+                        ->count('pelanggan_id');
+                }
                 
                 $belumBayar = $pelangganIds->count() - $sudahBayar;
                 
@@ -444,6 +457,11 @@ class LaporanController extends Controller
         $tahun = $request->input('tahun', Carbon::now()->year);
         $bulan = $request->input('bulan', Carbon::now()->format('m'));
         $wilayah = $request->input('wilayah', 'semua');
+        $selectedMonth = ($bulan && $bulan !== 'semua') ? ($tahun . '-' . $bulan) : null;
+        $isBeforeGoLive = $selectedMonth ? (strcmp($selectedMonth, self::GO_LIVE_MONTH) < 0) : false;
+        $startMonthForYear = strcmp($tahun . '-01', self::GO_LIVE_MONTH) < 0
+            ? self::GO_LIVE_MONTH
+            : ($tahun . '-01');
 
         // Get active pelanggan IDs based on user role and filters
         $pelangganQuery = Pelanggan::forUser()->where('status_aktif', true);
@@ -469,9 +487,14 @@ class LaporanController extends Controller
 
         if ($bulan && $bulan !== 'semua') {
             $bulanFormat = $tahun . '-' . $bulan;
-            $query->where('bulan_bayar', $bulanFormat);
+            if ($isBeforeGoLive) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->where('bulan_bayar', $bulanFormat);
+            }
         } else {
-            $query->where('bulan_bayar', 'like', $tahun . '-%');
+            $query->where('bulan_bayar', 'like', $tahun . '-%')
+                ->where('bulan_bayar', '>=', $startMonthForYear);
         }
 
         // Filter by active pelanggan
@@ -484,12 +507,13 @@ class LaporanController extends Controller
         
         // Add tunggakan (pembayaran bulan lalu yang dibayar di periode ini)
         $pembayaranTunggakan = 0;
-        if ($bulan && $bulan !== 'semua') {
+        if ($bulan && $bulan !== 'semua' && !$isBeforeGoLive) {
             $bulanFormat = $tahun . '-' . $bulan;
             $startOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->startOfMonth();
             $endOfMonth = Carbon::createFromFormat('Y-m', $bulanFormat)->endOfMonth();
             
             $pembayaranTunggakan = Pembayaran::where('bulan_bayar', '<', $bulanFormat)
+            ->where('bulan_bayar', '>=', self::GO_LIVE_MONTH)
                 ->whereBetween('tanggal_bayar', [$startOfMonth, $endOfMonth])
                 ->whereIn('pelanggan_id', $pelangganAktifIds)
                 ->sum('jumlah_bayar');
@@ -501,12 +525,13 @@ class LaporanController extends Controller
 
         // Detail siapa saja yang bayar tunggakan bulan ini
         $detailPembayaranTunggakan = [];
-        if ($pembayaranTunggakan > 0 && $bulan && $bulan !== 'semua') {
+        if ($pembayaranTunggakan > 0 && $bulan && $bulan !== 'semua' && !$isBeforeGoLive) {
             $bulanFormat2 = $tahun . '-' . $bulan;
             $startOfMonth2 = Carbon::createFromFormat('Y-m', $bulanFormat2)->startOfMonth();
             $endOfMonth2   = Carbon::createFromFormat('Y-m', $bulanFormat2)->endOfMonth();
             $detailPembayaranTunggakan = Pembayaran::with('pelanggan:id,id_pelanggan,nama_pelanggan')
                 ->where('bulan_bayar', '<', $bulanFormat2)
+            ->where('bulan_bayar', '>=', self::GO_LIVE_MONTH)
                 ->whereBetween('tanggal_bayar', [$startOfMonth2, $endOfMonth2])
                 ->whereIn('pelanggan_id', $pelangganAktifIds)
                 ->get()
@@ -583,6 +608,7 @@ class LaporanController extends Controller
 
         // Distribusi Tunggakan per Wilayah
         $bulanFilter = ($bulan && $bulan !== 'semua') ? $tahun . '-' . $bulan : now()->format('Y-m');
+        $isBeforeGoLiveDistribusi = strcmp($bulanFilter, self::GO_LIVE_MONTH) < 0;
         $sqlExpr = WilayahHelper::getSqlExpression();
         
         $distribusiWilayah = (clone $pelangganQuery)
@@ -595,7 +621,7 @@ class LaporanController extends Controller
             ->groupByRaw($sqlExpr)
             ->orderBy('jumlah', 'desc')
             ->get()
-            ->map(function ($item) use ($bulanFilter) {
+            ->map(function ($item) use ($bulanFilter, $isBeforeGoLiveDistribusi) {
                 $sqlExpr = WilayahHelper::getSqlExpression();
                 
                 $pelangganIds = Pelanggan::forUser()
@@ -603,10 +629,13 @@ class LaporanController extends Controller
                     ->whereRaw("{$sqlExpr} = ?", [$item->wilayah_normalized])
                     ->pluck('id');
                 
-                $sudahBayar = Pembayaran::where('bulan_bayar', $bulanFilter)
-                    ->whereIn('pelanggan_id', $pelangganIds)
-                    ->distinct('pelanggan_id')
-                    ->count('pelanggan_id');
+                $sudahBayar = 0;
+                if (!$isBeforeGoLiveDistribusi) {
+                    $sudahBayar = Pembayaran::where('bulan_bayar', $bulanFilter)
+                        ->whereIn('pelanggan_id', $pelangganIds)
+                        ->distinct('pelanggan_id')
+                        ->count('pelanggan_id');
+                }
                 
                 $belumBayar = $pelangganIds->count() - $sudahBayar;
                 
