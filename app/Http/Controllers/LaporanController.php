@@ -255,7 +255,7 @@ class LaporanController extends Controller
                     ->where('status_bayar', 'BELUM_BAYAR')
                     ->whereIn('pelanggan_id', $pelangganIds)
                     ->with('pelanggan:id,id_pelanggan,nama_pelanggan')
-                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw('SUM(total_tagihan) as total_tunggakan'))
+                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw("GROUP_CONCAT(bulan ORDER BY bulan ASC SEPARATOR ', ') as daftar_bulan"), \DB::raw('SUM(total_tagihan) as total_tunggakan'))
                     ->groupBy('pelanggan_id')
                     ->get();
                 
@@ -263,11 +263,20 @@ class LaporanController extends Controller
                 
                 // Detail pelanggan yang nunggak
                 $detailTunggakan = $tunggakanData->map(function($t) {
+                    $bulanList = array_filter(explode(', ', $t->daftar_bulan ?? ''));
+                    $formattedBulan = collect($bulanList)->map(function ($b) {
+                        $parts = explode('-', $b);
+                        if (count($parts) != 2) return $b;
+                        $months = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                        $m = (int)$parts[1];
+                        return ($months[$m] ?? '') . ' ' . $parts[0];
+                    })->implode(', ');
                     return [
                         'id_pelanggan' => $t->pelanggan->id_pelanggan ?? 'N/A',
                         'nama_pelanggan' => $t->pelanggan->nama_pelanggan ?? 'N/A',
                         'jumlah_bulan' => $t->jumlah_bulan,
                         'total_tunggakan' => $t->total_tunggakan,
+                        'daftar_bulan' => $formattedBulan,
                     ];
                 })->toArray();
                 
@@ -602,7 +611,7 @@ class LaporanController extends Controller
                     ->where('status_bayar', 'BELUM_BAYAR')
                     ->whereIn('pelanggan_id', $pelangganIds)
                     ->with('pelanggan:id,id_pelanggan,nama_pelanggan')
-                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw('SUM(total_tagihan) as total_tunggakan'))
+                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw("GROUP_CONCAT(bulan ORDER BY bulan ASC SEPARATOR ', ') as daftar_bulan"), \DB::raw('SUM(total_tagihan) as total_tunggakan'))
                     ->groupBy('pelanggan_id')
                     ->get();
                 
@@ -610,11 +619,20 @@ class LaporanController extends Controller
                 
                 // Detail pelanggan yang nunggak
                 $detailTunggakan = $tunggakanData->map(function($t) {
+                    $bulanList = array_filter(explode(', ', $t->daftar_bulan ?? ''));
+                    $formattedBulan = collect($bulanList)->map(function ($b) {
+                        $parts = explode('-', $b);
+                        if (count($parts) != 2) return $b;
+                        $months = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                        $m = (int)$parts[1];
+                        return ($months[$m] ?? '') . ' ' . $parts[0];
+                    })->implode(', ');
                     return [
                         'id_pelanggan' => $t->pelanggan->id_pelanggan ?? 'N/A',
                         'nama_pelanggan' => $t->pelanggan->nama_pelanggan ?? 'N/A',
                         'jumlah_bulan' => $t->jumlah_bulan,
                         'total_tunggakan' => $t->total_tunggakan,
+                        'daftar_bulan' => $formattedBulan,
                     ];
                 })->toArray();
                 
@@ -679,3 +697,6 @@ class LaporanController extends Controller
         return $bulanNames[$bulan] ?? $bulan;
     }
 }
+
+
+

@@ -474,7 +474,7 @@
                                                                 <th class="px-3 py-2 text-left text-xs font-semibold text-red-900">No</th>
                                                                 <th class="px-3 py-2 text-left text-xs font-semibold text-red-900">ID Pelanggan</th>
                                                                 <th class="px-3 py-2 text-left text-xs font-semibold text-red-900">Nama Pelanggan</th>
-                                                                <th class="px-3 py-2 text-right text-xs font-semibold text-red-900">Jumlah Bulan</th>
+                                                                <th class="px-3 py-2 text-right text-xs font-semibold text-red-900">Bulan Tertunggak</th>
                                                                 <th class="px-3 py-2 text-right text-xs font-semibold text-red-900">Total Tunggakan</th>
                                                             </tr>
                                                         </thead>
@@ -484,9 +484,14 @@
                                                                 <td class="px-3 py-2 text-xs font-medium text-gray-900">{{ detail.id_pelanggan }}</td>
                                                                 <td class="px-3 py-2 text-xs text-gray-900">{{ detail.nama_pelanggan }}</td>
                                                                 <td class="px-3 py-2 text-xs text-right">
-                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
-                                                                        {{ detail.jumlah_bulan }} bulan
-                                                                    </span>
+                                                                    <div class="flex flex-col items-end gap-1">
+                                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
+                                                                            {{ detail.jumlah_bulan }} bulan
+                                                                        </span>
+                                                                        <span v-if="detail.daftar_bulan" class="text-[10px] text-gray-500 whitespace-normal text-right max-w-[200px]">
+                                                                            {{ detail.daftar_bulan }}
+                                                                        </span>
+                                                                    </div>
                                                                 </td>
                                                                 <td class="px-3 py-2 text-xs text-right font-semibold text-red-700"> {{ formatRupiah(detail.total_tunggakan) }}</td>
                                                             </tr>
@@ -911,3 +916,4 @@ watch(form, debounce(() => {
 }, 300), { deep: true });
 
 </script>
+
