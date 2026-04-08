@@ -255,10 +255,11 @@ class LaporanController extends Controller
                 // Hitung tunggakan (bulan sebelumnya yang belum bayar)
                 $tunggakanData = \App\Models\TagihanBulanan::where('bulan', '<', $bulanFilter)
                     ->where('bulan', '>=', self::GO_LIVE_MONTH)
-                    ->where('status_bayar', 'BELUM_BAYAR')
+                    ->whereIn('status_bayar', ['BELUM_BAYAR', 'TUNGGAKAN', 'CICILAN'])
                     ->whereIn('pelanggan_id', $pelangganIds)
                     ->with('pelanggan:id,id_pelanggan,nama_pelanggan')
-                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw("GROUP_CONCAT(bulan ORDER BY bulan ASC SEPARATOR ', ') as daftar_bulan"), \DB::raw('SUM(total_tagihan) as total_tunggakan'))
+                    ->whereRaw('(total_tagihan - COALESCE(jumlah_terbayar, 0)) > 0')
+                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw("GROUP_CONCAT(bulan ORDER BY bulan ASC SEPARATOR ', ') as daftar_bulan"), \DB::raw('SUM(total_tagihan - COALESCE(jumlah_terbayar, 0)) as total_tunggakan'))
                     ->groupBy('pelanggan_id')
                     ->get();
                 
@@ -612,10 +613,11 @@ class LaporanController extends Controller
                 // Hitung tunggakan (bulan sebelumnya yang belum bayar)
                 $tunggakanData = \App\Models\TagihanBulanan::where('bulan', '<', $bulanFilter)
                     ->where('bulan', '>=', self::GO_LIVE_MONTH)
-                    ->where('status_bayar', 'BELUM_BAYAR')
+                    ->whereIn('status_bayar', ['BELUM_BAYAR', 'TUNGGAKAN', 'CICILAN'])
                     ->whereIn('pelanggan_id', $pelangganIds)
                     ->with('pelanggan:id,id_pelanggan,nama_pelanggan')
-                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw("GROUP_CONCAT(bulan ORDER BY bulan ASC SEPARATOR ', ') as daftar_bulan"), \DB::raw('SUM(total_tagihan) as total_tunggakan'))
+                    ->whereRaw('(total_tagihan - COALESCE(jumlah_terbayar, 0)) > 0')
+                    ->select('pelanggan_id', \DB::raw('COUNT(*) as jumlah_bulan'), \DB::raw("GROUP_CONCAT(bulan ORDER BY bulan ASC SEPARATOR ', ') as daftar_bulan"), \DB::raw('SUM(total_tagihan - COALESCE(jumlah_terbayar, 0)) as total_tunggakan'))
                     ->groupBy('pelanggan_id')
                     ->get();
                 

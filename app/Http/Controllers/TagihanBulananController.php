@@ -465,7 +465,9 @@ class TagihanBulananController extends Controller
         try {
             $tunggakan = TagihanBulanan::with('pelanggan')
                 ->where('pelanggan_id', $pelangganId)
+                ->where('bulan', '>=', self::GO_LIVE_MONTH)
                 ->whereIn('status_bayar', ['BELUM_BAYAR', 'TUNGGAKAN', 'CICILAN'])
+                ->whereRaw('(total_tagihan - COALESCE(jumlah_terbayar, 0)) > 0')
                 ->orderBy('bulan', 'asc')
                 ->get()
                 ->map(function($t) {
