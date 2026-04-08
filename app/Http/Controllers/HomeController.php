@@ -14,6 +14,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class HomeController extends Controller
 {
+    private const GO_LIVE_MONTH = '2026-02';
+
     public function downloadPdf($id)
     {
         $pelangganData = Pelanggan::where('id_pelanggan', $id)->firstOrFail();
@@ -350,6 +352,7 @@ class HomeController extends Controller
             // Menggunakan query langsung agar data akurat dari DB
             $hasTunggakan = $p->tagihanBulanan()
                 ->where('bulan', '<', $bulanIni)
+                ->where('bulan', '>=', self::GO_LIVE_MONTH)
                 ->whereIn('status_bayar', ['BELUM_BAYAR', 'TUNGGAKAN', 'CICILAN'])
                 ->exists();
             
@@ -540,6 +543,7 @@ class HomeController extends Controller
                 
                 // Hitung tunggakan (bulan sebelumnya yang belum bayar)
                 $tunggakanCount = \App\Models\TagihanBulanan::where('bulan', '<', $bulanIni)
+                    ->where('bulan', '>=', self::GO_LIVE_MONTH)
                     ->where('status_bayar', 'BELUM_BAYAR')
                     ->whereIn('pelanggan_id', $pelangganIds)
                     ->count();

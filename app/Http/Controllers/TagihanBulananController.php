@@ -10,6 +10,8 @@ use Inertia\Inertia;
 
 class TagihanBulananController extends Controller
 {
+    private const GO_LIVE_MONTH = '2026-02';
+
     /**
      * Halaman input meteran bulanan untuk pengelola
      */
@@ -227,6 +229,7 @@ class TagihanBulananController extends Controller
             if ($masukkanTunggakan) {
                 $totalTunggakan = TagihanBulanan::where('pelanggan_id', $pelanggan->id)
                     ->where('bulan', '<', $bulan)
+                    ->where('bulan', '>=', self::GO_LIVE_MONTH)
                     ->where('status_bayar', 'BELUM_BAYAR')
                     ->sum('total_tagihan');
             }
@@ -369,6 +372,7 @@ class TagihanBulananController extends Controller
         // Ambil semua tagihan yang belum lunas sebelum bulan ini
         $tunggakan = TagihanBulanan::where('pelanggan_id', $pelangganId)
             ->where('bulan', '<', $bulanSekarang)
+            ->where('bulan', '>=', self::GO_LIVE_MONTH)
             ->where('status_bayar', 'BELUM_BAYAR')
             ->orderBy('bulan', 'asc')
             ->get()

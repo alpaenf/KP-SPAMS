@@ -15,6 +15,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class LaporanController extends Controller
 {
+    private const GO_LIVE_MONTH = '2026-02';
+
     public function index(Request $request)
     {
         $tahun = $request->input('tahun', Carbon::now()->year);
@@ -252,6 +254,7 @@ class LaporanController extends Controller
                 
                 // Hitung tunggakan (bulan sebelumnya yang belum bayar)
                 $tunggakanData = \App\Models\TagihanBulanan::where('bulan', '<', $bulanFilter)
+                    ->where('bulan', '>=', self::GO_LIVE_MONTH)
                     ->where('status_bayar', 'BELUM_BAYAR')
                     ->whereIn('pelanggan_id', $pelangganIds)
                     ->with('pelanggan:id,id_pelanggan,nama_pelanggan')
@@ -608,6 +611,7 @@ class LaporanController extends Controller
                 
                 // Hitung tunggakan (bulan sebelumnya yang belum bayar)
                 $tunggakanData = \App\Models\TagihanBulanan::where('bulan', '<', $bulanFilter)
+                    ->where('bulan', '>=', self::GO_LIVE_MONTH)
                     ->where('status_bayar', 'BELUM_BAYAR')
                     ->whereIn('pelanggan_id', $pelangganIds)
                     ->with('pelanggan:id,id_pelanggan,nama_pelanggan')
