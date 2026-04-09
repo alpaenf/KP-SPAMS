@@ -7,6 +7,7 @@ use App\Models\Pembayaran;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Storage;
 
 class PembayaranController extends Controller
 {
@@ -134,8 +135,11 @@ class PembayaranController extends Controller
                     }
                 }
 
+                $fotoMeteranPath = $p->foto_meteran;
+                $fotoMeteranExists = $fotoMeteranPath && Storage::disk('public')->exists($fotoMeteranPath);
+
                 $fotoMeteranSource = null;
-                if ($p->foto_meteran) {
+                if ($fotoMeteranExists) {
                     $keteranganUpper = strtoupper((string) ($p->keterangan ?? ''));
                     $fotoMeteranSource = str_contains($keteranganUpper, 'KONFIRMASI QRIS/TRANSFER')
                         ? 'bukti_transfer'
@@ -158,8 +162,8 @@ class PembayaranController extends Controller
                     'jumlah_bayar'     => $jumlahBayar,
                     'status_tagihan'   => $statusTagihan,
                     'keterangan'       => $p->keterangan,
-                    'foto_meteran'     => $p->foto_meteran,
-                    'foto_meteran_url' => $p->foto_meteran ? asset('storage/' . $p->foto_meteran) : null,
+                    'foto_meteran'     => $fotoMeteranExists ? $fotoMeteranPath : null,
+                    'foto_meteran_url' => $fotoMeteranExists ? asset('storage/' . $fotoMeteranPath) : null,
                     'foto_meteran_source' => $fotoMeteranSource,
                 ];
             });
@@ -452,11 +456,11 @@ class PembayaranController extends Controller
                 'jumlah_bayar' => $pembayaran->jumlah_bayar,
                 'status_tagihan' => $tagihan->status_bayar ?? 'BELUM_BAYAR',
                 'keterangan' => $pembayaran->keterangan,
-                'foto_meteran' => $pembayaran->foto_meteran,
-                'foto_meteran_url' => $pembayaran->foto_meteran ? asset('storage/' . $pembayaran->foto_meteran) : null,
-                'foto_meteran_source' => ($pembayaran->foto_meteran && str_contains(strtoupper((string) ($pembayaran->keterangan ?? '')), 'KONFIRMASI QRIS/TRANSFER'))
+                'foto_meteran' => ($pembayaran->foto_meteran && Storage::disk('public')->exists($pembayaran->foto_meteran)) ? $pembayaran->foto_meteran : null,
+                'foto_meteran_url' => ($pembayaran->foto_meteran && Storage::disk('public')->exists($pembayaran->foto_meteran)) ? asset('storage/' . $pembayaran->foto_meteran) : null,
+                'foto_meteran_source' => ($pembayaran->foto_meteran && Storage::disk('public')->exists($pembayaran->foto_meteran) && str_contains(strtoupper((string) ($pembayaran->keterangan ?? '')), 'KONFIRMASI QRIS/TRANSFER'))
                     ? 'bukti_transfer'
-                    : ($pembayaran->foto_meteran ? 'foto_meteran' : null),
+                    : (($pembayaran->foto_meteran && Storage::disk('public')->exists($pembayaran->foto_meteran)) ? 'foto_meteran' : null),
             ],
         ], 201);
     }

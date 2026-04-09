@@ -1306,6 +1306,7 @@ const wilayahFilterPembayaran = ref('all');
 // Modal state
 const showModal = ref(false);
 const selectedPelanggan = ref(null);
+const deletingPelangganId = ref(null);
 const pembayaranList = ref([]);
 const loadingPembayaran = ref(false);
 const isSubmitting = ref(false);
@@ -2439,8 +2440,17 @@ const formatTanggal = (tanggal) => {
 };
 
 const confirmDelete = (pelanggan) => {
+    if (deletingPelangganId.value === pelanggan.id) return;
+
     if (confirm(`Apakah Anda yakin ingin menghapus pelanggan ${pelanggan.nama_pelanggan}?`)) {
-        router.delete(`/pelanggan/${pelanggan.id}`);
+        deletingPelangganId.value = pelanggan.id;
+
+        router.delete(`/pelanggan/${pelanggan.id}`, {
+            preserveScroll: true,
+            onFinish: () => {
+                deletingPelangganId.value = null;
+            },
+        });
     }
 };
 </script>

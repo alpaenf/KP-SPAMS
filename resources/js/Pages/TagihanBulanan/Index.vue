@@ -1053,18 +1053,18 @@
                             <div>
                                 <label class="text-sm font-medium text-gray-500">Status Foto Meteran</label>
                                 <p class="text-base text-gray-900">
-                                    {{ selectedPembayaran.foto_meteran
+                                    {{ selectedPembayaran.foto_meteran_url
                                         ? (selectedPembayaran.foto_meteran_source === 'bukti_transfer' ? 'Ada (dari bukti transfer)' : 'Ada (diinput petugas)')
                                         : 'Tidak diisi' }}
                                 </p>
                             </div>
 
-                            <div v-if="selectedPembayaran.foto_meteran">
+                            <div v-if="selectedPembayaran.foto_meteran_url">
                                 <label class="text-sm font-medium text-gray-500">Foto Riwayat Meteran</label>
                                 <div class="mt-2">
-                                    <a :href="'/storage/' + selectedPembayaran.foto_meteran" target="_blank" rel="noopener">
+                                    <a :href="selectedPembayaran.foto_meteran_url" target="_blank" rel="noopener">
                                         <img
-                                            :src="'/storage/' + selectedPembayaran.foto_meteran"
+                                            :src="selectedPembayaran.foto_meteran_url"
                                             class="h-40 w-auto rounded-lg border border-gray-200 object-cover shadow-sm hover:opacity-90 transition"
                                             alt="Foto meteran"
                                         />

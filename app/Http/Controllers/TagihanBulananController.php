@@ -7,6 +7,7 @@ use App\Models\Pelanggan;
 use App\Models\Pembayaran;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Storage;
 
 class TagihanBulananController extends Controller
 {
@@ -89,8 +90,11 @@ class TagihanBulananController extends Controller
         $pembayaranList = $query->orderBy('tanggal_bayar', 'desc')
             ->get()
             ->map(function ($p) {
+                $fotoMeteranPath = $p->foto_meteran;
+                $fotoMeteranExists = $fotoMeteranPath && Storage::disk('public')->exists($fotoMeteranPath);
+
                 $fotoMeteranSource = null;
-                if ($p->foto_meteran) {
+                if ($fotoMeteranExists) {
                     $keteranganUpper = strtoupper((string) ($p->keterangan ?? ''));
                     $fotoMeteranSource = str_contains($keteranganUpper, 'KONFIRMASI QRIS/TRANSFER')
                         ? 'bukti_transfer'
@@ -115,7 +119,8 @@ class TagihanBulananController extends Controller
                     'jumlah_bayar' => $p->jumlah_bayar,
                     'keterangan' => $p->keterangan,
                     'catatan' => $p->catatan,
-                    'foto_meteran' => $p->foto_meteran,
+                    'foto_meteran' => $fotoMeteranExists ? $fotoMeteranPath : null,
+                    'foto_meteran_url' => $fotoMeteranExists ? asset('storage/' . $fotoMeteranPath) : null,
                     'foto_meteran_source' => $fotoMeteranSource,
                 ];
             });
