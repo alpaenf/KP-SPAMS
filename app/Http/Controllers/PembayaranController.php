@@ -134,6 +134,14 @@ class PembayaranController extends Controller
                     }
                 }
 
+                $fotoMeteranSource = null;
+                if ($p->foto_meteran) {
+                    $keteranganUpper = strtoupper((string) ($p->keterangan ?? ''));
+                    $fotoMeteranSource = str_contains($keteranganUpper, 'KONFIRMASI QRIS/TRANSFER')
+                        ? 'bukti_transfer'
+                        : 'foto_meteran';
+                }
+
                 return [
                     'id'               => $p->id,
                     'bulan_bayar'      => $p->bulan_bayar,
@@ -152,6 +160,7 @@ class PembayaranController extends Controller
                     'keterangan'       => $p->keterangan,
                     'foto_meteran'     => $p->foto_meteran,
                     'foto_meteran_url' => $p->foto_meteran ? asset('storage/' . $p->foto_meteran) : null,
+                    'foto_meteran_source' => $fotoMeteranSource,
                 ];
             });
         
@@ -445,6 +454,9 @@ class PembayaranController extends Controller
                 'keterangan' => $pembayaran->keterangan,
                 'foto_meteran' => $pembayaran->foto_meteran,
                 'foto_meteran_url' => $pembayaran->foto_meteran ? asset('storage/' . $pembayaran->foto_meteran) : null,
+                'foto_meteran_source' => ($pembayaran->foto_meteran && str_contains(strtoupper((string) ($pembayaran->keterangan ?? '')), 'KONFIRMASI QRIS/TRANSFER'))
+                    ? 'bukti_transfer'
+                    : ($pembayaran->foto_meteran ? 'foto_meteran' : null),
             ],
         ], 201);
     }

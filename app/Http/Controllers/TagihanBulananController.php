@@ -89,6 +89,14 @@ class TagihanBulananController extends Controller
         $pembayaranList = $query->orderBy('tanggal_bayar', 'desc')
             ->get()
             ->map(function ($p) {
+                $fotoMeteranSource = null;
+                if ($p->foto_meteran) {
+                    $keteranganUpper = strtoupper((string) ($p->keterangan ?? ''));
+                    $fotoMeteranSource = str_contains($keteranganUpper, 'KONFIRMASI QRIS/TRANSFER')
+                        ? 'bukti_transfer'
+                        : 'foto_meteran';
+                }
+
                 return [
                     'id' => $p->id,
                     'pelanggan' => [
@@ -107,6 +115,8 @@ class TagihanBulananController extends Controller
                     'jumlah_bayar' => $p->jumlah_bayar,
                     'keterangan' => $p->keterangan,
                     'catatan' => $p->catatan,
+                    'foto_meteran' => $p->foto_meteran,
+                    'foto_meteran_source' => $fotoMeteranSource,
                 ];
             });
         
@@ -339,6 +349,7 @@ class TagihanBulananController extends Controller
             'tunggakan' => $tagihan->tunggakan ?? 0,
             'jumlah_bayar' => $tagihan->total_tagihan,
             'keterangan' => 'Pembayaran via konfirmasi QRIS/Transfer',
+            'foto_meteran' => $tagihan->bukti_transfer,
         ]);
 
         // Update status tagihan
