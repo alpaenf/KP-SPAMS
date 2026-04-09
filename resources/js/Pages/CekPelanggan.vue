@@ -1941,6 +1941,10 @@ const submitPembayaran = async () => {
         if (error.response?.status === 422) {
             if (error.response.data.errors) {
                 pembayaranErrors.value = error.response.data.errors;
+                const details = Object.values(error.response.data.errors).flat().join('\n');
+                if (details) {
+                    alert('Gagal menyimpan pembayaran:\n' + details);
+                }
             } else if (error.response.data.message) {
                 alert(error.response.data.message);
             }

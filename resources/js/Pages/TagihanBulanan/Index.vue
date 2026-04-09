@@ -1601,7 +1601,13 @@ const submitPembayaran = async () => {
         closePembayaranModal();
         reloadPage();
     } catch (error) {
-        alert('Gagal menyimpan pembayaran: ' + (error.response?.data?.message || error.message));
+        const validationErrors = error.response?.data?.errors;
+        if (validationErrors && typeof validationErrors === 'object') {
+            const details = Object.values(validationErrors).flat().join('\n');
+            alert('Gagal menyimpan pembayaran:\n' + details);
+        } else {
+            alert('Gagal menyimpan pembayaran: ' + (error.response?.data?.message || error.message));
+        }
     } finally {
         isSubmittingPembayaran.value = false;
     }

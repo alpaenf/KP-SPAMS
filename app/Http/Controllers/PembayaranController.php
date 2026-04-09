@@ -196,7 +196,7 @@ class PembayaranController extends Controller
             'jumlah_bayar_tunggakan' => 'nullable|numeric|min:0',
             'id_tunggakan' => 'nullable|array',
             'id_tunggakan.*' => 'integer|exists:tagihan_bulanan,id',
-            'foto_meteran' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'foto_meteran' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:5120',
             'legacy_override' => 'nullable|boolean',
             'legacy_reason' => 'nullable|string|max:255',
         ]);
