@@ -165,18 +165,61 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-2">
                                 Upload Foto Meteran (Opsional)
                             </label>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <button
+                                    type="button"
+                                    @click="triggerUploadFoto"
+                                    class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-gray-200 bg-white text-gray-700 font-semibold hover:border-blue-300 hover:text-blue-700 transition"
+                                >
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-5l-4-4m0 0L8 11m4-4v12"/>
+                                    </svg>
+                                    Upload Foto
+                                </button>
+
+                                <button
+                                    type="button"
+                                    @click="triggerFotoLangsung"
+                                    class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-blue-200 bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 transition"
+                                >
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h2l1.172-1.172A2 2 0 019.586 5h4.828a2 2 0 011.414.586L17 7h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16a3 3 0 100-6 3 3 0 000 6z"/>
+                                    </svg>
+                                    Foto Langsung
+                                </button>
+                            </div>
+
                             <input
+                                ref="inputFotoUpload"
+                                type="file"
+                                accept="image/*"
+                                @change="handleFotoMeteranChange"
+                                class="hidden"
+                            />
+
+                            <input
+                                ref="inputFotoKamera"
                                 type="file"
                                 accept="image/*"
                                 capture="environment"
                                 @change="handleFotoMeteranChange"
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                                class="hidden"
                             />
-                            <p class="text-xs text-gray-500 mt-1">Di HP akan membuka kamera belakang secara langsung. Format: JPG/PNG/GIF/WebP, maksimal 5MB.</p>
+
+                            <p class="text-xs text-gray-500 mt-1">Upload untuk ambil dari galeri, atau Foto Langsung untuk buka kamera belakang. Maksimal 5MB.</p>
 
                             <div v-if="fotoMeteranPreview" class="mt-3">
                                 <p class="text-xs font-semibold text-gray-600 mb-2">Preview Foto</p>
                                 <img :src="fotoMeteranPreview" alt="Preview foto meteran" class="w-36 h-36 object-cover rounded-lg border border-gray-200" />
+                                <button
+                                    type="button"
+                                    @click="clearFotoMeteran"
+                                    class="mt-2 text-xs font-semibold text-red-600 hover:text-red-700"
+                                >
+                                    Hapus Foto
+                                </button>
                             </div>
                         </div>
 
@@ -332,6 +375,8 @@ const savedTagihan = ref(null);
 const meteranSebelumValue = ref(props.tagihan_terbaru ? props.tagihan_terbaru.meteran_sesudah : 0);
 const fotoMeteranFile = ref(null);
 const fotoMeteranPreview = ref(null);
+const inputFotoUpload = ref(null);
+const inputFotoKamera = ref(null);
 
 const meteranSebelum = computed(() => {
     return meteranSebelumValue.value;
@@ -430,6 +475,29 @@ function handleFotoMeteranChange(event) {
 
     if (file) {
         fotoMeteranPreview.value = URL.createObjectURL(file);
+    }
+
+    // Boleh pilih file yang sama di input berikutnya
+    event.target.value = '';
+}
+
+function clearFotoMeteran() {
+    if (fotoMeteranPreview.value) {
+        URL.revokeObjectURL(fotoMeteranPreview.value);
+    }
+    fotoMeteranFile.value = null;
+    fotoMeteranPreview.value = null;
+}
+
+function triggerUploadFoto() {
+    if (inputFotoUpload.value) {
+        inputFotoUpload.value.click();
+    }
+}
+
+function triggerFotoLangsung() {
+    if (inputFotoKamera.value) {
+        inputFotoKamera.value.click();
     }
 }
 
