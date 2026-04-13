@@ -290,8 +290,14 @@
 
             <!-- Status -->
             <div style="text-align: center; margin: 5px 0;">
-                <span class="status-badge">LUNAS</span>
+                <span class="status-badge">{{ strtoupper($pembayaran['status_struk'] ?? 'BELUM BAYAR') }}</span>
             </div>
+
+            @if(!empty($pembayaran['status_note']))
+            <div style="text-align: center; margin: 0 0 6px 0; font-size: .85em; color: #b91c1c; font-weight: 700; font-family: 'Courier New', monospace;">
+                {{ $pembayaran['status_note'] }}
+            </div>
+            @endif
 
             <!-- Tanggal Cetak -->
             <div style="text-align: center; margin-top: .4em; font-size: .85em; opacity: .75; font-family: 'Courier New', monospace;">

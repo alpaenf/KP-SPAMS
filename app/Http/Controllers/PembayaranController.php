@@ -570,6 +570,8 @@ class PembayaranController extends Controller
             $jumlahKubik = $meteranSesudah - $meteranSebelum;
         }
         
+        $statusInfo = $this->buildReceiptStatusInfo($pembayaran, $tagihan);
+
         // Generate PDF
         $data = [
             'pembayaran' => [
@@ -589,6 +591,8 @@ class PembayaranController extends Controller
                 'jumlah_kubik' => $jumlahKubik,
                 'jumlah_bayar' => $pembayaran->jumlah_bayar,
                 'keterangan' => $pembayaran->keterangan,
+                'status_struk' => $statusInfo['label'],
+                'status_note' => $statusInfo['note'],
             ]
         ];
 
@@ -622,13 +626,26 @@ class PembayaranController extends Controller
         }
 
         $message = "Halo *{$pembayaran->pelanggan->nama_pelanggan}*,\n\n";
-        $message .= "Terima kasih atas pembayaran Anda untuk tagihan bulan *{$data['pembayaran']['bulan_bayar']}*.\n\n";
+
+        $isSosial = strtolower((string) ($pembayaran->pelanggan->kategori ?? '')) === 'sosial';
+        if ((float) $pembayaran->jumlah_bayar > 0 || $isSosial) {
+            $message .= "Terima kasih atas pembayaran Anda untuk tagihan bulan *{$data['pembayaran']['bulan_bayar']}*.\n\n";
+        } else {
+            $message .= "Berikut informasi status tagihan Anda untuk bulan *{$data['pembayaran']['bulan_bayar']}*.\n\n";
+        }
+
         $message .= "📋 *Detail Pembayaran:*\n";
         $message .= "• ID Pelanggan: {$pembayaran->pelanggan->id_pelanggan}\n";
         $message .= "• Bulan Tagihan: {$data['pembayaran']['bulan_bayar']}\n";
         $message .= "• Tanggal Bayar: {$data['pembayaran']['tanggal_bayar']}\n";
         $message .= "• Total Bayar: Rp " . number_format($pembayaran->jumlah_bayar, 0, ',', '.') . "\n\n";
-        $message .= "✅ Status: *LUNAS*\n\n";
+        $message .= "✅ Status: *{$statusInfo['label']}*\n";
+
+        if (!empty($statusInfo['note'])) {
+            $message .= $statusInfo['note'] . "\n";
+        }
+
+        $message .= "\n";
         $message .= "Struk pembayaran Anda dapat diunduh melalui link berikut:\n";
         $message .= url('storage/struk/' . $fileName) . "\n\n";
         $message .= "Simpan struk ini sebagai bukti pembayaran yang sah.\n\n";
@@ -643,6 +660,62 @@ class PembayaranController extends Controller
             'pelanggan_nama' => $pembayaran->pelanggan->nama_pelanggan,
             'no_whatsapp' => $pembayaran->pelanggan->no_whatsapp,
         ]);
+    }
+
+    /**
+     * Tentukan status struk yang aman untuk ditampilkan ke pelanggan.
+     * Prioritas: status tagihan bulan ini + cek apakah masih ada tunggakan bulan sebelumnya.
+     */
+    private function buildReceiptStatusInfo(Pembayaran $pembayaran, ?\App\Models\TagihanBulanan $tagihan): array
+    {
+        $statusLabel = 'BELUM BAYAR';
+        $note = null;
+
+        $isSosial = strtolower((string) ($pembayaran->pelanggan->kategori ?? '')) === 'sosial';
+
+        if ($tagihan) {
+            $totalTagihan = (float) ($tagihan->total_tagihan ?? 0);
+            $jumlahTerbayar = (float) ($tagihan->jumlah_terbayar ?? 0);
+
+            if ($totalTagihan > 0 && $jumlahTerbayar >= $totalTagihan) {
+                $statusLabel = 'LUNAS';
+            } elseif ($jumlahTerbayar > 0) {
+                $statusLabel = 'CICILAN';
+            } else {
+                $statusLabel = 'BELUM BAYAR';
+            }
+
+            // Hormati status eksplisit TUNGGAKAN jika belum ada pembayaran bulan ini.
+            if (strtoupper((string) $tagihan->status_bayar) === 'TUNGGAKAN' && $jumlahTerbayar <= 0) {
+                $statusLabel = 'TUNGGAKAN';
+            }
+        } elseif ($isSosial) {
+            $statusLabel = 'LUNAS';
+        } elseif ((float) $pembayaran->jumlah_bayar > 0) {
+            $statusLabel = strtoupper((string) ($pembayaran->keterangan ?: 'CICILAN'));
+        } elseif (strtoupper((string) $pembayaran->keterangan) === 'TUNGGAKAN') {
+            $statusLabel = 'TUNGGAKAN';
+        }
+
+        $hasTunggakan = \App\Models\TagihanBulanan::query()
+            ->where('pelanggan_id', $pembayaran->pelanggan_id)
+            ->where('bulan', '<', $pembayaran->bulan_bayar)
+            ->whereIn('status_bayar', ['BELUM_BAYAR', 'TUNGGAKAN', 'CICILAN'])
+            ->whereRaw('COALESCE(total_tagihan, 0) > COALESCE(jumlah_terbayar, 0)')
+            ->exists();
+
+        if ($hasTunggakan) {
+            if ($statusLabel === 'LUNAS') {
+                $statusLabel = 'LUNAS BULAN INI';
+            }
+
+            $note = '⚠️ Masih ada tunggakan dari bulan sebelumnya.';
+        }
+
+        return [
+            'label' => $statusLabel,
+            'note' => $note,
+        ];
     }
 
     public function getReceiptLink($id)
@@ -680,6 +753,12 @@ class PembayaranController extends Controller
         $jumlahKubik = $pembayaran->jumlah_kubik ?? 0;
         $tarifPerKubik = 2000; // Default tarif
         
+        $tagihan = \App\Models\TagihanBulanan::where('pelanggan_id', $pembayaran->pelanggan_id)
+            ->where('bulan', $pembayaran->bulan_bayar)
+            ->first();
+
+        $statusInfo = $this->buildReceiptStatusInfo($pembayaran, $tagihan);
+
         // Generate PDF
         $data = [
             'pembayaran' => [
@@ -699,6 +778,8 @@ class PembayaranController extends Controller
                 'jumlah_kubik' => $jumlahKubik,
                 'jumlah_bayar' => $pembayaran->jumlah_bayar,
                 'keterangan' => $pembayaran->keterangan,
+                'status_struk' => $statusInfo['label'],
+                'status_note' => $statusInfo['note'],
             ]
         ];
 
@@ -750,6 +831,12 @@ class PembayaranController extends Controller
         $jumlahKubik = $pembayaran->jumlah_kubik ?? 0;
         $tarifPerKubik = 2000; // Default tarif
         
+        $tagihan = \App\Models\TagihanBulanan::where('pelanggan_id', $pembayaran->pelanggan_id)
+            ->where('bulan', $pembayaran->bulan_bayar)
+            ->first();
+
+        $statusInfo = $this->buildReceiptStatusInfo($pembayaran, $tagihan);
+
         $data = [
             'pembayaran' => [
                 'id' => $pembayaran->id,
@@ -768,6 +855,8 @@ class PembayaranController extends Controller
                 'jumlah_kubik' => $jumlahKubik,
                 'jumlah_bayar' => $pembayaran->jumlah_bayar,
                 'keterangan' => $pembayaran->keterangan,
+                'status_struk' => $statusInfo['label'],
+                'status_note' => $statusInfo['note'],
             ]
         ];
         

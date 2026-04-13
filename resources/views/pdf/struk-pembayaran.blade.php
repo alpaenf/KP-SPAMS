@@ -238,8 +238,14 @@
 
         <!-- Status -->
         <div style="text-align: center; margin: 15px 0;">
-            <span class="status-badge">*** LUNAS ***</span>
+            <span class="status-badge">*** {{ strtoupper($pembayaran['status_struk'] ?? 'BELUM BAYAR') }} ***</span>
         </div>
+
+        @if(!empty($pembayaran['status_note']))
+        <div style="text-align: center; margin: 0 0 10px 0; font-size: 11px; color: #b91c1c; font-weight: 700;">
+            {{ $pembayaran['status_note'] }}
+        </div>
+        @endif
 
         <!-- Footer -->
         <div class="footer">
