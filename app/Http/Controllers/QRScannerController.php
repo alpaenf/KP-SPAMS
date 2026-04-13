@@ -9,6 +9,7 @@ use App\Helpers\WilayahHelper;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -207,7 +208,9 @@ class QRScannerController extends Controller
         $request->validate([
             'pelanggan_id' => 'required|exists:pelanggan,id',
             'meteran_sesudah' => 'required|numeric|min:0',
-            'bulan' => 'required|date',
+            'bulan' => ['required', 'regex:/^\d{4}-\d{2}$/'],
+            'ada_abunemen' => 'nullable|boolean',
+            'foto_meteran' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:5120',
             'keterangan' => 'nullable|string',
         ]);
         
@@ -244,6 +247,10 @@ class QRScannerController extends Controller
             $tarifPerKubik = $tarifPemakaian ? (float)$tarifPemakaian->harga : 2000;
             $biayaAbunemen = $biayaAbunemenData ? (float)$biayaAbunemenData->harga : 3000;
             $minimalPemakaian = 10;
+            $adaAbunemen = $request->boolean('ada_abunemen', true);
+            $fotoMeteranPath = $request->hasFile('foto_meteran')
+                ? $request->file('foto_meteran')->store('foto-meteran', 'public')
+                : null;
             
             // Validasi tarif tidak boleh null atau 0
             if (!$tarifPerKubik || $tarifPerKubik <= 0) {
@@ -274,17 +281,24 @@ class QRScannerController extends Controller
                 $pemakaianDitagih = max($pemakaianKubik, $minimalPemakaian);
                 
                 // Hitung total tagihan
-                $totalTagihan = ($pemakaianDitagih * $tarifPerKubik) + $biayaAbunemen;
+                $totalTagihan = ($pemakaianDitagih * $tarifPerKubik) + ($adaAbunemen ? $biayaAbunemen : 0);
 
-                // Update tagihan yang ada
-                $existingTagihan->update([
+                $updateData = [
                     'meteran_sesudah' => $request->meteran_sesudah,
                     'pemakaian_kubik' => $pemakaianKubik,
                     'tarif_per_kubik' => $tarifPerKubik,
-                    'biaya_abunemen' => $biayaAbunemen,
+                    'ada_abunemen' => $adaAbunemen,
+                    'biaya_abunemen' => $adaAbunemen ? $biayaAbunemen : 0,
                     'total_tagihan' => $totalTagihan,
                     'keterangan' => $request->keterangan,
-                ]);
+                ];
+
+                if ($fotoMeteranPath) {
+                    $updateData['foto_meteran'] = $fotoMeteranPath;
+                }
+
+                // Update tagihan yang ada
+                $existingTagihan->update($updateData);
 
                 $tagihan = $existingTagihan;
                 $message = 'Data tagihan berhasil diperbarui.';
@@ -314,7 +328,7 @@ class QRScannerController extends Controller
                 $pemakaianDitagih = max($pemakaianKubik, $minimalPemakaian);
                 
                 // Hitung total tagihan
-                $totalTagihan = ($pemakaianDitagih * $tarifPerKubik) + $biayaAbunemen;
+                $totalTagihan = ($pemakaianDitagih * $tarifPerKubik) + ($adaAbunemen ? $biayaAbunemen : 0);
                 
                 // Buat tagihan baru
                 $tagihan = TagihanBulanan::create([
@@ -324,10 +338,11 @@ class QRScannerController extends Controller
                     'meteran_sesudah' => $request->meteran_sesudah,
                     'pemakaian_kubik' => $pemakaianKubik,
                     'tarif_per_kubik' => $tarifPerKubik,
-                    'ada_abunemen' => true,
-                    'biaya_abunemen' => $biayaAbunemen,
+                    'ada_abunemen' => $adaAbunemen,
+                    'biaya_abunemen' => $adaAbunemen ? $biayaAbunemen : 0,
                     'total_tagihan' => $totalTagihan,
                     'status_bayar' => 'BELUM_BAYAR',
+                    'foto_meteran' => $fotoMeteranPath,
                     'keterangan' => $request->keterangan,
                 ]);
 
@@ -346,6 +361,9 @@ class QRScannerController extends Controller
                     'meteran_sesudah' => $tagihan->meteran_sesudah,
                     'pemakaian_kubik' => $tagihan->pemakaian_kubik,
                     'total_tagihan' => $tagihan->total_tagihan,
+                    'ada_abunemen' => (bool) $tagihan->ada_abunemen,
+                    'biaya_abunemen' => $tagihan->biaya_abunemen,
+                    'foto_meteran_url' => $tagihan->foto_meteran ? asset('storage/' . $tagihan->foto_meteran) : null,
                 ],
             ]);
             

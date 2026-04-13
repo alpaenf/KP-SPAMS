@@ -140,6 +140,46 @@
                             <p v-else class="text-xs text-gray-500 mt-1">Masukkan angka yang tertera pada meteran air</p>
                         </div>
 
+                        <!-- Opsi Abunemen -->
+                        <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+                            <label class="flex items-center justify-between gap-4 cursor-pointer">
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-800">Kenakan Biaya Abunemen</p>
+                                    <p class="text-xs text-gray-600 mt-1">Nonaktifkan jika bulan ini tidak dikenakan abunemen</p>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-sm font-semibold" :class="form.ada_abunemen ? 'text-green-700' : 'text-gray-600'">
+                                        {{ form.ada_abunemen ? 'Ya' : 'Tidak' }}
+                                    </span>
+                                    <input
+                                        v-model="form.ada_abunemen"
+                                        type="checkbox"
+                                        class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Upload Foto Meteran -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Upload Foto Meteran (Opsional)
+                            </label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                @change="handleFotoMeteranChange"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">Di HP akan membuka kamera belakang secara langsung. Format: JPG/PNG/GIF/WebP, maksimal 5MB.</p>
+
+                            <div v-if="fotoMeteranPreview" class="mt-3">
+                                <p class="text-xs font-semibold text-gray-600 mb-2">Preview Foto</p>
+                                <img :src="fotoMeteranPreview" alt="Preview foto meteran" class="w-36 h-36 object-cover rounded-lg border border-gray-200" />
+                            </div>
+                        </div>
+
                         <!-- Perhitungan Otomatis -->
                         <div v-if="form.meteran_sesudah >= meteranSebelum" class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6">
                             <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -169,7 +209,7 @@
                                     </div>
                                     <div class="flex justify-between items-center">
                                         <span class="text-gray-600">Biaya Abunemen</span>
-                                        <span class="font-semibold">{{ formatRupiah(tarif_aktif.biaya_abunemen) }}</span>
+                                        <span class="font-semibold">{{ formatRupiah(form.ada_abunemen ? tarif_aktif.biaya_abunemen : 0) }}</span>
                                     </div>
                                     <div class="border-t-2 border-gray-200 pt-3">
                                         <div class="flex justify-between items-center">
@@ -282,6 +322,7 @@ const form = ref({
     pelanggan_id: props.pelanggan.id,
     bulan: getCurrentMonth(),
     meteran_sesudah: null,
+    ada_abunemen: true,
     keterangan: '',
 });
 
@@ -289,6 +330,8 @@ const loading = ref(false);
 const showSuccessModal = ref(false);
 const savedTagihan = ref(null);
 const meteranSebelumValue = ref(props.tagihan_terbaru ? props.tagihan_terbaru.meteran_sesudah : 0);
+const fotoMeteranFile = ref(null);
+const fotoMeteranPreview = ref(null);
 
 const meteranSebelum = computed(() => {
     return meteranSebelumValue.value;
@@ -316,7 +359,7 @@ const biayaPemakaian = computed(() => {
 const estimasiTagihan = computed(() => {
     if (!form.value.meteran_sesudah || form.value.meteran_sesudah === '') return 0;
     
-    return biayaPemakaian.value + props.tarif_aktif.biaya_abunemen;
+    return biayaPemakaian.value + (form.value.ada_abunemen ? props.tarif_aktif.biaya_abunemen : 0);
 });
 
 const isFormValid = computed(() => {
@@ -340,15 +383,24 @@ async function submitForm() {
     loading.value = true;
     
     try {
+        const formData = new FormData();
+        formData.append('pelanggan_id', String(form.value.pelanggan_id));
+        formData.append('bulan', form.value.bulan);
+        formData.append('meteran_sesudah', String(form.value.meteran_sesudah));
+        formData.append('ada_abunemen', form.value.ada_abunemen ? '1' : '0');
+        formData.append('keterangan', form.value.keterangan || '');
+        if (fotoMeteranFile.value) {
+            formData.append('foto_meteran', fotoMeteranFile.value);
+        }
+
         const response = await fetch('/api/qr-scanner/store-meteran', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                 'Accept': 'application/json',
             },
             credentials: 'same-origin', // FIX: Include cookies untuk session/CSRF
-            body: JSON.stringify(form.value),
+            body: formData,
         });
         
         const data = await response.json();
@@ -364,6 +416,20 @@ async function submitForm() {
         alert('Terjadi kesalahan saat menyimpan data.');
     } finally {
         loading.value = false;
+    }
+}
+
+function handleFotoMeteranChange(event) {
+    const file = event.target.files?.[0] || null;
+    fotoMeteranFile.value = file;
+
+    if (fotoMeteranPreview.value) {
+        URL.revokeObjectURL(fotoMeteranPreview.value);
+        fotoMeteranPreview.value = null;
+    }
+
+    if (file) {
+        fotoMeteranPreview.value = URL.createObjectURL(file);
     }
 }
 
@@ -416,4 +482,10 @@ function formatBulan(bulan) {
 function formatRupiah(angka) {
     return new Intl.NumberFormat('id-ID').format(angka);
 }
+
+onMounted(() => {
+    if ((props.pelanggan?.kategori || '').toLowerCase() === 'sosial') {
+        form.value.ada_abunemen = false;
+    }
+});
 </script>

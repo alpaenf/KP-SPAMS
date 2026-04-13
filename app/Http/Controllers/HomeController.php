@@ -425,6 +425,15 @@ class HomeController extends Controller
             ->orderBy('tanggal_bayar', 'desc');
             
         $pembayaranList = $pembayaranQuery->get()->map(function($p) {
+            $fotoMeteranExists = $p->foto_meteran && \Storage::disk('public')->exists($p->foto_meteran);
+            $fotoMeteranSource = null;
+            if ($fotoMeteranExists) {
+                $keteranganUpper = strtoupper((string) ($p->keterangan ?? ''));
+                $fotoMeteranSource = str_contains($keteranganUpper, 'KONFIRMASI QRIS/TRANSFER')
+                    ? 'bukti_transfer'
+                    : 'foto_meteran';
+            }
+
             return [
                 'id' => $p->id,
                 'pelanggan_id' => $p->pelanggan->id,
@@ -445,6 +454,9 @@ class HomeController extends Controller
                 'keterangan' => $p->keterangan,
                 'metode_bayar' => $p->metode_bayar ?? 'Tunai',
                 'catatan' => $p->catatan,
+                'foto_meteran' => $fotoMeteranExists ? $p->foto_meteran : null,
+                'foto_meteran_url' => $fotoMeteranExists ? asset('storage/' . $p->foto_meteran) : null,
+                'foto_meteran_source' => $fotoMeteranSource,
             ];
         });
         
