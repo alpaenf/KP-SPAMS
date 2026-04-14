@@ -208,7 +208,7 @@
                                 class="hidden"
                             />
 
-                            <p class="text-xs text-gray-500 mt-1">Upload untuk ambil dari galeri, atau Foto Langsung untuk buka kamera belakang. Maksimal 5MB.</p>
+                            <p class="text-xs text-gray-500 mt-1">Upload untuk ambil dari galeri, atau Foto Langsung untuk buka kamera belakang. Foto akan dikompres otomatis agar lebih aman di hosting.</p>
 
                             <div v-if="fotoMeteranPreview" class="mt-3">
                                 <p class="text-xs font-semibold text-gray-600 mb-2">Preview Foto</p>
@@ -378,6 +378,10 @@ const fotoMeteranPreview = ref(null);
 const inputFotoUpload = ref(null);
 const inputFotoKamera = ref(null);
 
+const MAX_SAFE_UPLOAD_BYTES = 350 * 1024; // super kecil (~350KB) agar aman di hosting ketat
+const MAX_DIMENSION = 1280;
+const MIN_DIMENSION = 640;
+
 const meteranSebelum = computed(() => {
     return meteranSebelumValue.value;
 });
@@ -464,8 +468,21 @@ async function submitForm() {
     }
 }
 
-function handleFotoMeteranChange(event) {
-    const file = event.target.files?.[0] || null;
+async function handleFotoMeteranChange(event) {
+    const rawFile = event.target.files?.[0] || null;
+
+    // Boleh pilih file yang sama di input berikutnya
+    event.target.value = '';
+
+    if (!rawFile) return;
+
+    const file = await compressImageIfNeeded(rawFile);
+
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Ukuran foto masih terlalu besar. Coba ambil ulang dengan jarak lebih jauh.');
+        return;
+    }
+
     fotoMeteranFile.value = file;
 
     if (fotoMeteranPreview.value) {
@@ -473,12 +490,82 @@ function handleFotoMeteranChange(event) {
         fotoMeteranPreview.value = null;
     }
 
-    if (file) {
-        fotoMeteranPreview.value = URL.createObjectURL(file);
-    }
+    fotoMeteranPreview.value = URL.createObjectURL(file);
+}
 
-    // Boleh pilih file yang sama di input berikutnya
-    event.target.value = '';
+async function compressImageIfNeeded(file) {
+    if (!file.type.startsWith('image/')) return file;
+
+    const objectUrl = URL.createObjectURL(file);
+
+    try {
+        const image = await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = objectUrl;
+        });
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let targetWidth = image.width;
+        let targetHeight = image.height;
+
+        const maxSide = Math.max(targetWidth, targetHeight);
+        if (maxSide > MAX_DIMENSION) {
+            const scale = MAX_DIMENSION / maxSide;
+            targetWidth = Math.round(targetWidth * scale);
+            targetHeight = Math.round(targetHeight * scale);
+        }
+
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+        let quality = 0.72;
+        let blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+
+        // Tahap 1: turunkan quality dulu
+        while (blob && blob.size > MAX_SAFE_UPLOAD_BYTES && quality > 0.25) {
+            quality -= 0.1;
+            blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+        }
+
+        // Tahap 2: jika masih besar, perkecil dimensi bertahap lalu encode ulang
+        while (blob && blob.size > MAX_SAFE_UPLOAD_BYTES && Math.max(targetWidth, targetHeight) > MIN_DIMENSION) {
+            targetWidth = Math.round(targetWidth * 0.85);
+            targetHeight = Math.round(targetHeight * 0.85);
+
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+            // reset sedikit quality agar detail tetap kebaca setelah resize
+            quality = Math.min(0.6, quality + 0.1);
+            blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+
+            while (blob && blob.size > MAX_SAFE_UPLOAD_BYTES && quality > 0.2) {
+                quality -= 0.08;
+                blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+            }
+        }
+
+        if (!blob) {
+            return file;
+        }
+
+        const optimizedName = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+        return new File([blob], optimizedName, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+        });
+    } catch (error) {
+        console.error('Image compression failed, using original file:', error);
+        return file;
+    } finally {
+        URL.revokeObjectURL(objectUrl);
+    }
 }
 
 function clearFotoMeteran() {
