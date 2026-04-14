@@ -289,7 +289,7 @@
                         <div class="bg-indigo-50 rounded-xl p-4 sm:p-5 border border-indigo-100">
                              <h4 class="text-xs sm:text-sm font-semibold text-indigo-900 mb-2">Total Honor Penarik</h4>
                              <p class="text-xl sm:text-2xl font-bold text-indigo-800">{{ formatRupiah(detail.honorPenarik) }}</p>
-                             <p class="text-xs text-indigo-600 mt-1">20% + Ops Penarik</p>
+                                <p class="text-xs text-indigo-600 mt-1">20% + Ops Penarik + Ops Lapangan</p>
                         </div>
 
                         <!-- Biaya Ops. Lapangan -->
@@ -323,8 +323,8 @@
                         <!-- Total Semua Biaya (Hidden for Penarik) -->
                         <div v-if="$page.props.auth.user.role !== 'penarik'" class="bg-red-50 rounded-xl p-4 sm:p-5 border border-red-100">
                              <h4 class="text-xs sm:text-sm font-semibold text-red-900 mb-2">Total Semua Biaya</h4>
-                             <p class="text-xl sm:text-2xl font-bold text-red-800">{{ formatRupiah((Number(detail?.honorPenarik) || 0) + (Number(detail?.biayaOpsLapangan) || 0) + (Number(detail?.biayaPadDesa) || 0) + (Number(detail?.biayaLainLain) || 0) + (Number(detail?.biayaCSR) || 0)) }}</p>
-                             <p class="text-xs text-red-600 mt-1">Honor + Ops + PAD + Lain-lain + CSR</p>
+                                <p class="text-xl sm:text-2xl font-bold text-red-800">{{ formatRupiah((Number(detail?.honorPenarik) || 0) + (Number(detail?.biayaPadDesa) || 0) + (Number(detail?.biayaLainLain) || 0) + (Number(detail?.biayaCSR) || 0)) }}</p>
+                                <p class="text-xs text-red-600 mt-1">Honor (sudah termasuk Ops Lapangan) + PAD + Lain-lain + CSR</p>
                         </div>
                     </div>
 

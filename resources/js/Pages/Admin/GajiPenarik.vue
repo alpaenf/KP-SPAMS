@@ -95,7 +95,7 @@ const getColor = (wilayah) => wilayahColors[wilayah] || { bg:'bg-gray-50', borde
                 <div class="bg-gradient-to-br from-pink-600 to-pink-700 rounded-xl p-4 text-white shadow">
                     <p class="text-xs font-medium text-pink-200 uppercase tracking-wider">Total Honor Penarik</p>
                     <p class="text-xl font-bold mt-1">Rp {{ fmt(totals.honor_penarik) }}</p>
-                    <p class="text-xs text-pink-200 mt-0.5">20% + Ops Penarik</p>
+                    <p class="text-xs text-pink-200 mt-0.5">20% + Ops Penarik + Ops Lapangan</p>
                 </div>
                 <div class="bg-gradient-to-br from-teal-600 to-teal-700 rounded-xl p-4 text-white shadow">
                     <p class="text-xs font-medium text-teal-200 uppercase tracking-wider">Total Ops. Lapangan</p>
@@ -170,7 +170,7 @@ const getColor = (wilayah) => wilayahColors[wilayah] || { bg:'bg-gray-50', borde
                                 <p class="text-xs font-semibold text-pink-700">Total Honor Penarik</p>
                             </div>
                             <p class="text-lg font-bold text-pink-900">Rp {{ fmt(item.honor_penarik) }}</p>
-                            <p class="text-xs text-pink-500 mt-0.5">20% + Ops Penarik</p>
+                            <p class="text-xs text-pink-500 mt-0.5">20% + Ops Penarik + Ops Lapangan</p>
                         </div>
 
                         <!-- Card 3: Biaya Ops Penarik -->
@@ -229,7 +229,7 @@ const getColor = (wilayah) => wilayahColors[wilayah] || { bg:'bg-gray-50', borde
                 <p class="font-semibold mb-1">Keterangan Kalkulasi:</p>
                 <ul class="space-y-1 text-xs">
                     <li>• <strong>20% Jasa Penarik</strong> = Total pemasukan wilayah × 20%</li>
-                    <li>• <strong>Total Honor Penarik</strong> = 20% Jasa Penarik + Biaya Ops. Penarik</li>
+                    <li>• <strong>Total Honor Penarik</strong> = 20% Jasa Penarik + Biaya Ops. Penarik + Biaya Ops. Lapangan</li>
                     <li>• <strong>Biaya Ops. Penarik</strong> & <strong>Biaya Ops. Lapangan</strong> diambil dari data Laporan Bulanan per wilayah</li>
                 </ul>
             </div>

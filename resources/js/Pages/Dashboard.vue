@@ -517,7 +517,7 @@
                                 </svg>
                             </div>
                             <p class="text-2xl font-bold text-indigo-900">Rp {{ formatRupiah(laporanKeuangan.honorPenarik) }}</p>
-                            <p class="text-xs text-indigo-700 mt-1">20% + Operasional</p>
+                            <p class="text-xs text-indigo-700 mt-1">20% + Ops Penarik + Ops Lapangan</p>
                         </div>
 
                         <!-- Biaya Ops Lapangan -->

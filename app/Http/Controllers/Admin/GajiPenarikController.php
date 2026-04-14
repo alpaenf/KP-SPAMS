@@ -52,7 +52,7 @@ class GajiPenarikController extends Controller
 
             // === 4 Kalkulasi ===
             $jasa20Persen = $totalPemasukan * 0.20;
-            $honorPenarik = $jasa20Persen + $biayaOpsPenarik;
+            $honorPenarik = $jasa20Persen + $biayaOpsPenarik + $biayaOpsLapangan;
 
             // Penarik yang bertugas di wilayah ini
             $petugas = ($penarikUsers[$wilayah] ?? collect())->map(fn($u) => [

@@ -223,12 +223,12 @@ class LaporanController extends Controller
         $biayaLainLain = $laporanQuery->sum('biaya_lain_lain');
         $biayaCSR = $laporanQuery->sum('biaya_csr');
 
-        // D. Honor Penarik
-        $honorPenarik = $tarik20Persen + $biayaOperasional;
+        // D. Honor Penarik = 20% + Ops Penarik + Ops Lapangan
+        $honorPenarik = $tarik20Persen + $biayaOperasional + $biayaOpsLapangan;
 
         // E. Total Tarikan Bersih = (Tarikan tanpa abunemen + abunemen) - seluruh biaya
         $totalTarikanBersih = ($totalTarikanTanpaAbunemen + $totalAbunemen)
-            - $honorPenarik - $biayaPadDesa - $biayaOpsLapangan - $biayaLainLain - $biayaCSR;
+            - $honorPenarik - $biayaPadDesa - $biayaLainLain - $biayaCSR;
 
         // === 3. Statistik SR (Sambungan Rumah) ===
         // Use pelanggan IDs already calculated earlier
@@ -362,7 +362,7 @@ class LaporanController extends Controller
                 'biayaOpsLapangan' => $biayaOpsLapangan,
                 'biayaLainLain' => $biayaLainLain,
                 'biayaCSR' => $biayaCSR,
-                'honorPenarik' => $honorPenarik, // 20% + Ops
+                'honorPenarik' => $honorPenarik, // 20% + Ops Penarik + Ops Lapangan
                 'honorMurni' => $honorPenarik,   // Sama, penamaan beda konteks
                 'totalAbunemen' => $totalAbunemen,
                 'jumlahTransaksiAbunemen' => $jumlahTransaksiAbunemen,
@@ -444,7 +444,6 @@ class LaporanController extends Controller
         $detailKeuangan = $data['detail'];
         $totalPengeluaran = (float)($detailKeuangan['honorPenarik'] ?? 0)
             + (float)($detailKeuangan['biayaPadDesa'] ?? 0)
-            + (float)($detailKeuangan['biayaOpsLapangan'] ?? 0)
             + (float)($detailKeuangan['biayaLainLain'] ?? 0)
             + (float)($detailKeuangan['biayaCSR'] ?? 0);
         $saldoAkhir = (float)($detailKeuangan['totalTarikanBersih'] ?? 0);
@@ -669,9 +668,9 @@ class LaporanController extends Controller
         $biayaOpsLapangan = $laporanQuery->sum('biaya_operasional_lapangan');
         $biayaLainLain = $laporanQuery->sum('biaya_lain_lain');
         $biayaCSR = $laporanQuery->sum('biaya_csr');
-        $honorPenarik = $tarik20Persen + $biayaOperasional;
+        $honorPenarik = $tarik20Persen + $biayaOperasional + $biayaOpsLapangan;
         $totalTarikanBersih = ($totalTarikanTanpaAbunemen + $totalAbunemen)
-            - $honorPenarik - $biayaPadDesa - $biayaOpsLapangan - $biayaLainLain - $biayaCSR;
+            - $honorPenarik - $biayaPadDesa - $biayaLainLain - $biayaCSR;
 
         // Statistik SR - use pelanggan IDs already calculated
         $totalSR = $pelangganAktifIds->count();

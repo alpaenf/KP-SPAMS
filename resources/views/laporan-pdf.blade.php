@@ -510,17 +510,17 @@
                     <td>Biaya Operasional Penarik</td>
                     <td class="text-right">{{ number_format($detailKeuangan['biayaOperasional'], 0, ',', '.') }}</td>
                 </tr>
+                <tr>
+                    <td>Biaya Operasional Lapangan</td>
+                    <td class="text-right">{{ number_format($detailKeuangan['biayaOpsLapangan'], 0, ',', '.') }}</td>
+                </tr>
                 <tr style="background-color: #f1f5f9; font-weight: bold;">
-                    <td class="text-right">SUBTOTAL HONOR PENARIK:</td>
+                    <td class="text-right">SUBTOTAL HONOR PENARIK (20% + OPS PENARIK + OPS LAPANGAN):</td>
                     <td class="text-right">{{ number_format($detailKeuangan['honorPenarik'], 0, ',', '.') }}</td>
                 </tr>
                 <tr>
                     <td>Biaya PAD Desa</td>
                     <td class="text-right">{{ number_format($detailKeuangan['biayaPadDesa'], 0, ',', '.') }}</td>
-                </tr>
-                <tr>
-                    <td>Biaya Operasional Lapangan</td>
-                    <td class="text-right">{{ number_format($detailKeuangan['biayaOpsLapangan'], 0, ',', '.') }}</td>
                 </tr>
                 <tr>
                     <td>Biaya Lain-lain</td>

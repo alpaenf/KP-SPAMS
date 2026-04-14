@@ -637,11 +637,11 @@ class HomeController extends Controller
         $biayaLainLain = $laporanBulanan->biaya_lain_lain ?? 0;
         $biayaCSR = $laporanBulanan->biaya_csr ?? 0;
 
-        // 4. Honor Penarik = 20% + Operasional
-        $honorPenarik = $tarik20Persen + $biayaOperasionalPenarik;
+        // 4. Honor Penarik = 20% + Ops Penarik + Ops Lapangan
+        $honorPenarik = $tarik20Persen + $biayaOperasionalPenarik + $biayaOpsLapangan;
         
-        // 4b. Total Semua Biaya = Honor Penarik + PAD Desa + Ops Lapangan + Lain-lain + CSR
-        $totalSemuaBiaya = $honorPenarik + $biayaPadDesa + $biayaOpsLapangan + $biayaLainLain + $biayaCSR;
+        // 4b. Total Semua Biaya = Honor Penarik + PAD Desa + Lain-lain + CSR
+        $totalSemuaBiaya = $honorPenarik + $biayaPadDesa + $biayaLainLain + $biayaCSR;
 
         // 5. Total Tarikan Bersih (Sisa Kas Air)
         $totalTarikanBersih = $totalTarikan - $totalSemuaBiaya;
