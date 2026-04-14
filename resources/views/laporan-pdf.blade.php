@@ -518,6 +518,10 @@
                     <td class="text-right">SUBTOTAL HONOR PENARIK (20% + OPS PENARIK + OPS LAPANGAN):</td>
                     <td class="text-right">{{ number_format($detailKeuangan['honorPenarik'], 0, ',', '.') }}</td>
                 </tr>
+                <tr style="background-color: #ecfdf5; font-weight: bold;">
+                    <td class="text-right">SISA SETELAH HONOR PENARIK (KOTOR - HONOR):</td>
+                    <td class="text-right">{{ number_format(($detailKeuangan['totalTarikanKotorAsli'] ?? $totalPemasukan) - ($detailKeuangan['honorPenarik'] ?? 0), 0, ',', '.') }}</td>
+                </tr>
                 <tr>
                     <td>Biaya PAD Desa</td>
                     <td class="text-right">{{ number_format($detailKeuangan['biayaPadDesa'], 0, ',', '.') }}</td>
