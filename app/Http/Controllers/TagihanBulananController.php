@@ -420,6 +420,17 @@ class TagihanBulananController extends Controller
             ->first();
         
         if ($tagihan) {
+            $fotoMeteranPath = null;
+            $fotoMeteranSource = null;
+
+            if (!empty($tagihan->foto_meteran) && Storage::disk('public')->exists($tagihan->foto_meteran)) {
+                $fotoMeteranPath = $tagihan->foto_meteran;
+                $fotoMeteranSource = 'foto_meteran';
+            } elseif (!empty($tagihan->bukti_transfer) && Storage::disk('public')->exists($tagihan->bukti_transfer)) {
+                $fotoMeteranPath = $tagihan->bukti_transfer;
+                $fotoMeteranSource = 'bukti_transfer';
+            }
+
             // Hitung ulang total_tagihan dengan tarif yang benar (2000/m³)
             // agar tidak terpengaruh nilai tarif salah dari generate-bulk
             $pemakaian = $tagihan->pemakaian_kubik ?? 0;
@@ -441,6 +452,9 @@ class TagihanBulananController extends Controller
                     'ada_abunemen' => $adaAbunemen,
                     'biaya_abunemen' => $biayaAbunemen,
                     'status_bayar' => $tagihan->status_bayar,
+                    'foto_meteran' => $fotoMeteranPath,
+                    'foto_meteran_url' => $fotoMeteranPath ? asset('storage/' . $fotoMeteranPath) : null,
+                    'foto_meteran_source' => $fotoMeteranSource,
                 ],
             ]);
         }
@@ -452,6 +466,10 @@ class TagihanBulananController extends Controller
             ->first();
         
         if ($pembayaran) {
+            $fotoPembayaranPath = (!empty($pembayaran->foto_meteran) && Storage::disk('public')->exists($pembayaran->foto_meteran))
+                ? $pembayaran->foto_meteran
+                : null;
+
             return response()->json([
                 'tagihan' => [
                     'id' => null,
@@ -462,6 +480,9 @@ class TagihanBulananController extends Controller
                     'ada_abunemen' => $pembayaran->abunemen ?? false,
                     'biaya_abunemen' => $pembayaran->abunemen ? 3000 : 0,
                     'status_bayar' => 'SUDAH_BAYAR',
+                    'foto_meteran' => $fotoPembayaranPath,
+                    'foto_meteran_url' => $fotoPembayaranPath ? asset('storage/' . $fotoPembayaranPath) : null,
+                    'foto_meteran_source' => $fotoPembayaranPath ? 'foto_meteran' : null,
                 ],
             ]);
         }

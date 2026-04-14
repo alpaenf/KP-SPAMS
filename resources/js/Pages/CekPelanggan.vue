@@ -1579,6 +1579,8 @@ const showPembayaranModal = async (pelanggan) => {
     showModal.value = true;
     loadingPembayaran.value = true;
     pembayaranErrors.value = {};
+    fotoMeteran.value = null;
+    fotoMeteranPreview.value = null;
     
     // Default values
     const today = new Date();
@@ -1692,6 +1694,11 @@ const fetchMeteranData = async (bulan) => {
             
             // Simpan data tagihan lengkap untuk InfoCicilan
             currentTagihan.value = tagihan;
+
+            // Tampilkan foto meteran existing (jika ada) di form pembayaran.
+            if (!fotoMeteran.value) {
+                fotoMeteranPreview.value = tagihan.foto_meteran_url || null;
+            }
             
             // Jika tagihan ada tapi meteran_sebelum sudah terisi (> 0), langsung pakai
             if (tagihan.meteran_sebelum > 0 || tagihan.meteran_sesudah > 0) {
@@ -1754,6 +1761,9 @@ const fetchMeteranData = async (bulan) => {
         pembayaranForm.value.meteran_sebelum = 0;
         pembayaranForm.value.meteran_sesudah = 0;
         pembayaranForm.value.jumlah_kubik = 0;
+        if (!fotoMeteran.value) {
+            fotoMeteranPreview.value = null;
+        }
         hitungTagihan();
 
     } catch (error) {
@@ -1784,6 +1794,8 @@ const closeModal = () => {
     selectedPelanggan.value = null;
     pembayaranList.value = [];
     pembayaranErrors.value = {};
+    fotoMeteran.value = null;
+    fotoMeteranPreview.value = null;
 };
 
 const onFotoMeteranChange = (event) => {
