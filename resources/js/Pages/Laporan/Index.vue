@@ -292,6 +292,15 @@
                                 <p class="text-xs text-indigo-600 mt-1">20% + Ops Penarik + Ops Lapangan</p>
                         </div>
 
+                                <!-- Sisa Setelah Honor Penarik -->
+                            <div class="bg-emerald-50 rounded-xl p-4 sm:p-5 border border-emerald-100">
+                                    <h4 class="text-xs sm:text-sm font-semibold text-emerald-900 mb-2">Sisa Setelah Honor Penarik</h4>
+                                <p class="text-xl sm:text-2xl font-bold text-emerald-800">
+                                  {{ formatRupiah((Number(detail?.totalTarikanKotorAsli ?? detail?.totalTarikan ?? 0) || 0) - (Number(detail?.honorPenarik) || 0)) }}
+                                </p>
+                                    <p class="text-xs text-emerald-600 mt-1">Penghasilan Kotor - Total Honor Penarik</p>
+                            </div>
+
                         <!-- Biaya Ops. Lapangan -->
                         <div class="bg-teal-50 rounded-xl p-4 sm:p-5 border border-teal-100 cursor-pointer hover:bg-teal-100 transition" @click="openModalOperasional" title="Klik untuk update">
                              <h4 class="text-xs sm:text-sm font-semibold text-teal-900 mb-2">Biaya Ops. Lapangan</h4>
