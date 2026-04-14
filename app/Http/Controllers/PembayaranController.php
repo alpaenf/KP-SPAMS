@@ -404,8 +404,9 @@ class PembayaranController extends Controller
 
         // Jika pembayaran dibuat dari tagihan QR dan petugas tidak upload ulang foto,
         // wariskan foto meteran dari tagihan agar tetap muncul di riwayat pembayaran.
-        if (empty($pembayaran->foto_meteran) && !empty($tagihan?->foto_meteran)) {
-            $pembayaran->foto_meteran = $tagihan->foto_meteran;
+        $fotoTagihan = $tagihan?->foto_meteran ?? $tagihan?->bukti_transfer;
+        if (empty($pembayaran->foto_meteran) && !empty($fotoTagihan)) {
+            $pembayaran->foto_meteran = $fotoTagihan;
             $pembayaran->save();
         }
         

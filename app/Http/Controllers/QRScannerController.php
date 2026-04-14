@@ -9,6 +9,7 @@ use App\Helpers\WilayahHelper;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -251,6 +252,7 @@ class QRScannerController extends Controller
             $fotoMeteranPath = $request->hasFile('foto_meteran')
                 ? $request->file('foto_meteran')->store('foto-meteran', 'public')
                 : null;
+            $fotoTagihanColumn = $this->resolveTagihanFotoColumn();
             
             // Validasi tarif tidak boleh null atau 0
             if (!$tarifPerKubik || $tarifPerKubik <= 0) {
@@ -293,8 +295,8 @@ class QRScannerController extends Controller
                     'keterangan' => $request->keterangan,
                 ];
 
-                if ($fotoMeteranPath) {
-                    $updateData['foto_meteran'] = $fotoMeteranPath;
+                if ($fotoMeteranPath && $fotoTagihanColumn) {
+                    $updateData[$fotoTagihanColumn] = $fotoMeteranPath;
                 }
 
                 // Update tagihan yang ada
@@ -331,7 +333,7 @@ class QRScannerController extends Controller
                 $totalTagihan = ($pemakaianDitagih * $tarifPerKubik) + ($adaAbunemen ? $biayaAbunemen : 0);
                 
                 // Buat tagihan baru
-                $tagihan = TagihanBulanan::create([
+                $createData = [
                     'pelanggan_id' => $pelanggan->id,
                     'bulan' => $request->bulan,
                     'meteran_sebelum' => $meteranSebelum,
@@ -342,15 +344,22 @@ class QRScannerController extends Controller
                     'biaya_abunemen' => $adaAbunemen ? $biayaAbunemen : 0,
                     'total_tagihan' => $totalTagihan,
                     'status_bayar' => 'BELUM_BAYAR',
-                    'foto_meteran' => $fotoMeteranPath,
                     'keterangan' => $request->keterangan,
-                ]);
+                ];
+
+                if ($fotoMeteranPath && $fotoTagihanColumn) {
+                    $createData[$fotoTagihanColumn] = $fotoMeteranPath;
+                }
+
+                $tagihan = TagihanBulanan::create($createData);
 
                 $message = 'Data meteran berhasil disimpan.';
             }
             
             DB::commit();
             
+            $fotoPath = $tagihan->foto_meteran ?? $tagihan->bukti_transfer ?? null;
+
             return response()->json([
                 'success' => true,
                 'message' => $message,
@@ -363,7 +372,7 @@ class QRScannerController extends Controller
                     'total_tagihan' => $tagihan->total_tagihan,
                     'ada_abunemen' => (bool) $tagihan->ada_abunemen,
                     'biaya_abunemen' => $tagihan->biaya_abunemen,
-                    'foto_meteran_url' => $tagihan->foto_meteran ? asset('storage/' . $tagihan->foto_meteran) : null,
+                    'foto_meteran_url' => $fotoPath ? asset('storage/' . $fotoPath) : null,
                 ],
             ]);
             
@@ -491,5 +500,18 @@ class QRScannerController extends Controller
             'meteran_terakhir' => $tagihanTerakhir ? $tagihanTerakhir->meteran_sesudah : 0,
             'bulan_terakhir' => $tagihanTerakhir ? $tagihanTerakhir->bulan : null,
         ]);
+    }
+
+    private function resolveTagihanFotoColumn(): ?string
+    {
+        if (Schema::hasColumn('tagihan_bulanan', 'foto_meteran')) {
+            return 'foto_meteran';
+        }
+
+        if (Schema::hasColumn('tagihan_bulanan', 'bukti_transfer')) {
+            return 'bukti_transfer';
+        }
+
+        return null;
     }
 }

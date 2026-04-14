@@ -22,6 +22,7 @@ class TagihanBulanan extends Model
         'jumlah_terbayar',
         'status_bayar',
         'foto_meteran',
+        'bukti_transfer',
         'keterangan',
     ];
     
