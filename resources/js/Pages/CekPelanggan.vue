@@ -771,8 +771,8 @@
                             <div class="mt-3">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Foto Bukti Meteran <span class="text-gray-400 font-normal">(opsional)</span></label>
                                 <!-- Hidden inputs -->
-                                <input ref="inputFotoGaleri" type="file" accept="image/*" class="hidden" @change="onFotoMeteranChange" />
-                                <input ref="inputFotoKamera" type="file" accept="image/*" capture="environment" class="hidden" @change="onFotoMeteranChange" />
+                                <input ref="inputFotoGaleri" type="file" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" class="hidden" @change="onFotoMeteranChange" />
+                                <input ref="inputFotoKamera" type="file" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" capture="environment" class="hidden" @change="onFotoMeteranChange" />
                                 <div class="flex gap-2">
                                     <button
                                         type="button"
@@ -791,7 +791,7 @@
                                         Ambil Foto
                                     </button>
                                 </div>
-                                <p class="text-xs text-gray-400 mt-1">Maks 5MB. Klik "Ambil Foto" untuk langsung buka kamera.</p>
+                                <p class="text-xs text-gray-400 mt-1">Maks 5MB. File dari galeri maupun kamera akan dikompres otomatis dengan ukuran target yang sama sebelum upload.</p>
                                 <!-- Feedback foto terpilih -->
                                 <div v-if="fotoMeteran" class="mt-2 flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
                                     <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -1320,6 +1320,11 @@ const fotoMeteranPreview = ref(null);
 const inputFotoGaleri = ref(null);
 const inputFotoKamera = ref(null);
 const GO_LIVE_MONTH = '2026-02';
+const MAX_SAFE_UPLOAD_BYTES = 350 * 1024; // Keep small to survive strict hosting upload limits
+const MAX_DIMENSION = 1280;
+const MIN_DIMENSION = 640;
+const SUPPORTED_METERAN_EXT = /\.(jpe?g|png|gif|webp)$/i;
+const UNSUPPORTED_HEIC_EXT = /\.(heic|heif)$/i;
 
 const compareMonth = (monthA, monthB) => {
     if (!monthA || !monthB) return 0;
@@ -1798,17 +1803,135 @@ const closeModal = () => {
     fotoMeteranPreview.value = null;
 };
 
-const onFotoMeteranChange = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    fotoMeteran.value = file;
-    // blob: URL - lebih cepat dari FileReader, sudah diizinkan CSP
-    fotoMeteranPreview.value = URL.createObjectURL(file);
+const onFotoMeteranChange = async (event) => {
+    const rawFile = event.target.files?.[0] || null;
+
     // Reset input agar bisa pilih file yang sama lagi jika perlu
     event.target.value = '';
+
+    if (!rawFile) return;
+
+    const lowerName = (rawFile.name || '').toLowerCase();
+    const lowerType = (rawFile.type || '').toLowerCase();
+    const isHeicHeif = UNSUPPORTED_HEIC_EXT.test(lowerName) || lowerType.includes('heic') || lowerType.includes('heif');
+
+    const looksSupported = SUPPORTED_METERAN_EXT.test(lowerName) || lowerType.startsWith('image/') || isHeicHeif;
+    if (!looksSupported) {
+        alert('Format file tidak didukung. Gunakan JPG, PNG, GIF, atau WEBP.');
+        return;
+    }
+
+    const file = await compressImageIfNeeded(rawFile);
+    if (!file) {
+        alert('File HEIC/HEIF terdeteksi, tetapi perangkat ini belum bisa mengonversi otomatis. Silakan ubah ke JPG/PNG dulu, lalu upload ulang.');
+        return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Ukuran foto masih terlalu besar. Mohon pilih gambar lain atau ambil ulang dengan resolusi lebih rendah.');
+        return;
+    }
+
+    fotoMeteran.value = file;
+
+    if (fotoMeteranPreview.value) {
+        URL.revokeObjectURL(fotoMeteranPreview.value);
+        fotoMeteranPreview.value = null;
+    }
+
+    // blob URL lebih cepat dari FileReader dan aman untuk preview local
+    fotoMeteranPreview.value = URL.createObjectURL(file);
+};
+
+const compressImageIfNeeded = async (file) => {
+    const lowerName = (file.name || '').toLowerCase();
+    const lowerType = (file.type || '').toLowerCase();
+    const isHeicHeif = UNSUPPORTED_HEIC_EXT.test(lowerName) || lowerType.includes('heic') || lowerType.includes('heif');
+    const isProbablyImage = lowerType.startsWith('image/') || isHeicHeif;
+
+    if (!isProbablyImage) return file;
+
+    const objectUrl = URL.createObjectURL(file);
+
+    try {
+        const image = await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = objectUrl;
+        });
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            return file;
+        }
+
+        let targetWidth = image.width;
+        let targetHeight = image.height;
+
+        const maxSide = Math.max(targetWidth, targetHeight);
+        if (maxSide > MAX_DIMENSION) {
+            const scale = MAX_DIMENSION / maxSide;
+            targetWidth = Math.round(targetWidth * scale);
+            targetHeight = Math.round(targetHeight * scale);
+        }
+
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+        let quality = 0.72;
+        let blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+
+        while (blob && blob.size > MAX_SAFE_UPLOAD_BYTES && quality > 0.25) {
+            quality -= 0.1;
+            blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+        }
+
+        while (blob && blob.size > MAX_SAFE_UPLOAD_BYTES && Math.max(targetWidth, targetHeight) > MIN_DIMENSION) {
+            targetWidth = Math.round(targetWidth * 0.85);
+            targetHeight = Math.round(targetHeight * 0.85);
+
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+            quality = Math.min(0.6, quality + 0.1);
+            blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+
+            while (blob && blob.size > MAX_SAFE_UPLOAD_BYTES && quality > 0.2) {
+                quality -= 0.08;
+                blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+            }
+        }
+
+        if (!blob) {
+            return file;
+        }
+
+        const optimizedName = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+        return new File([blob], optimizedName, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+        });
+    } catch (error) {
+        if (isHeicHeif) {
+            // Return null so caller can show a clear message for unsupported HEIC decode.
+            return null;
+        }
+
+        console.error('Image compression failed, using original file:', error);
+        return file;
+    } finally {
+        URL.revokeObjectURL(objectUrl);
+    }
 };
 
 const clearFotoMeteran = () => {
+    if (fotoMeteranPreview.value) {
+        URL.revokeObjectURL(fotoMeteranPreview.value);
+    }
     fotoMeteran.value = null;
     fotoMeteranPreview.value = null;
 };
@@ -1869,8 +1992,7 @@ const submitPembayaran = async () => {
         
         const response = await axios.post(
             `/pelanggan/${selectedPelanggan.value.id}/pembayaran`,
-            formData,
-            { headers: { 'Content-Type': 'multipart/form-data' } }
+            formData
         );
         
         // Add to list
