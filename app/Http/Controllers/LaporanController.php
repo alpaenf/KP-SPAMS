@@ -584,6 +584,11 @@ class LaporanController extends Controller
                     'jumlah_bayar'   => $p->jumlah_bayar,
                 ])->toArray();
         }
+
+        $pemasukanUmum = $pembayarans->filter(function($p) {
+            $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
+            return $kategori === 'umum';
+        })->sum('jumlah_bayar');
         
         $pemasukanSosial = $pembayarans->filter(function($p) { 
             $kategori = strtolower(trim($p->pelanggan->kategori ?? 'umum'));
